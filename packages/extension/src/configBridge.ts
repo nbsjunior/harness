@@ -87,7 +87,30 @@ export async function buildHarnessProcessEnv(
     { key: 'harness.connectors.kiro.apiKey', envVars: ['KIRO_API_KEY'] },
   ];
 
+  // For the Copilot token: always try `gh auth token` first (freshest source),
+  // then fall back to VS Code secrets. This avoids using a stale cached token.
+  const liveGhToken = await getGhCliToken();
+  if (liveGhToken) {
+    env['GH_TOKEN'] = liveGhToken;
+    // Keep secret in sync with the live token
+    const stored = await context.secrets.get('harness.connectors.copilot.token');
+    if (stored !== liveGhToken) {
+      void context.secrets.store('harness.connectors.copilot.token', liveGhToken);
+    }
+  }
+
+  // For all other secrets (claude, devin, cursor, kiro) — read from VS Code secrets
   for (const { key, envVars } of secretMap) {
+    if (key === 'harness.connectors.copilot.token') {
+      // Copilot handled above via `gh auth token`; only use secret as fallback
+      if (!env['GH_TOKEN'] && !env['COPILOT_GITHUB_TOKEN']) {
+        const value = await context.secrets.get(key);
+        if (value) {
+          env['GH_TOKEN'] = value;
+        }
+      }
+      continue;
+    }
     const value = await context.secrets.get(key);
     if (!value) {
       continue;
@@ -96,17 +119,6 @@ export async function buildHarnessProcessEnv(
       if (!env[envVar]) {
         env[envVar] = value;
       }
-    }
-  }
-
-  // Auto-detect GitHub token from `gh` CLI when none is saved in secrets or env.
-  // This means users only need to run `gh auth login` once — no manual copy/paste.
-  if (!env['GH_TOKEN'] && !env['COPILOT_GITHUB_TOKEN']) {
-    const ghToken = await getGhCliToken();
-    if (ghToken) {
-      env['GH_TOKEN'] = ghToken;
-      // Persist to VS Code secrets so it survives without gh CLI in PATH
-      void context.secrets.store('harness.connectors.copilot.token', ghToken);
     }
   }
 

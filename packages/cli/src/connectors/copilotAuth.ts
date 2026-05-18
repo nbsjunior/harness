@@ -75,15 +75,21 @@ function fetchCopilotToken(githubToken: string): Promise<CopilotToken> {
 /**
  * Exchange a GitHub OAuth/fine-grained PAT for a short-lived Copilot API token.
  * Result is cached in-process until ~1 minute before expiry.
+ * On 401 the cache is cleared so the next call retries fresh.
  */
 export async function getCopilotApiToken(githubToken: string): Promise<string> {
   const cached = tokenCache.get(githubToken);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.token;
   }
-  const fresh = await fetchCopilotToken(githubToken);
-  tokenCache.set(githubToken, fresh);
-  return fresh.token;
+  try {
+    const fresh = await fetchCopilotToken(githubToken);
+    tokenCache.set(githubToken, fresh);
+    return fresh.token;
+  } catch (err) {
+    tokenCache.delete(githubToken);
+    throw err;
+  }
 }
 
 export function buildCopilotAuthHeaders(copilotToken: string): Record<string, string> {
