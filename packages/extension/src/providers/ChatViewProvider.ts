@@ -1,8 +1,11 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 import type {
   AgentId,
   ChatMessage,
   ContextItem,
+  CopilotMode,
   ExtensionMessage,
   WebviewMessage,
   InitializePayload,
@@ -21,6 +24,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private history: ChatMessage[] = [];
   private activeSessionId = crypto.randomUUID();
   private selectedAgent: AgentId;
+  private selectedMode: CopilotMode = 'ask';
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -77,9 +81,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  async sendChatMessage(text: string, agent?: AgentId): Promise<void> {
+  async sendChatMessage(text: string, agent?: AgentId, mode?: CopilotMode): Promise<void> {
     if (agent) {
       this.selectedAgent = agent;
+    }
+    if (mode) {
+      this.selectedMode = mode;
     }
 
     const userMessage: ChatMessage = {
@@ -106,11 +113,18 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     this.post({ command: 'appendChunk', payload: { message: userMessage, done: false } });
     this.post({ command: 'appendChunk', payload: { message: assistantMessage, done: false } });
 
+    // For spec+agent mode: collect spec files from the workspace specsDir
+    const specPaths = this.selectedMode === 'spec+agent'
+      ? this.resolveSpecPaths()
+      : [];
+
     await this.agentService.chat({
       sessionId: this.activeSessionId,
       messages: this.history.slice(0, -1), // exclude the empty assistant placeholder
       contextPaths: this.contextProvider.getAbsolutePaths(),
       agent: this.selectedAgent,
+      mode: this.selectedMode,
+      specPaths,
       onChunk: (chunk: string, messageId: string) => {
         // Accumulate chunk in local history
         const msg = this.history.find((m) => m.id === assistantMessage.id);
@@ -157,8 +171,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         break;
 
       case 'sendMessage': {
-        const payload = msg.payload as { text: string; agent?: AgentId };
-        await this.sendChatMessage(payload.text, payload.agent);
+        const payload = msg.payload as { text: string; agent?: AgentId; mode?: CopilotMode };
+        await this.sendChatMessage(payload.text, payload.agent, payload.mode);
         break;
       }
 
@@ -166,6 +180,13 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         const payload = msg.payload as { agent: AgentId };
         this.selectedAgent = payload.agent;
         this.post({ command: 'agentChanged', payload: { agent: this.selectedAgent } });
+        break;
+      }
+
+      case 'selectMode': {
+        const payload = msg.payload as { mode: CopilotMode };
+        this.selectedMode = payload.mode;
+        this.post({ command: 'modeChanged', payload: { mode: this.selectedMode } });
         break;
       }
 
@@ -204,11 +225,37 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private sendInitialize(): void {
     const initPayload: InitializePayload = {
       agent: this.selectedAgent,
+      mode: this.selectedMode,
       context: this.contextProvider.getItems(),
       history: this.history,
       agents: Object.values(AGENTS),
     };
     this.post({ command: 'initialize', payload: initPayload });
+  }
+
+  /** Resolve all spec YAML/JSON files from the configured specs directory. */
+  private resolveSpecPaths(): string[] {
+    const specsDir = vscode.workspace
+      .getConfiguration('harness')
+      .get<string>('specsDirectory', '.harness/specs');
+
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    if (!workspaceRoot) return [];
+
+    const absSpecsDir = path.isAbsolute(specsDir)
+      ? specsDir
+      : path.join(workspaceRoot, specsDir);
+
+    if (!fs.existsSync(absSpecsDir)) return [];
+
+    try {
+      return fs
+        .readdirSync(absSpecsDir)
+        .filter(f => /\.(yaml|yml|json)$/i.test(f))
+        .map(f => path.join(absSpecsDir, f));
+    } catch {
+      return [];
+    }
   }
 
   private post(msg: ExtensionMessage): void {

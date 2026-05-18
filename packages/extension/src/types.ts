@@ -57,6 +57,23 @@ export const AGENT_DESCRIPTORS: Record<AgentId, AgentDescriptor> = {
 };
 
 // ---------------------------------------------------------------------------
+// Copilot interaction modes
+// ---------------------------------------------------------------------------
+
+/**
+ * Ask    — conversational Q&A, no file modifications suggested.
+ * Agent  — autonomous coding agent: produces structured file edits, can use tools.
+ * spec+agent — like Agent but injects all active Specs as system context first.
+ */
+export type CopilotMode = 'ask' | 'agent' | 'spec+agent';
+
+export const COPILOT_MODE_LABELS: Record<CopilotMode, string> = {
+  ask:         'Ask',
+  agent:       'Agent',
+  'spec+agent':'Spec+Agent',
+};
+
+// ---------------------------------------------------------------------------
 // Chat messages
 // ---------------------------------------------------------------------------
 
@@ -176,6 +193,10 @@ export interface ChatSendPayload {
   contextPaths: string[];
   agent: AgentId;
   specsDir?: string;
+  /** Interaction mode — defaults to 'ask' */
+  mode?: CopilotMode;
+  /** Resolved spec file paths — populated by extension for spec+agent mode */
+  specPaths?: string[];
 }
 
 export interface ChatChunkPayload {
@@ -218,6 +239,7 @@ export interface McpCallPayload {
 export type WebviewCommand =
   | 'sendMessage'
   | 'selectAgent'
+  | 'selectMode'
   | 'addContext'
   | 'removeContext'
   | 'clearContext'
@@ -256,6 +278,7 @@ export type ExtensionCommand =
   | 'specsLoaded'
   | 'specSaved'
   | 'agentChanged'
+  | 'modeChanged'
   | 'initialize'
   | 'error'
   // Token usage (for status bar display)
@@ -273,6 +296,7 @@ export interface ExtensionMessage<T = unknown> {
 
 export interface InitializePayload {
   agent: AgentId;
+  mode: CopilotMode;
   context: ContextItem[];
   history: ChatMessage[];
   agents: AgentDescriptor[];

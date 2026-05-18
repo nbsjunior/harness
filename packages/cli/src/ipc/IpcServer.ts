@@ -163,7 +163,7 @@ async function handleChatSend(
   msg: IPCMessage<ChatSendPayload>,
   router: AgentRouter,
 ): Promise<void> {
-  const { sessionId, messages, contextPaths, agent, specsDir } = msg.payload;
+  const { sessionId, messages, contextPaths, agent, specsDir, mode, specPaths } = msg.payload;
   const agentConfig = loadAgentConfig(specsDir);
   const messageId = crypto.randomUUID();
 
@@ -185,11 +185,31 @@ async function handleChatSend(
     });
   }
 
+  // For spec+agent mode: read and inject spec files as additional system context
+  if (mode === 'spec+agent' && specPaths && specPaths.length > 0) {
+    const specFiles = await readContextFiles(specPaths);
+    if (specFiles.length > 0) {
+      const specBlock = specFiles
+        .map(({ path, content }) => `<spec path="${path}">\n${content}\n</spec>`)
+        .join('\n\n');
+
+      enrichedMessages.unshift({
+        id: crypto.randomUUID(),
+        role: 'system',
+        content:
+          `The following Harness Spec definitions are active for this task. ` +
+          `Follow them as authoritative guidance for agent behaviour, tools, and constraints:\n\n${specBlock}`,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
   await router.route({
     sessionId,
     messages: enrichedMessages,
     context: contextPaths.map((p) => ({ absolutePath: p, kind: 'file', label: p })),
     agent,
+    mode: mode ?? 'ask',
     config: agentConfig,
     onChunk: (chunk) => {
       const frame: IPCMessage<ChatChunkPayload> = {

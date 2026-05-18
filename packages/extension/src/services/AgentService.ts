@@ -4,6 +4,7 @@ import type {
   ChatMessage,
   ChatSendPayload,
   ChatChunkPayload,
+  CopilotMode,
   IPCMessage,
 } from '../types';
 import type { CliService } from './CliService';
@@ -35,11 +36,13 @@ export class AgentService {
     messages: ChatMessage[];
     contextPaths: string[];
     agent: AgentId;
+    mode?: CopilotMode;
+    specPaths?: string[];
     onChunk: (chunk: string, messageId: string) => void;
     onComplete: (messageId: string) => void;
     onError: (error: string, messageId: string) => void;
   }): Promise<void> {
-    const { sessionId, messages, contextPaths, agent, onChunk, onComplete, onError } = options;
+    const { sessionId, messages, contextPaths, agent, mode, specPaths, onChunk, onComplete, onError } = options;
 
     if (this.activeSessions.has(sessionId)) {
       this.output.warn(`Session ${sessionId} is already active — ignoring duplicate request`);
@@ -87,6 +90,8 @@ export class AgentService {
         contextPaths,   // absolute paths — CLI does the file reading
         agent,
         specsDir,
+        mode: mode ?? 'ask',
+        specPaths: specPaths ?? [],
       };
 
       await this.cliService.send<ChatSendPayload>({
