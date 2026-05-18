@@ -4,7 +4,7 @@ import { URL } from 'url';
 import { execa } from 'execa';
 import type { ChatMessage, ContextItem, AgentId } from '../types.js';
 import type { AgentConnectorConfig } from '../config.js';
-import { buildCopilotAuthHeaders, validateCopilotToken } from '../connectors/copilotAuth.js';
+import { buildCopilotAuthHeaders, validateCopilotToken, getCopilotApiToken } from '../connectors/copilotAuth.js';
 import { runKiroCli } from '../connectors/kiroCli.js';
 import { ensureAidlcInstalled } from '../aidlc/install.js';
 import { ensureKiroCli } from '../kiro/bootstrap.js';
@@ -83,6 +83,15 @@ export class AgentRouter {
       return;
     }
 
+    // Exchange the GitHub OAuth/PAT token for a short-lived Copilot API token
+    let copilotToken: string;
+    try {
+      copilotToken = await getCopilotApiToken(cfg.token);
+    } catch (err) {
+      req.onError(`Copilot auth failed: ${(err as Error).message}`);
+      return;
+    }
+
     const url = new URL('/chat/completions', cfg.endpoint);
     const body = JSON.stringify({
       model: 'gpt-4o',
@@ -92,7 +101,7 @@ export class AgentRouter {
 
     await this.streamSseRequest(
       url,
-      { ...buildCopilotAuthHeaders(cfg.token), 'Content-Type': 'application/json' },
+      { ...buildCopilotAuthHeaders(copilotToken), 'Content-Type': 'application/json' },
       body,
       req.onChunk,
       req.onDone,
