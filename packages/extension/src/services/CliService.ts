@@ -327,19 +327,37 @@ export class CliService extends EventEmitter {
   // Private: lifecycle helpers
   // ---------------------------------------------------------------------------
 
+  /**
+   * Send a ping directly (bypassing ensureStarted to avoid a deadlock when
+   * ping is called from within doStart while startingPromise is still set).
+   */
   private async ping(): Promise<void> {
-    const pingMsg: IPCMessage<Record<string, never>> = {
-      id: `ping-${Date.now()}`,
-      action: 'ping',
-      payload: {},
-    };
+    const id = `ping-${Date.now()}`;
+    const pingMsg: IPCMessage<Record<string, never>> = { id, action: 'ping', payload: {} };
 
-    await Promise.race([
-      this.send(pingMsg),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('CLI ping timed out — daemon did not respond')), PING_TIMEOUT_MS),
-      ),
-    ]);
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pendingRequests.delete(id);
+        reject(new Error('CLI ping timed out — daemon did not respond'));
+      }, PING_TIMEOUT_MS);
+
+      this.pendingRequests.set(id, {
+        resolve: () => {
+          clearTimeout(timer);
+          this.pendingRequests.delete(id);
+          resolve();
+        },
+        reject: (err) => {
+          clearTimeout(timer);
+          this.pendingRequests.delete(id);
+          reject(err);
+        },
+        timeoutHandle: timer,
+      });
+
+      // Write directly — subprocess is spawned but startingPromise is still pending
+      this.writeFrame(pingMsg);
+    });
   }
 
   private async ensureStarted(): Promise<void> {
