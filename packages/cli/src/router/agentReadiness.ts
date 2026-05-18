@@ -1,7 +1,19 @@
+import * as child_process from 'child_process';
 import type { AgentConnectorConfig } from '../config.js';
 import type { AgentId } from '../types.js';
 import { validateCopilotToken } from '../connectors/copilotAuth.js';
 import { isGhCliAvailable } from '../connectors/ghToken.js';
+
+/** Returns true if `bin` is found in PATH (sync, best-effort). */
+function isBinAvailable(bin: string): boolean {
+  try {
+    const cmd = process.platform === 'win32' ? `where "${bin}"` : `command -v "${bin}"`;
+    child_process.execSync(cmd, { stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export interface AgentReadiness {
   agent: AgentId;
@@ -79,11 +91,20 @@ export function checkAgentReadiness(
       };
     }
     case 'claude': {
+      const claudeBin = config.claude.path ?? 'claude';
+      if (!isBinAvailable(claudeBin)) {
+        return {
+          agent,
+          label: LABELS.claude,
+          ready: false,
+          hint: `\`${claudeBin}\` not found in PATH. Install Claude CLI: https://claude.ai/code`,
+        };
+      }
       return {
         agent,
         label: LABELS.claude,
         ready: true,
-        hint: `CLI: ${config.claude.path}${config.claude.apiKey ? ' (API key set)' : ' (uses Claude CLI auth)'}`,
+        hint: `CLI: ${claudeBin}${config.claude.apiKey ? ' (API key set)' : ' (uses Claude CLI auth)'}`,
       };
     }
     case 'kiro': {
