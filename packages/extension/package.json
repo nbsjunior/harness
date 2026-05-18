@@ -6,10 +6,15 @@
   "private": true,
   "publisher": "harness-ai",
   "license": "MIT",
+  "icon": "resources/harness-icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/harness-ai/harness-vscode"
+    "url": "https://github.com/nbsjunior/harness"
   },
+  "bugs": {
+    "url": "https://github.com/nbsjunior/harness/issues"
+  },
+  "homepage": "https://github.com/nbsjunior/harness#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
