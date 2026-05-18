@@ -2,33 +2,28 @@ import https from 'https';
 import http from 'http';
 import { URL } from 'url';
 import { execa } from 'execa';
-import type { ChatMessage, ContextItem } from '../types.js';
-
-export type AgentId = 'copilot' | 'devin' | 'cursor' | 'claude' | 'kiro';
-
-export interface AgentConfig {
-  copilot?: { token: string; endpoint: string };
-  devin?: { apiKey: string; endpoint: string };
-  cursor?: { apiKey: string; endpoint: string };
-  claude?: { path: string; apiKey?: string };
-  kiro?: { apiKey: string; endpoint: string };
-}
+import type { ChatMessage, ContextItem, AgentId } from '../types.js';
+import type { AgentConnectorConfig } from '../config.js';
 
 export interface AgentRequest {
   sessionId: string;
   messages: ChatMessage[];
   context: ContextItem[];
   agent: AgentId;
-  config: AgentConfig;
+  config: AgentConnectorConfig;
   onChunk: (chunk: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
 }
 
 /**
- * Routes agent requests to the appropriate connector based on the AgentId.
- * Each connector implements streaming where supported, falling back to
- * single-shot responses when the provider does not support SSE/streams.
+ * Routes agent requests to the appropriate connector implementation.
+ *
+ * Each connector streams response chunks via `onChunk`, signals completion with
+ * `onDone`, and signals failure with `onError`. Errors are always communicated
+ * through `onError` — connectors never throw directly to the caller.
+ *
+ * Debug output goes to stderr; stdout is reserved for JSON IPC frames.
  */
 export class AgentRouter {
   async route(request: AgentRequest): Promise<void> {
@@ -49,6 +44,7 @@ export class AgentRouter {
         await this.routeKiro(request);
         break;
       default: {
+        // Exhaustiveness check — TypeScript will error here if a new AgentId is added
         const _exhaustive: never = request.agent;
         request.onError(`Unknown agent: ${String(_exhaustive)}`);
       }
@@ -56,28 +52,24 @@ export class AgentRouter {
   }
 
   // ---------------------------------------------------------------------------
-  // GitHub Copilot (OpenAI-compatible chat completions with SSE streaming)
+  // GitHub Copilot — OpenAI-compatible SSE streaming
   // ---------------------------------------------------------------------------
 
   private async routeCopilot(req: AgentRequest): Promise<void> {
     const cfg = req.config.copilot;
-    if (!cfg?.token) {
-      req.onError(
-        'GitHub Copilot token not configured. Set harness.connectors.copilot.token in settings.',
-      );
+    if (!cfg.token) {
+      req.onError('GitHub Copilot token not configured. Set GITHUB_TOKEN or harness.connectors.copilot.token.');
       return;
     }
 
-    const endpoint = cfg.endpoint || 'https://api.githubcopilot.com';
-    const url = new URL('/chat/completions', endpoint);
-
+    const url = new URL('/chat/completions', cfg.endpoint);
     const body = JSON.stringify({
       model: 'gpt-4o',
       stream: true,
-      messages: this.buildOpenAiMessages(req.messages, req.context),
+      messages: this.buildOpenAiMessages(req.messages),
     });
 
-    await this.streamOpenAiRequest(
+    await this.streamSseRequest(
       url,
       { Authorization: `Bearer ${cfg.token}`, 'Content-Type': 'application/json' },
       body,
@@ -88,67 +80,47 @@ export class AgentRouter {
   }
 
   // ---------------------------------------------------------------------------
-  // Devin (REST API — single response, no streaming)
+  // Devin — single-response REST API (async session)
   // ---------------------------------------------------------------------------
 
   private async routeDevin(req: AgentRequest): Promise<void> {
     const cfg = req.config.devin;
-    if (!cfg?.apiKey) {
-      req.onError(
-        'Devin API key not configured. Set harness.connectors.devin.apiKey in settings.',
-      );
+    if (!cfg.apiKey) {
+      req.onError('Devin API key not configured. Set DEVIN_API_KEY or harness.connectors.devin.apiKey.');
       return;
     }
 
-    const endpoint = cfg.endpoint || 'https://api.devin.ai/v1';
-    const url = new URL('/sessions', endpoint);
-
-    const contextSummary = req.context
-      .map((c) => `- ${c.label} (${c.kind})`)
-      .join('\n');
-
-    const lastUserMessage = [...req.messages].reverse().find((m) => m.role === 'user');
-    const prompt = [
-      contextSummary ? `Context:\n${contextSummary}\n` : '',
-      lastUserMessage?.content ?? '',
-    ]
-      .filter(Boolean)
-      .join('\n');
+    const url = new URL('/sessions', cfg.endpoint);
+    const lastUser = [...req.messages].reverse().find((m) => m.role === 'user');
 
     const body = JSON.stringify({
-      prompt,
+      prompt: lastUser?.content ?? '',
       idempotent: false,
     });
 
     try {
-      const responseText = await this.httpPost(url, cfg.apiKey, body);
-      const data = JSON.parse(responseText) as { session_id: string; url: string };
-
-      req.onChunk(`Devin session created: ${data.url ?? data.session_id}\n`);
-      req.onChunk(
-        'Devin is working asynchronously. Check the session URL for live progress.\n',
-      );
+      const text = await this.httpPost(url, cfg.apiKey, body);
+      const data = JSON.parse(text) as { session_id?: string; url?: string };
+      req.onChunk(`Devin session created: ${data.url ?? data.session_id ?? '(unknown)'}\n`);
+      req.onChunk('Devin is working asynchronously. Visit the session URL for live progress.\n');
       req.onDone();
     } catch (err) {
-      req.onError(err instanceof Error ? err.message : String(err));
+      req.onError(`Devin request failed: ${(err as Error).message}`);
     }
   }
 
   // ---------------------------------------------------------------------------
-  // Cursor AI (OpenAI-compatible endpoint or MCP)
+  // Cursor AI — OpenAI-compatible endpoint
   // ---------------------------------------------------------------------------
 
   private async routeCursor(req: AgentRequest): Promise<void> {
     const cfg = req.config.cursor;
-    if (!cfg?.endpoint) {
-      req.onError(
-        'Cursor AI endpoint not configured. Set harness.connectors.cursor.endpoint in settings.',
-      );
+    if (!cfg.endpoint) {
+      req.onError('Cursor AI endpoint not configured. Set harness.connectors.cursor.endpoint.');
       return;
     }
 
     const url = new URL('/chat/completions', cfg.endpoint);
-
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (cfg.apiKey) {
       headers['Authorization'] = `Bearer ${cfg.apiKey}`;
@@ -157,132 +129,108 @@ export class AgentRouter {
     const body = JSON.stringify({
       model: 'claude-3-5-sonnet',
       stream: true,
-      messages: this.buildOpenAiMessages(req.messages, req.context),
+      messages: this.buildOpenAiMessages(req.messages),
     });
 
-    await this.streamOpenAiRequest(url, headers, body, req.onChunk, req.onDone, req.onError);
+    await this.streamSseRequest(url, headers, body, req.onChunk, req.onDone, req.onError);
   }
 
   // ---------------------------------------------------------------------------
-  // Claude Code (CLI subprocess with streaming stdout)
+  // Claude Code — CLI subprocess with stream-json output
   // ---------------------------------------------------------------------------
 
   private async routeClaude(req: AgentRequest): Promise<void> {
     const cfg = req.config.claude;
-    const claudePath = cfg?.path ?? 'claude';
+    const claudeBin = cfg.path;
 
-    const lastUserMessage = [...req.messages].reverse().find((m) => m.role === 'user');
-    if (!lastUserMessage) {
+    const lastUser = [...req.messages].reverse().find((m) => m.role === 'user');
+    if (!lastUser) {
       req.onError('No user message found in conversation history.');
       return;
     }
 
-    const contextFiles = req.context
-      .filter((c) => c.kind === 'file')
-      .map((c) => {
-        try {
-          return new URL(c.uri).pathname;
-        } catch {
-          return c.uri;
-        }
-      });
+    const args = ['-p', lastUser.content, '--output-format', 'stream-json', '--verbose'];
 
-    const args = [
-      '-p',
-      lastUserMessage.content,
-      '--output-format',
-      'stream-json',
-      '--verbose',
-    ];
-
-    // Add context files if Claude Code supports --file flag
-    if (contextFiles.length > 0) {
-      for (const f of contextFiles) {
-        args.push('--file', f);
-      }
-    }
-
-    if (cfg?.apiKey) {
+    if (cfg.apiKey) {
       process.env['ANTHROPIC_API_KEY'] = cfg.apiKey;
     }
 
     try {
-      const subprocess = execa(claudePath, args, {
-        reject: false,
-        all: false,
-      });
+      const subprocess = execa(claudeBin, args, { reject: false });
 
       subprocess.stdout?.on('data', (chunk: Buffer) => {
         const text = chunk.toString('utf-8');
-
-        // Stream-json format: each line is a JSON event
         for (const line of text.split('\n')) {
           const trimmed = line.trim();
           if (!trimmed) {
             continue;
           }
           try {
-            const event = JSON.parse(trimmed) as { type?: string; delta?: { text?: string }; text?: string };
-            const content =
-              event.type === 'assistant'
-                ? (event.delta?.text ?? event.text ?? '')
-                : '';
+            const event = JSON.parse(trimmed) as {
+              type?: string;
+              delta?: { text?: string };
+              text?: string;
+            };
+            const content = event.type === 'assistant'
+              ? (event.delta?.text ?? event.text ?? '')
+              : '';
             if (content) {
               req.onChunk(content);
             }
           } catch {
-            // Raw text output — emit directly
+            // Raw text line — pass through
             req.onChunk(text);
           }
         }
       });
 
       subprocess.stderr?.on('data', (chunk: Buffer) => {
-        const msg = chunk.toString('utf-8');
-        if (msg.toLowerCase().includes('error')) {
-          req.onError(`Claude Code error: ${msg}`);
-        }
+        // Claude's stderr is its own debug output — forward to our stderr
+        process.stderr.write(`[claude] ${chunk.toString('utf-8')}`);
       });
 
-      await subprocess;
+      const result = await subprocess;
+
+      if (result.exitCode !== 0 && result.exitCode !== null) {
+        req.onError(`Claude Code exited with code ${result.exitCode}`);
+        return;
+      }
+
       req.onDone();
     } catch (err) {
       req.onError(
-        `Failed to run Claude Code CLI ("${claudePath}"): ${err instanceof Error ? err.message : String(err)}`,
+        `Failed to run Claude Code CLI ("${claudeBin}"): ${(err as Error).message}. ` +
+          'Is Claude Code installed and on PATH?',
       );
     }
   }
 
   // ---------------------------------------------------------------------------
-  // AWS KIRO (REST API)
+  // AWS KIRO — REST API
   // ---------------------------------------------------------------------------
 
   private async routeKiro(req: AgentRequest): Promise<void> {
     const cfg = req.config.kiro;
-    if (!cfg?.apiKey || !cfg?.endpoint) {
-      req.onError(
-        'AWS KIRO not configured. Set harness.connectors.kiro.apiKey and endpoint in settings.',
-      );
+    if (!cfg.apiKey || !cfg.endpoint) {
+      req.onError('AWS KIRO not configured. Set harness.connectors.kiro.apiKey and endpoint.');
       return;
     }
 
     const url = new URL('/invoke', cfg.endpoint);
-
-    const lastUserMessage = [...req.messages].reverse().find((m) => m.role === 'user');
+    const lastUser = [...req.messages].reverse().find((m) => m.role === 'user');
 
     const body = JSON.stringify({
-      prompt: lastUserMessage?.content ?? '',
-      context: req.context.map((c) => ({ uri: c.uri, kind: c.kind, label: c.label })),
+      prompt: lastUser?.content ?? '',
+      context: req.context.map((c) => ({ path: c.absolutePath, kind: c.kind, label: c.label })),
     });
 
     try {
-      const responseText = await this.httpPost(url, cfg.apiKey, body);
-      const data = JSON.parse(responseText) as { response?: string; output?: string };
-      const text = data.response ?? data.output ?? responseText;
-      req.onChunk(text);
+      const text = await this.httpPost(url, cfg.apiKey, body);
+      const data = JSON.parse(text) as { response?: string; output?: string };
+      req.onChunk(data.response ?? data.output ?? text);
       req.onDone();
     } catch (err) {
-      req.onError(err instanceof Error ? err.message : String(err));
+      req.onError(`KIRO request failed: ${(err as Error).message}`);
     }
   }
 
@@ -292,33 +240,17 @@ export class AgentRouter {
 
   private buildOpenAiMessages(
     messages: ChatMessage[],
-    context: ContextItem[],
   ): Array<{ role: string; content: string }> {
-    const result: Array<{ role: string; content: string }> = [];
-
-    if (context.length > 0) {
-      const contextBlock = context
-        .map((c) => `<context kind="${c.kind}" path="${c.label}">${c.uri}</context>`)
-        .join('\n');
-      result.push({
-        role: 'system',
-        content: `You are a software engineering AI agent. The user has included the following context:\n\n${contextBlock}`,
-      });
-    }
-
-    for (const msg of messages) {
-      if (msg.role !== 'system') {
-        result.push({ role: msg.role, content: msg.content });
-      }
-    }
-
-    return result;
+    return messages
+      .filter((m) => m.role !== 'system' || m.content.trim().length > 0)
+      .map((m) => ({ role: m.role, content: m.content }));
   }
 
   /**
-   * Stream an OpenAI-compatible SSE chat completion response.
+   * Stream an OpenAI-compatible SSE chat completion.
+   * Parses `data: {...}` lines, extracts `choices[0].delta.content` chunks.
    */
-  private streamOpenAiRequest(
+  private streamSseRequest(
     url: URL,
     headers: Record<string, string>,
     body: string,
@@ -328,71 +260,54 @@ export class AgentRouter {
   ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const lib = url.protocol === 'https:' ? https : http;
+      const bodyBuffer = Buffer.from(body, 'utf-8');
 
-      const req = lib.request(
-        url,
-        {
-          method: 'POST',
-          headers: {
-            ...headers,
-            'Content-Length': Buffer.byteLength(body),
-          },
-        },
-        (res) => {
-          if (res.statusCode && res.statusCode >= 400) {
-            const err = `HTTP ${res.statusCode} from ${url.hostname}`;
-            onError(err);
-            reject(new Error(err));
-            return;
-          }
+      const req = lib.request(url, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Length': bodyBuffer.length },
+      }, (res) => {
+        if (res.statusCode !== undefined && res.statusCode >= 400) {
+          const msg = `HTTP ${res.statusCode} from ${url.hostname}`;
+          onError(msg);
+          reject(new Error(msg));
+          return;
+        }
 
-          let buffer = '';
+        let sseBuffer = '';
 
-          res.on('data', (chunk: Buffer) => {
-            buffer += chunk.toString('utf-8');
-            const lines = buffer.split('\n');
-            buffer = lines.pop() ?? '';
+        res.on('data', (chunk: Buffer) => {
+          sseBuffer += chunk.toString('utf-8');
+          const lines = sseBuffer.split('\n');
+          sseBuffer = lines.pop() ?? '';
 
-            for (const line of lines) {
-              if (!line.startsWith('data: ')) {
-                continue;
-              }
-              const data = line.slice(6).trim();
-              if (data === '[DONE]') {
-                continue;
-              }
-              try {
-                const parsed = JSON.parse(data) as {
-                  choices?: Array<{ delta?: { content?: string } }>;
-                };
-                const content = parsed.choices?.[0]?.delta?.content ?? '';
-                if (content) {
-                  onChunk(content);
-                }
-              } catch {
-                // Skip malformed SSE frames
-              }
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) {
+              continue;
             }
-          });
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') {
+              continue;
+            }
+            try {
+              const parsed = JSON.parse(data) as {
+                choices?: Array<{ delta?: { content?: string } }>;
+              };
+              const content = parsed.choices?.[0]?.delta?.content ?? '';
+              if (content) {
+                onChunk(content);
+              }
+            } catch {
+              // Skip malformed SSE frames silently
+            }
+          }
+        });
 
-          res.on('end', () => {
-            onDone();
-            resolve();
-          });
-
-          res.on('error', (err: Error) => {
-            onError(err.message);
-            reject(err);
-          });
-        },
-      );
-
-      req.on('error', (err: Error) => {
-        onError(err.message);
-        reject(err);
+        res.on('end', () => { onDone(); resolve(); });
+        res.on('error', (err: Error) => { onError(err.message); reject(err); });
       });
 
-      req.write(body);
+      req.on('error', (err: Error) => { onError(err.message); reject(err); });
+      req.write(bodyBuffer);
       req.end();
     });
   }
@@ -400,34 +315,31 @@ export class AgentRouter {
   private httpPost(url: URL, apiKey: string, body: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const lib = url.protocol === 'https:' ? https : http;
+      const bodyBuffer = Buffer.from(body, 'utf-8');
 
-      const req = lib.request(
-        url,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(body),
-            Authorization: `Bearer ${apiKey}`,
-          },
+      const req = lib.request(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': bodyBuffer.length,
+          Authorization: `Bearer ${apiKey}`,
         },
-        (res) => {
-          const chunks: Buffer[] = [];
-          res.on('data', (c: Buffer) => chunks.push(c));
-          res.on('end', () => {
-            const text = Buffer.concat(chunks).toString('utf-8');
-            if (res.statusCode && res.statusCode >= 400) {
-              reject(new Error(`HTTP ${res.statusCode}: ${text}`));
-            } else {
-              resolve(text);
-            }
-          });
-          res.on('error', reject);
-        },
-      );
+      }, (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => {
+          const text = Buffer.concat(chunks).toString('utf-8');
+          if (res.statusCode !== undefined && res.statusCode >= 400) {
+            reject(new Error(`HTTP ${res.statusCode}: ${text.slice(0, 200)}`));
+          } else {
+            resolve(text);
+          }
+        });
+        res.on('error', reject);
+      });
 
       req.on('error', reject);
-      req.write(body);
+      req.write(bodyBuffer);
       req.end();
     });
   }

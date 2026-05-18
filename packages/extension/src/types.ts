@@ -81,7 +81,8 @@ export interface ChatMessage {
 export type ContextItemKind = 'file' | 'directory' | 'snippet';
 
 export interface ContextItem {
-  uri: string;
+  /** Absolute file-system path (not URI) — required by the CLI for direct fs.readFile */
+  absolutePath: string;
   kind: ContextItemKind;
   label: string;
   /** Token estimate for budget tracking */
@@ -114,10 +115,19 @@ export interface SpecDefinition {
 }
 
 // ---------------------------------------------------------------------------
-// IPC message types (Extension Host ↔ CLI Process)
+// IPC Protocol
+//
+// All communication between the Extension Host (broker) and the CLI (daemon)
+// flows as newline-delimited JSON over stdin/stdout.
+//
+// Schema: { id, action, payload, error? }
+//   id      — correlation UUID, matched in response
+//   action  — discriminant string (e.g. "chat:send", "ping")
+//   payload — typed data (generic T)
+//   error   — present only in error responses; human-readable message
 // ---------------------------------------------------------------------------
 
-export type IpcMessageType =
+export type IpcAction =
   | 'chat:send'
   | 'chat:chunk'
   | 'chat:done'
@@ -133,16 +143,31 @@ export type IpcMessageType =
   | 'ping'
   | 'pong';
 
-export interface IpcMessage<T = unknown> {
+/**
+ * Base IPC message envelope. All extension ↔ CLI communication uses this shape.
+ * - Requests carry `action` + `payload`.
+ * - Responses carry the same `id` + `action` + `payload`, or `error` on failure.
+ */
+export interface IPCMessage<TPayload = unknown> {
+  /** Correlation ID (UUID). The response mirrors the request's id. */
   id: string;
-  type: IpcMessageType;
-  payload: T;
+  /** Discriminant action string. */
+  action: IpcAction;
+  /** Typed request/response data. */
+  payload: TPayload;
+  /** Present only when the message represents an error. */
+  error?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Typed payload definitions
+// ---------------------------------------------------------------------------
 
 export interface ChatSendPayload {
   sessionId: string;
   messages: ChatMessage[];
-  context: ContextItem[];
+  /** Absolute paths to context files/directories */
+  contextPaths: string[];
   agent: AgentId;
   specsDir?: string;
 }
@@ -154,14 +179,9 @@ export interface ChatChunkPayload {
   done: boolean;
 }
 
-export interface ChatErrorPayload {
-  sessionId: string;
-  messageId: string;
-  error: string;
-}
-
 export interface ContextBuildPayload {
-  directories: string[];
+  /** Absolute paths to scan */
+  paths: string[];
   workspaceRoot: string;
 }
 
@@ -171,11 +191,18 @@ export interface ContextResultPayload {
 }
 
 export interface SpecParsePayload {
-  filePath: string;
+  /** Absolute path to a spec file or directory */
+  path: string;
 }
 
 export interface SpecResultPayload {
   specs: SpecDefinition[];
+}
+
+export interface McpCallPayload {
+  serverName: string;
+  toolName: string;
+  arguments: Record<string, unknown>;
 }
 
 // ---------------------------------------------------------------------------

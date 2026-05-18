@@ -1,243 +1,313 @@
-import { getEachMessage, sendMessage } from 'execa';
+import * as fs from 'fs';
 import { AgentRouter } from '../router/AgentRouter.js';
 import { parseSpecDirectory } from '../parsers/specParser.js';
 import { contextBuildCommand } from '../commands/contextBuild.js';
+import { loadAgentConfig } from '../config.js';
 import type {
-  IpcMessage,
+  IPCMessage,
   ChatSendPayload,
   ChatChunkPayload,
-  ChatErrorPayload,
   ContextBuildPayload,
   ContextResultPayload,
   SpecParsePayload,
   SpecResultPayload,
 } from '../types.js';
-import yaml from 'js-yaml';
-import * as fs from 'fs';
-import * as path from 'path';
+
+// ---------------------------------------------------------------------------
+// Frame writer
+// ---------------------------------------------------------------------------
 
 /**
- * IPC server — runs when the CLI is started with `--ipc` flag by the VSCode extension.
- * Listens for structured JSON messages from the extension host and responds
- * using execa's IPC channel (process.on('message') / process.send()).
+ * Write a single IPC message as a newline-delimited JSON frame to stdout.
+ * stdout is ONLY for JSON frames. All debug output must go to stderr.
+ */
+function writeFrame(msg: IPCMessage): void {
+  process.stdout.write(JSON.stringify(msg) + '\n');
+}
+
+/**
+ * Write an error response for a given request, using the envelope-level `error` field.
+ */
+function writeError(requestId: string, action: IPCMessage['action'], error: string): void {
+  writeFrame({ id: requestId, action, payload: null, error });
+}
+
+// ---------------------------------------------------------------------------
+// IPC server entry point
+// ---------------------------------------------------------------------------
+
+/**
+ * Start the newline-delimited JSON IPC server on stdin/stdout.
+ *
+ * Protocol:
+ *   - Extension writes `IPCMessage<T>` + `\n` to CLI stdin.
+ *   - CLI writes `IPCMessage<T>` + `\n` to stdout (responses or push events).
+ *   - CLI writes human-readable debug logs only to stderr.
  */
 export async function startIpcServer(): Promise<void> {
   const router = new AgentRouter();
 
-  // Signal readiness immediately after startup
-  process.stderr.write('[harness-cli] IPC server ready\n');
+  // Signal readiness via stderr (never stdout — would break the JSON parser)
+  process.stderr.write('[harness-cli] IPC daemon started — listening on stdin\n');
 
-  for await (const rawMessage of getEachMessage()) {
-    const msg = rawMessage as IpcMessage;
-    void handleMessage(msg, router);
-  }
+  let lineBuffer = '';
+
+  process.stdin.setEncoding('utf-8');
+  process.stdin.resume();
+
+  process.stdin.on('data', (chunk: string) => {
+    lineBuffer += chunk;
+    const lines = lineBuffer.split('\n');
+    lineBuffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        continue;
+      }
+      parseAndDispatch(trimmed, router);
+    }
+  });
+
+  process.stdin.on('end', () => {
+    process.stderr.write('[harness-cli] stdin closed — shutting down\n');
+    process.exit(0);
+  });
+
+  process.stdin.on('error', (err: Error) => {
+    process.stderr.write(`[harness-cli] stdin error: ${err.message}\n`);
+    process.exit(1);
+  });
+
+  // Keep the process alive
+  await new Promise<never>(() => { /* resolved by stdin end or fatal error */ });
 }
 
-async function handleMessage(msg: IpcMessage, router: AgentRouter): Promise<void> {
-  if (!msg?.id || !msg?.type) {
+// ---------------------------------------------------------------------------
+// Frame dispatcher
+// ---------------------------------------------------------------------------
+
+function parseAndDispatch(raw: string, router: AgentRouter): void {
+  let msg: IPCMessage;
+  try {
+    msg = JSON.parse(raw) as IPCMessage;
+  } catch {
+    process.stderr.write(`[harness-cli] Received non-JSON frame: ${raw.slice(0, 200)}\n`);
     return;
   }
 
-  switch (msg.type) {
+  if (!msg.id || !msg.action) {
+    process.stderr.write(`[harness-cli] Malformed frame (missing id/action)\n`);
+    return;
+  }
+
+  void dispatchMessage(msg, router).catch((err: Error) => {
+    process.stderr.write(`[harness-cli] Unhandled dispatch error for action=${msg.action}: ${err.message}\n`);
+    writeError(msg.id, msg.action, err.message);
+  });
+}
+
+async function dispatchMessage(msg: IPCMessage, router: AgentRouter): Promise<void> {
+  switch (msg.action) {
     case 'ping':
-      await respond({ id: msg.id, type: 'pong', payload: {} });
+      writeFrame({ id: msg.id, action: 'pong', payload: { ts: Date.now() } });
       break;
 
     case 'chat:send':
-      await handleChatSend(msg as IpcMessage<ChatSendPayload>, router);
+      await handleChatSend(msg as IPCMessage<ChatSendPayload>, router);
       break;
 
     case 'context:build':
-      await handleContextBuild(msg as IpcMessage<ContextBuildPayload>);
+      await handleContextBuild(msg as IPCMessage<ContextBuildPayload>);
       break;
 
     case 'spec:parse':
-      await handleSpecParse(msg as IpcMessage<SpecParsePayload>);
+      await handleSpecParse(msg as IPCMessage<SpecParsePayload>);
       break;
 
     case 'agent:list':
-      await respond({
+      writeFrame({
         id: msg.id,
-        type: 'agent:list:result',
-        payload: {
-          agents: ['copilot', 'devin', 'cursor', 'claude', 'kiro'],
-        },
+        action: 'agent:list:result',
+        payload: { agents: ['copilot', 'devin', 'cursor', 'claude', 'kiro'] },
       });
       break;
 
     default:
-      process.stderr.write(`[harness-cli] Unknown IPC message type: ${msg.type}\n`);
+      process.stderr.write(`[harness-cli] Unknown action: ${msg.action}\n`);
+      writeError(msg.id, msg.action as IPCMessage['action'], `Unknown action: ${msg.action}`);
   }
 }
 
+// ---------------------------------------------------------------------------
+// Handlers
+// ---------------------------------------------------------------------------
+
 async function handleChatSend(
-  msg: IpcMessage<ChatSendPayload>,
+  msg: IPCMessage<ChatSendPayload>,
   router: AgentRouter,
 ): Promise<void> {
-  const { sessionId, messages, context, agent, specsDir } = msg.payload;
+  const { sessionId, messages, contextPaths, agent, specsDir } = msg.payload;
   const agentConfig = loadAgentConfig(specsDir);
   const messageId = crypto.randomUUID();
 
+  // Read context files from absolute paths (CLI owns all file I/O)
+  const contextFiles = await readContextFiles(contextPaths);
+
+  // Append context as a system message so the router can inject it
+  const enrichedMessages = [...messages];
+  if (contextFiles.length > 0) {
+    const contextBlock = contextFiles
+      .map(({ path, content }) => `<file path="${path}">\n${content}\n</file>`)
+      .join('\n\n');
+
+    enrichedMessages.unshift({
+      id: crypto.randomUUID(),
+      role: 'system',
+      content: `The user has selected the following files as context:\n\n${contextBlock}`,
+      timestamp: Date.now(),
+    });
+  }
+
   await router.route({
     sessionId,
-    messages,
-    context,
+    messages: enrichedMessages,
+    context: contextPaths.map((p) => ({ absolutePath: p, kind: 'file', label: p })),
     agent,
     config: agentConfig,
     onChunk: (chunk) => {
-      void sendMessage({
+      const frame: IPCMessage<ChatChunkPayload> = {
         id: msg.id,
-        type: 'chat:chunk',
-        payload: {
-          sessionId,
-          messageId,
-          chunk,
-          done: false,
-        } satisfies ChatChunkPayload,
-      });
+        action: 'chat:chunk',
+        payload: { sessionId, messageId, chunk, done: false },
+      };
+      writeFrame(frame);
     },
     onDone: () => {
-      void sendMessage({
+      const frame: IPCMessage<ChatChunkPayload> = {
         id: msg.id,
-        type: 'chat:chunk',
-        payload: {
-          sessionId,
-          messageId,
-          chunk: '',
-          done: true,
-        } satisfies ChatChunkPayload,
-      });
+        action: 'chat:chunk',
+        payload: { sessionId, messageId, chunk: '', done: true },
+      };
+      writeFrame(frame);
     },
     onError: (error) => {
-      void sendMessage({
-        id: msg.id,
-        type: 'chat:error',
-        payload: {
-          sessionId,
-          messageId,
-          error,
-        } satisfies ChatErrorPayload,
-      });
+      writeError(msg.id, 'chat:error', error);
     },
   });
 }
 
-async function handleContextBuild(msg: IpcMessage<ContextBuildPayload>): Promise<void> {
-  const { directories, workspaceRoot } = msg.payload;
+async function handleContextBuild(msg: IPCMessage<ContextBuildPayload>): Promise<void> {
+  const { paths, workspaceRoot } = msg.payload;
   const savedCwd = process.cwd();
 
   try {
     process.chdir(workspaceRoot);
-    const result = await contextBuildCommand(directories, { output: 'json' });
-    await respond({
+    const result = await contextBuildCommand(paths, { output: 'json' });
+    const response: IPCMessage<ContextResultPayload> = {
       id: msg.id,
-      type: 'context:result',
-      payload: result satisfies ContextResultPayload,
-    });
+      action: 'context:result',
+      payload: result,
+    };
+    writeFrame(response);
   } catch (err) {
-    await respond({
-      id: msg.id,
-      type: 'chat:error',
-      payload: {
-        sessionId: '',
-        messageId: msg.id,
-        error: err instanceof Error ? err.message : String(err),
-      },
-    });
+    writeError(msg.id, 'context:result', err instanceof Error ? err.message : String(err));
   } finally {
     process.chdir(savedCwd);
   }
 }
 
-async function handleSpecParse(msg: IpcMessage<SpecParsePayload>): Promise<void> {
-  const { filePath } = msg.payload;
-
+async function handleSpecParse(msg: IPCMessage<SpecParsePayload>): Promise<void> {
   try {
-    const { specs, errors } = parseSpecDirectory(filePath);
+    const { specs, errors } = parseSpecDirectory(msg.payload.path);
 
     if (errors.length > 0) {
       process.stderr.write(
-        `[harness-cli] Spec parse warnings: ${errors.map((e) => e.message).join(', ')}\n`,
+        `[harness-cli] Spec parse warnings: ${errors.map((e) => e.message).join('; ')}\n`,
       );
     }
 
-    await respond({
+    const response: IPCMessage<SpecResultPayload> = {
       id: msg.id,
-      type: 'spec:result',
-      payload: { specs } satisfies SpecResultPayload,
-    });
+      action: 'spec:result',
+      payload: { specs },
+    };
+    writeFrame(response);
   } catch (err) {
-    await respond({
-      id: msg.id,
-      type: 'chat:error',
-      payload: {
-        sessionId: '',
-        messageId: msg.id,
-        error: err instanceof Error ? err.message : String(err),
-      },
-    });
+    writeError(msg.id, 'spec:result', err instanceof Error ? err.message : String(err));
   }
 }
 
-async function respond(msg: IpcMessage): Promise<void> {
-  await sendMessage(msg);
-}
-
 // ---------------------------------------------------------------------------
-// Config loading
+// File reader — CLI owns all file system I/O
 // ---------------------------------------------------------------------------
 
-interface HarnessConfig {
-  connectors?: {
-    copilot?: { token?: string; endpoint?: string };
-    devin?: { apiKey?: string; endpoint?: string };
-    cursor?: { apiKey?: string; endpoint?: string };
-    claude?: { path?: string; apiKey?: string };
-    kiro?: { apiKey?: string; endpoint?: string };
-  };
-}
+async function readContextFiles(
+  paths: string[],
+): Promise<Array<{ path: string; content: string }>> {
+  const results: Array<{ path: string; content: string }> = [];
 
-function loadAgentConfig(specsDir?: string) {
-  const configCandidates = [
-    specsDir ? path.join(specsDir, '..', 'config.yaml') : null,
-    path.join(process.env['HARNESS_WORKSPACE'] ?? process.cwd(), '.harness', 'config.yaml'),
-  ].filter(Boolean) as string[];
+  for (const absPath of paths) {
+    try {
+      const stat = fs.statSync(absPath);
 
-  let config: HarnessConfig = {};
-
-  for (const candidate of configCandidates) {
-    if (fs.existsSync(candidate)) {
-      try {
-        config = (yaml.load(fs.readFileSync(candidate, 'utf-8')) as HarnessConfig) ?? {};
-      } catch {
-        // Ignore malformed config
+      if (stat.isDirectory()) {
+        const files = collectTextFiles(absPath, 3);
+        for (const filePath of files.slice(0, 50)) {
+          try {
+            results.push({ path: filePath, content: fs.readFileSync(filePath, 'utf-8') });
+          } catch {
+            // Skip unreadable files
+          }
+        }
+      } else {
+        results.push({ path: absPath, content: fs.readFileSync(absPath, 'utf-8') });
       }
-      break;
+    } catch (err) {
+      process.stderr.write(`[harness-cli] Cannot read context path "${absPath}": ${(err as Error).message}\n`);
     }
   }
 
-  const c = config.connectors ?? {};
+  return results;
+}
 
-  return {
-    copilot: {
-      token: c.copilot?.token ?? process.env['GITHUB_TOKEN'] ?? process.env['COPILOT_TOKEN'] ?? '',
-      endpoint: c.copilot?.endpoint ?? 'https://api.githubcopilot.com',
-    },
-    devin: {
-      apiKey: c.devin?.apiKey ?? process.env['DEVIN_API_KEY'] ?? '',
-      endpoint: c.devin?.endpoint ?? 'https://api.devin.ai/v1',
-    },
-    cursor: {
-      apiKey: c.cursor?.apiKey ?? process.env['CURSOR_API_KEY'] ?? '',
-      endpoint: c.cursor?.endpoint ?? '',
-    },
-    claude: {
-      path: c.claude?.path ?? process.env['CLAUDE_PATH'] ?? 'claude',
-      apiKey: c.claude?.apiKey ?? process.env['ANTHROPIC_API_KEY'],
-    },
-    kiro: {
-      apiKey: c.kiro?.apiKey ?? process.env['KIRO_API_KEY'] ?? '',
-      endpoint: c.kiro?.endpoint ?? '',
-    },
-  };
+const TEXT_EXTENSIONS = new Set([
+  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+  '.py', '.go', '.rs', '.java', '.c', '.cpp', '.h', '.cs', '.rb',
+  '.md', '.mdx', '.txt', '.json', '.yaml', '.yml', '.toml', '.xml',
+  '.html', '.css', '.scss', '.sql', '.sh', '.bash',
+]);
+
+function collectTextFiles(dir: string, maxDepth: number, depth = 0): string[] {
+  if (depth >= maxDepth) {
+    return [];
+  }
+
+  const results: string[] = [];
+
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+
+  for (const entry of entries) {
+    if (entry.name.startsWith('.') || entry.name === 'node_modules' || entry.name === 'dist') {
+      continue;
+    }
+
+    const fullPath = `${dir}/${entry.name}`;
+
+    if (entry.isDirectory()) {
+      results.push(...collectTextFiles(fullPath, maxDepth, depth + 1));
+    } else if (entry.isFile()) {
+      const ext = entry.name.includes('.') ? `.${entry.name.split('.').pop() ?? ''}` : '';
+      if (TEXT_EXTENSIONS.has(ext.toLowerCase())) {
+        results.push(fullPath);
+      }
+    }
+  }
+
+  return results;
 }
