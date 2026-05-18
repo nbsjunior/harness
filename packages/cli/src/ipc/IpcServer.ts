@@ -1,3 +1,22 @@
+/**
+ * @module ipc/IpcServer
+ * CLI daemon entry when launched with `--ipc`.
+ *
+ * **Why this module exists:** The VS Code extension must not perform file I/O or HTTP;
+ * it spawns the CLI and exchanges newline-delimited JSON on stdin/stdout. This module
+ * is the only code path that should write JSON to stdout in daemon mode.
+ *
+ * **Responsibilities:**
+ * - Parse incoming frames and dispatch by `action`
+ * - Enrich `chat:send` with file context and (for spec+agent) spec YAML as system messages
+ * - Delegate agent work to `AgentRouter`
+ * - Stream `chat:chunk` push events until `done: true`
+ *
+ * **Invariants:** Never `console.log` to stdout. Never `process.exit(0)` on stdin `end` (Windows).
+ *
+ * @see docs/ipc-protocol.md
+ * @see docs/ai-reference.md
+ */
 import * as fs from 'fs';
 import { AgentRouter } from '../router/AgentRouter.js';
 import { parseSpecDirectory } from '../parsers/specParser.js';
@@ -5,7 +24,12 @@ import { contextBuildCommand } from '../commands/contextBuild.js';
 import { loadAgentConfig } from '../config.js';
 import { installAidlcRules } from '../aidlc/install.js';
 import { getAidlcStatus } from '../aidlc/status.js';
-import { installAidlcRules } from '../aidlc/install.js';
+import {
+  cancelChatSession,
+  clearChatSessionCancel,
+  isChatSessionCancelled,
+} from '../session/cancel.js';
+import { harnessLog } from '../log.js';
 import type {
   IPCMessage,
   ChatSendPayload,
@@ -121,6 +145,16 @@ async function dispatchMessage(msg: IPCMessage, router: AgentRouter): Promise<vo
       await handleChatSend(msg as IPCMessage<ChatSendPayload>, router);
       break;
 
+    case 'chat:cancel': {
+      const { sessionId } = (msg.payload ?? {}) as { sessionId?: string };
+      if (sessionId) {
+        cancelChatSession(sessionId);
+        harnessLog(`[ipc] chat:cancel sessionId=${sessionId}`);
+      }
+      writeFrame({ id: msg.id, action: 'chat:cancel', payload: { sessionId } });
+      break;
+    }
+
     case 'context:build':
       await handleContextBuild(msg as IPCMessage<ContextBuildPayload>);
       break;
@@ -204,33 +238,57 @@ async function handleChatSend(
     }
   }
 
-  await router.route({
-    sessionId,
-    messages: enrichedMessages,
-    context: contextPaths.map((p) => ({ absolutePath: p, kind: 'file', label: p })),
-    agent,
-    mode: mode ?? 'ask',
-    config: agentConfig,
-    onChunk: (chunk) => {
-      const frame: IPCMessage<ChatChunkPayload> = {
-        id: msg.id,
-        action: 'chat:chunk',
-        payload: { sessionId, messageId, chunk, done: false },
-      };
-      writeFrame(frame);
-    },
-    onDone: () => {
-      const frame: IPCMessage<ChatChunkPayload> = {
-        id: msg.id,
-        action: 'chat:chunk',
-        payload: { sessionId, messageId, chunk: '', done: true },
-      };
-      writeFrame(frame);
-    },
-    onError: (error) => {
-      writeError(msg.id, 'chat:error', error);
-    },
+  // Acknowledge immediately so the extension does not wait on the full agent run
+  writeFrame({
+    id: msg.id,
+    action: 'chat:send:ack',
+    payload: { sessionId, messageId },
   });
+
+  harnessLog(
+    `[ipc] chat:send agent=${agent} mode=${mode ?? 'ask'} context=${contextPaths.length} specs=${specPaths?.length ?? 0}`,
+  );
+
+  try {
+    await router.route({
+      sessionId,
+      messages: enrichedMessages,
+      context: contextPaths.map((p) => ({ absolutePath: p, kind: 'file', label: p })),
+      agent,
+      mode: mode ?? 'ask',
+      config: agentConfig,
+      onChunk: (chunk) => {
+        if (isChatSessionCancelled(sessionId)) {
+          return;
+        }
+        writeFrame({
+          id: msg.id,
+          action: 'chat:chunk',
+          payload: { sessionId, messageId, chunk, done: false },
+        });
+      },
+      onDone: () => {
+        clearChatSessionCancel(sessionId);
+        writeFrame({
+          id: msg.id,
+          action: 'chat:chunk',
+          payload: { sessionId, messageId, chunk: '', done: true },
+        });
+      },
+      onError: (error) => {
+        clearChatSessionCancel(sessionId);
+        writeFrame({
+          id: msg.id,
+          action: 'chat:error',
+          payload: { sessionId, error },
+          error,
+        });
+      },
+    });
+  } catch (err) {
+    clearChatSessionCancel(sessionId);
+    writeError(msg.id, 'chat:error', (err as Error).message);
+  }
 }
 
 async function handleContextBuild(msg: IPCMessage<ContextBuildPayload>): Promise<void> {

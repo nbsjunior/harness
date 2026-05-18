@@ -1,3 +1,10 @@
+/**
+ * @module connectors/ghToken
+ * Reads GitHub credentials from the installed `gh` CLI (no VS Code dependency).
+ *
+ * **Why:** Lets standalone CLI and `loadHarnessConfig()` obtain Copilot tokens without
+ * manual `GH_TOKEN` export when the user has run `gh auth login`.
+ */
 import { execFileSync } from 'child_process';
 
 /**

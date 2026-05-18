@@ -1,3 +1,15 @@
+/**
+ * @module providers/ChatViewProvider
+ * VS Code webview for the Harness chat sidebar.
+ *
+ * **Why:** UI runs in an isolated webview; this provider is the extension-host bridge:
+ * webview postMessage ↔ `AgentService` ↔ CLI IPC.
+ *
+ * **State:** conversation history, selected `AgentId`, selected `CopilotMode`.
+ * For `spec+agent`, resolves `.harness/specs/*.{yaml,yml,json}` paths before each send.
+ *
+ * @see webview/chat/main.ts — browser UI (mode bar, agent dropdown, streaming render)
+ */
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -15,6 +27,7 @@ import { AGENT_DESCRIPTORS as AGENTS } from '../types';
 import type { CliService } from '../services/CliService';
 import type { ContextProvider } from './ContextProvider';
 import { AgentService } from '../services/AgentService';
+import { traceLog } from '../trace';
 
 export class ChatViewProvider implements vscode.WebviewViewProvider {
   static readonly VIEW_ID = 'harness.chatView';
@@ -89,6 +102,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       this.selectedMode = mode;
     }
 
+    traceLog(this.output, 'ChatView', 'sendMessage', {
+      agent: this.selectedAgent,
+      mode: this.selectedMode,
+      textLength: text.length,
+    });
+
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -157,6 +176,13 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           payload: { messageId: assistantMessage.id, error },
         });
       },
+      onStopped: () => {
+        const msg = this.history.find((m) => m.id === assistantMessage.id);
+        if (msg) {
+          msg.streaming = false;
+        }
+        this.post({ command: 'streamStopped' });
+      },
     });
   }
 
@@ -216,6 +242,18 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       case 'openConfig':
         await vscode.commands.executeCommand('harness.openConfig');
         break;
+
+      case 'stopStream': {
+        traceLog(this.output, 'ChatView', 'stopStream', { sessionId: this.activeSessionId });
+        const streaming = this.history.find((m) => m.streaming);
+        this.agentService.cancelSession(this.activeSessionId, () => {
+          if (streaming) {
+            streaming.streaming = false;
+          }
+          this.post({ command: 'streamStopped' });
+        });
+        break;
+      }
 
       default:
         this.output.warn(`Unknown webview command: ${msg.command}`);

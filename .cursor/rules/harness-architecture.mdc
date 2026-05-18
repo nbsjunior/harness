@@ -1,0 +1,57 @@
+---
+description: Harness project architecture, conventions and key design decisions
+alwaysApply: true
+---
+
+# Harness — Architecture Overview
+
+> Before editing code, read `AGENTS.md`, then `docs/ai-reference.md` and `docs/code-map.md`.
+
+Harness is a **dual-mode meta-agent orchestrator**: it routes prompts to AI agents
+(Copilot, Devin, Cursor, Claude, Kiro) via a VS Code Extension OR standalone CLI.
+
+## Package Structure
+
+- `packages/cli/` — Node.js CLI daemon, ALL agent connectors, file I/O, IPC server
+- `packages/extension/` — VS Code Extension: UI webviews, IPC client, VS Code commands
+
+**Rule:** The extension host NEVER reads files or calls agent APIs directly.
+All I/O happens inside the CLI subprocess.
+
+## IPC Communication
+
+Extension spawns `node cli/dist/index.js --ipc` as subprocess.
+Protocol: newline-delimited JSON on stdin/stdout.
+
+```
+stdout = JSON frames ONLY  →  never console.log() in daemon code
+stderr = human logs        →  use harnessLog() / harnessWarn() from log.ts
+```
+
+Message shape: `{ id: uuid, action: IpcAction, payload: T, error?: string }`
+
+## Config Precedence (high → low)
+
+1. `gh auth token` (live — for Copilot only)
+2. VS Code Secrets
+3. Environment variables (GH_TOKEN, ANTHROPIC_API_KEY, …)
+4. HARNESS_SETTINGS_JSON (bridged from VS Code settings)
+5. `.harness/config.yaml`
+6. Defaults
+
+## Copilot Mode Selector
+
+Three modes in the chat UI:
+- `ask` — simple chat/completions, conversational
+- `agent` — tool-calling loop (read_file, write_file, list_files, search_in_files)
+- `spec+agent` — like agent but injects `.harness/specs/*.yaml` as `<spec>` system context
+
+## Adding a New Agent Checklist
+
+1. Add to `AgentId` union in BOTH `types.ts` files
+2. Add `AGENT_DESCRIPTORS` entry (extension types.ts)
+3. Add config interface in `cli/src/config.ts`
+4. Add readiness check in `router/agentReadiness.ts`
+5. Add `case 'newagent'` in `AgentRouter.ts`
+6. Add secret mapping in `extension/src/configBridge.ts`
+7. Add VS Code setting in `extension/package.json`

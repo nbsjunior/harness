@@ -1,7 +1,14 @@
 /**
- * Shared type definitions used across the extension and webview bundles.
- * Keep this file free of Node/VSCode-specific imports so it can be imported
- * from both the extension host and browser-based webview contexts.
+ * @module types
+ * Shared type definitions for the extension host and webview bundles.
+ *
+ * **Why a single types file:** Webviews compile separately (esbuild) but must share
+ * exact payload shapes with the host. Keep this file free of `vscode` imports.
+ *
+ * **CLI mirror:** `packages/cli/src/types.ts` duplicates IPC shapes — update both when
+ * changing `IpcAction` or `ChatSendPayload`.
+ *
+ * @see docs/code-map.md
  */
 
 // ---------------------------------------------------------------------------
@@ -146,6 +153,8 @@ export interface SpecDefinition {
 
 export type IpcAction =
   | 'chat:send'
+  | 'chat:send:ack'
+  | 'chat:cancel'
   | 'chat:chunk'
   | 'chat:done'
   | 'chat:error'

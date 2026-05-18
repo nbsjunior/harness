@@ -1,0 +1,63 @@
+---
+description: CLI coding conventions — IPC safety, logging, bundling
+globs: packages/cli/src/**/*.ts
+alwaysApply: false
+---
+
+# CLI Coding Conventions
+
+## stdout vs stderr — CRITICAL
+
+```typescript
+// ❌ BAD — breaks JSON IPC frames
+console.log('done');
+
+// ✅ GOOD — goes to stderr, safe in daemon mode
+import { harnessLog } from '../log.js';
+harnessLog('done');
+```
+
+`harnessLog()` routes to stderr when `HARNESS_IPC=1`, stdout otherwise.
+
+## IPC Frame Writing
+
+```typescript
+// Always use writeFrame() — never write to stdout directly
+writeFrame({ id: msg.id, action: 'chat:chunk', payload: { ... } });
+```
+
+## Error Handling in Connectors
+
+Connectors must call `onError(string)` and never throw to the router:
+
+```typescript
+// ❌ BAD
+throw new Error('API failed');
+
+// ✅ GOOD
+req.onError(`Copilot request failed: ${err.message}`);
+return;
+```
+
+## Import Paths
+
+All CLI imports use `.js` extension (ESM):
+
+```typescript
+import { loadHarnessConfig } from '../config.js';   // ✅
+import { loadHarnessConfig } from '../config';       // ❌
+```
+
+## Config Access
+
+Always use `loadHarnessConfig(specsDir?)` — never read env vars or files directly:
+
+```typescript
+const config = loadHarnessConfig(specsDir);
+const token = config.connectors.copilot.token;
+```
+
+## Copilot Auth
+
+`gho_` tokens need exchange via `getCopilotApiToken()` before calling `api.githubcopilot.com`.
+Fallback: use token directly when exchange returns 404 (Business/Enterprise accounts).

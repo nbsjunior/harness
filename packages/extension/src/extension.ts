@@ -10,7 +10,7 @@ import type { AgentId } from './types';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const outputChannel = vscode.window.createOutputChannel('Harness', { log: true });
-  outputChannel.info('Harness extension activating...');
+  outputChannel.info('Harness extension activating… (View → Output → Harness for full trace)');
 
   // -------------------------------------------------------------------------
   // Core services

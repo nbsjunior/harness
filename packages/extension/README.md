@@ -1,39 +1,33 @@
-# Harness — Meta-Agent Orchestrator
+# harness-vscode
 
-> One interface. Every AI agent.
+VS Code extension: chat sidebar, spec manager, configuration panel. Spawns the bundled CLI daemon for all agent I/O.
 
-Harness is a VSCode extension that centralizes your AI coding workflow by routing requests to **GitHub Copilot**, **Devin**, **Cursor AI**, **Claude Code**, and **AWS KIRO** through a single sidebar — using Spec-Driven Development (SDD) to guide agent behavior.
+## For AI assistants
 
-## Features
+Read in order: [../../AGENTS.md](../../AGENTS.md) → [../../docs/ai-reference.md](../../docs/ai-reference.md) → [../../docs/code-map.md](../../docs/code-map.md).
 
-- **Chat Sidebar** — conversational interface with streaming responses
-- **Context Selector** — right-click any file or folder → *Add to Harness Context*
-- **Spec Manager** — browse and create SDD specs (Skills, Tools, Workflows)
-- **Agent Menu** — switch agents mid-conversation with a Quick Pick
-- **MCP Support** — connect to any Model Context Protocol server
-- **Configuration Panel** — manage API keys, endpoints, and MCP servers
+## Architecture rule
 
-## Quick Start
+**The extension host never reads workspace file contents.** It passes absolute paths to the CLI via IPC; the CLI performs `fs.readFile` and HTTP.
 
-1. Press `Ctrl+Shift+P` → **Harness: Initialize Workspace**
-2. Configure at least one agent key in **Harness: Open Configuration**
-3. Click the Harness icon in the Activity Bar and start chatting
+## Key directories
 
-## Documentation
+| Path | Role |
+|------|------|
+| `src/extension.ts` | Activation, commands, service wiring |
+| `src/services/CliService.ts` | CLI subprocess + NDJSON IPC |
+| `src/services/AgentService.ts` | Chat streaming orchestration |
+| `src/providers/ChatViewProvider.ts` | Chat webview bridge |
+| `src/configBridge.ts` | Env + secrets for CLI child |
+| `src/webview/` | Browser bundles (esbuild) |
+| `cli/dist/` | Bundled CLI (generated — do not edit) |
 
-Full documentation at [github.com/nbsjunior/harness](https://github.com/nbsjunior/harness):
+## Build & package
 
-- [Getting Started](https://github.com/nbsjunior/harness/blob/main/docs/getting-started.md)
-- [Architecture](https://github.com/nbsjunior/harness/blob/main/docs/architecture.md)
-- [IPC Protocol](https://github.com/nbsjunior/harness/blob/main/docs/ipc-protocol.md)
-- [Spec-Driven Development](https://github.com/nbsjunior/harness/blob/main/docs/sdd-specs.md)
-- [Agent Connectors](https://github.com/nbsjunior/harness/blob/main/docs/agent-connectors.md)
+```bash
+npm run build
+node ../../scripts/bundle-cli.mjs
+npx @vscode/vsce package --no-dependencies
+```
 
-## Requirements
-
-- Node.js ≥ 20 (for the CLI daemon)
-- VSCode ≥ 1.85
-
-## License
-
-MIT © Nelson Borges
+Output: `harness-vscode-0.1.0.vsix`
