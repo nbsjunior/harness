@@ -61,18 +61,34 @@ const specWebviewConfig = {
   },
 };
 
+/** @type {esbuild.BuildOptions} */
+const configWebviewConfig = {
+  ...commonOptions,
+  entryPoints: ['src/webview/config/main.ts'],
+  platform: 'browser',
+  format: 'esm',
+  target: 'es2022',
+  outfile: 'dist/webview/config/main.js',
+  external: [],
+  define: {
+    'process.env.NODE_ENV': isProduction ? '"production"' : '"development"',
+  },
+};
+
 async function build() {
   if (isWatch) {
-    const [extCtx, chatCtx, specCtx] = await Promise.all([
+    const [extCtx, chatCtx, specCtx, configCtx] = await Promise.all([
       esbuild.context(extensionConfig),
       esbuild.context(chatWebviewConfig),
       esbuild.context(specWebviewConfig),
+      esbuild.context(configWebviewConfig),
     ]);
 
     await Promise.all([
       extCtx.watch(),
       chatCtx.watch(),
       specCtx.watch(),
+      configCtx.watch(),
     ]);
 
     console.log('[esbuild] Watching for changes...');
@@ -81,6 +97,7 @@ async function build() {
       esbuild.build(extensionConfig),
       esbuild.build(chatWebviewConfig),
       esbuild.build(specWebviewConfig),
+      esbuild.build(configWebviewConfig),
     ]);
 
     console.log('[esbuild] Build complete.');

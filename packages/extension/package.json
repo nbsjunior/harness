@@ -193,14 +193,22 @@
         },
         "harness.contextDirectories": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Directories to include in agent context by default.",
           "scope": "resource"
         },
         "harness.defaultAgent": {
           "type": "string",
-          "enum": ["copilot", "devin", "cursor", "claude", "kiro"],
+          "enum": [
+            "copilot",
+            "devin",
+            "cursor",
+            "claude",
+            "kiro"
+          ],
           "default": "copilot",
           "description": "Default agent to use when no agent is specified in a Spec.",
           "scope": "resource"
@@ -282,13 +290,33 @@
           "items": {
             "type": "object",
             "properties": {
-              "name": { "type": "string" },
-              "transport": { "type": "string", "enum": ["stdio", "http"] },
-              "command": { "type": "string" },
-              "args": { "type": "array", "items": { "type": "string" } },
-              "url": { "type": "string" }
+              "name": {
+                "type": "string"
+              },
+              "transport": {
+                "type": "string",
+                "enum": [
+                  "stdio",
+                  "http"
+                ]
+              },
+              "command": {
+                "type": "string"
+              },
+              "args": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "url": {
+                "type": "string"
+              }
             },
-            "required": ["name", "transport"]
+            "required": [
+              "name",
+              "transport"
+            ]
           },
           "default": [],
           "description": "List of MCP servers to connect to.",
@@ -312,19 +340,25 @@
             "id": "harness.gettingStarted.init",
             "title": "Initialize your workspace",
             "description": "Run **Harness: Initialize Workspace** to create the `.harness/` directory with example specs.\n[Initialize Workspace](command:harness.initWorkspace)",
-            "completionEvents": ["onCommand:harness.initWorkspace"]
+            "completionEvents": [
+              "onCommand:harness.initWorkspace"
+            ]
           },
           {
             "id": "harness.gettingStarted.configure",
             "title": "Configure agent connectors",
             "description": "Add your API keys in Harness settings.\n[Open Configuration](command:harness.openConfig)",
-            "completionEvents": ["onCommand:harness.openConfig"]
+            "completionEvents": [
+              "onCommand:harness.openConfig"
+            ]
           },
           {
             "id": "harness.gettingStarted.chat",
             "title": "Start chatting with your agent",
             "description": "Click the Harness icon in the Activity Bar and start a conversation.",
-            "completionEvents": ["onView:harness.chatView"]
+            "completionEvents": [
+              "onView:harness.chatView"
+            ]
           }
         ]
       }
@@ -341,9 +375,11 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.2",
+    "@types/marked": "^5.0.2",
     "@vscode/webview-ui-toolkit": "^1.4.0",
     "execa": "^9.5.2",
     "js-yaml": "^4.1.0",
+    "marked": "^18.0.3",
     "zod": "^3.24.4"
   },
   "devDependencies": {
