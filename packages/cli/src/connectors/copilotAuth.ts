@@ -40,6 +40,16 @@ function fetchCopilotToken(githubToken: string): Promise<CopilotToken> {
         res.on('data', (d: Buffer) => chunks.push(d));
         res.on('end', () => {
           const body = Buffer.concat(chunks).toString('utf-8');
+          if (res.statusCode === 404) {
+            reject(
+              new Error(
+                `Copilot token endpoint not found (HTTP 404). ` +
+                  `Your token likely lacks the "copilot" scope. ` +
+                  `Fix: run  gh auth refresh --scopes copilot  then reload VS Code.`,
+              ),
+            );
+            return;
+          }
           if (res.statusCode !== 200) {
             reject(
               new Error(
