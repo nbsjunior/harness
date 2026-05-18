@@ -88,7 +88,9 @@ your-project/
 
 2. Follow the wizard:
    - **Get started** → select **GitHub Copilot** → **Configure selected**
-   - Create a token at [github.com/settings/tokens](https://github.com/settings/tokens) with `copilot` / `models:read` scopes
+   - **Do not use classic PAT (`ghp_…`)** — the Copilot API rejects them.
+   - **Recommended:** in a terminal run `gh auth login`, then `gh auth token`, and paste that value (`gho_…`).
+   - **Alternative:** [Fine-grained PAT](https://github.com/settings/personal-access-tokens) with Copilot enabled (`github_pat_…`).
    - Paste the token → **Test connection** → **Save & Continue**
    - Set **Default agent** to `copilot` on the Workspace screen
    - Finish with **Open Chat**
@@ -209,7 +211,8 @@ In VSCode: send a chat message and confirm no **Harness CLI not found** in Outpu
 |---|---|
 | **Harness CLI not found** | Reinstall from a `.vsix` built with `npm run package:vsix`, or set `harness.cliPath` to `packages/cli/dist/index.js` |
 | **CLI ping timed out** | Check Node.js ≥ 20: `node --version` |
-| **HTTP 401 (Copilot)** | Regenerate token at GitHub settings; set `GITHUB_TOKEN` or use Configuration wizard |
+| **HTTP 400 — PATs not supported** | Use `gh auth token` (after `gh auth login`) or a fine-grained PAT (`github_pat_…`), not `ghp_…` |
+| **HTTP 401 (Copilot)** | Active Copilot subscription required; regenerate token via `gh auth login` |
 | Extension icon missing | Reload window; confirm extension is enabled under Extensions |
 
 ---

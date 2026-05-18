@@ -21,6 +21,16 @@ interface RunCommandResult {
 const REQUEST_TIMEOUT_MS = 30_000;
 const PING_TIMEOUT_MS = 5_000;
 
+/** SecretStorage keys → environment variables for the CLI subprocess. */
+const SECRET_ENV_MAP: Array<{ secretKey: string; envVar: string }> = [
+  { secretKey: 'harness.connectors.copilot.token', envVar: 'GH_TOKEN' },
+  { secretKey: 'harness.connectors.copilot.token', envVar: 'COPILOT_GITHUB_TOKEN' },
+  { secretKey: 'harness.connectors.claude.apiKey', envVar: 'ANTHROPIC_API_KEY' },
+  { secretKey: 'harness.connectors.devin.apiKey', envVar: 'DEVIN_API_KEY' },
+  { secretKey: 'harness.connectors.cursor.apiKey', envVar: 'CURSOR_API_KEY' },
+  { secretKey: 'harness.connectors.kiro.apiKey', envVar: 'KIRO_API_KEY' },
+];
+
 /**
  * Manages the lifecycle of the Harness CLI daemon subprocess and all
  * IPC communication with it.
@@ -60,13 +70,11 @@ export class CliService extends EventEmitter {
       const cliPath = this.resolveCliPath();
       this.output.info(`Starting Harness CLI daemon: ${cliPath}`);
 
+      const env = await this.buildCliEnv();
+
       this.subprocess = child_process.spawn('node', [cliPath, '--ipc'], {
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: {
-          ...process.env,
-          HARNESS_IPC: '1',
-          HARNESS_WORKSPACE: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '',
-        },
+        env,
       });
 
       // stdout → parse newline-delimited JSON frames
@@ -101,6 +109,21 @@ export class CliService extends EventEmitter {
     } finally {
       this.isStarting = false;
     }
+  }
+
+  /**
+   * Restart the CLI daemon (e.g. after saving a new API token in configuration).
+   */
+  async restart(): Promise<void> {
+    this.subprocess?.kill('SIGTERM');
+    this.subprocess = null;
+    for (const { reject, timeoutHandle } of this.pendingRequests.values()) {
+      clearTimeout(timeoutHandle);
+      reject(new Error('CLI daemon restarted'));
+    }
+    this.pendingRequests.clear();
+    this.lineBuffer = '';
+    await this.start();
   }
 
   dispose(): void {
@@ -312,6 +335,26 @@ export class CliService extends EventEmitter {
         );
       }
     }, delayMs);
+  }
+
+  private async buildCliEnv(): Promise<NodeJS.ProcessEnv> {
+    const env: NodeJS.ProcessEnv = {
+      ...process.env,
+      HARNESS_IPC: '1',
+      HARNESS_WORKSPACE: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '',
+    };
+
+    for (const { secretKey, envVar } of SECRET_ENV_MAP) {
+      if (env[envVar]) {
+        continue;
+      }
+      const value = await this.context.secrets.get(secretKey);
+      if (value) {
+        env[envVar] = value;
+      }
+    }
+
+    return env;
   }
 
   private resolveCliPath(): string {

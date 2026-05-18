@@ -1,0 +1,6 @@
+fix(copilot): use OAuth/fine-grained tokens and Copilot-Integration-Id header
+
+Classic PATs (ghp_) are rejected by api.githubcopilot.com with HTTP 400.
+Add copilotAuth validation, Copilot-Integration-Id: copilot-developer-cli on
+API calls, update wizard instructions to recommend `gh auth token`, inject
+secrets into CLI env (GH_TOKEN/COPILOT_GITHUB_TOKEN) and restart daemon on save.
