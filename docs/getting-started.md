@@ -1,6 +1,6 @@
 # Getting Started with Harness (Developer Setup)
 
-> **Looking to install Harness as a user?** See [user-guide.md](user-guide.md) for installing from the `.vsix` file and using the extension.
+> **Looking to install Harness as a user?** See **[starter-kit.md](starter-kit.md)** (recommended) or [user-guide.md](user-guide.md).
 
 This guide is for **contributors and developers** who want to clone the repository, run the extension in development mode, and contribute to the codebase.
 
@@ -27,19 +27,21 @@ npm install
 
 ---
 
-## Step 2 — Build the CLI
+## Step 2 — Build and bundle the CLI
 
-The extension communicates with the CLI daemon at runtime. Build it before pressing F5:
+The extension communicates with the CLI daemon at runtime. Build the CLI and copy it into the extension package (same layout as the shipped `.vsix`):
 
 ```bash
 npm run build:cli
+npm run bundle:cli
 ```
 
 You should see:
 ```
-ESM dist/index.js  ⚡️ Build success
-DTS dist/index.d.ts ⚡️ Build success
+[bundle-cli] Copied CLI → packages/extension/cli/dist/
 ```
+
+The bundled path `packages/extension/cli/dist/index.js` is what end users get inside the `.vsix`.
 
 ---
 
@@ -164,6 +166,24 @@ node dist/index.js spec:parse ../../.harness/specs/
 
 ---
 
+## Step 11 — Package for distribution
+
+From the monorepo root, produce a `.vsix` that includes the **bundled CLI**:
+
+```bash
+npm run package:vsix
+```
+
+Install locally:
+
+```bash
+code --install-extension packages/extension/harness-vscode-0.1.0.vsix
+```
+
+See [starter-kit.md](starter-kit.md) for the end-user update flow.
+
+---
+
 ## Troubleshooting
 
 ### "Harness CLI not found"
@@ -202,6 +222,7 @@ Open the **Harness** output channel (`View → Output → Harness`) and look for
 
 | What | Where |
 |---|---|
+| Starter kit (VSIX + Copilot + update flow) | [starter-kit.md](starter-kit.md) |
 | Use Harness as an end user (VSIX install) | [user-guide.md](user-guide.md) |
 | Write effective SDD specs | [sdd-specs.md](sdd-specs.md) |
 | Configure Devin, Cursor, Claude, and KIRO | [agent-connectors.md](agent-connectors.md) |

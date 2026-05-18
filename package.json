@@ -11,6 +11,8 @@
     "build": "npm run build --workspaces",
     "build:cli": "npm run build -w packages/cli",
     "build:extension": "npm run build -w packages/extension",
+    "bundle:cli": "node scripts/bundle-cli.mjs",
+    "package:vsix": "npm run build:cli && npm run bundle:cli && npm run build:prod -w packages/extension && npm run package -w packages/extension",
     "watch": "npm run watch --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",

@@ -55,6 +55,12 @@ Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instea
 
 ---
 
+## Starter Kit (recommended)
+
+**[→ docs/starter-kit.md](docs/starter-kit.md)** — install the `.vsix`, open the extension, configure **GitHub Copilot**, send your first message, and follow the **update flow**. The release `.vsix` includes the **compiled Harness CLI** (`cli/dist/index.js`) — no separate CLI install required.
+
+---
+
 ## Installation
 
 ### Option A — Install from VSIX (end users)
@@ -62,12 +68,15 @@ Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instea
 1. Download `harness-vscode-0.1.0.vsix` from the [**Releases**](https://github.com/nbsjunior/harness/releases) page.
 2. Open VSCode → `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
 3. Select the downloaded file and click **Reload**.
+4. Click the **Harness** icon in the Activity Bar → follow [starter-kit.md](docs/starter-kit.md).
 
 Or from the terminal:
 
 ```bash
 code --install-extension harness-vscode-0.1.0.vsix
 ```
+
+> The `.vsix` bundles the **Harness CLI** orchestrator (Copilot-first). Node.js 20+ must be on your `PATH`.
 
 > **[→ Full user guide: docs/user-guide.md](docs/user-guide.md)** — covers agent setup, chat, context, Spec Manager, CLI, and troubleshooting.
 
@@ -96,14 +105,17 @@ code packages/extension    # open only the extension folder
 # Press F5 → Extension Development Host opens
 ```
 
-**Package as .vsix**
+**Package as .vsix (extension + bundled CLI)**
 
 ```bash
-cd packages/extension
-npm run package            # → harness-vscode-*.vsix
+npm run package:vsix       # from monorepo root
+# → packages/extension/harness-vscode-0.1.0.vsix
 ```
 
-> For the full developer workflow see [docs/getting-started.md](docs/getting-started.md).
+This runs: `build:cli` → `bundle:cli` (copy into extension) → `build:prod` → `vsce package`.
+
+> For the full developer workflow see [docs/getting-started.md](docs/getting-started.md).  
+> For end-user onboarding see [docs/starter-kit.md](docs/starter-kit.md).
 
 ## Quick Setup (after install)
 
@@ -357,7 +369,8 @@ npm run clean
 
 | Document | Description |
 |---|---|
-| **[docs/user-guide.md](docs/user-guide.md)** | **Install, configure, and use Harness** — start here |
+| **[docs/starter-kit.md](docs/starter-kit.md)** | **Quick start** — VSIX, Copilot setup, bundled CLI, update flow |
+| **[docs/user-guide.md](docs/user-guide.md)** | Install, configure, and use Harness (full reference) |
 | [docs/getting-started.md](docs/getting-started.md) | Developer setup: clone, build, F5 hot-reload |
 | [docs/architecture.md](docs/architecture.md) | System design: extension ↔ CLI ↔ agents |
 | [docs/ipc-protocol.md](docs/ipc-protocol.md) | stdin/stdout newline-JSON protocol reference |

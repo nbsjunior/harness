@@ -12,6 +12,7 @@ packages/cli/dist/
 
 # Extension build output
 packages/extension/dist/
+packages/extension/cli/
 
 # VSCode
 .vscode-test/
