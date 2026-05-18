@@ -83,13 +83,14 @@ export class AgentRouter {
       return;
     }
 
-    // Exchange the GitHub OAuth/PAT token for a short-lived Copilot API token
-    let copilotToken: string;
+    // Try to get a short-lived Copilot API token via the internal exchange endpoint.
+    // If the token already has the `copilot` scope it can be used directly — the
+    // exchange endpoint returns 404 for accounts without an individual Copilot plan.
+    let copilotToken = cfg.token;
     try {
       copilotToken = await getCopilotApiToken(cfg.token);
-    } catch (err) {
-      req.onError(`Copilot auth failed: ${(err as Error).message}`);
-      return;
+    } catch {
+      // Fall through: use the OAuth/PAT token directly (works when it has `copilot` scope)
     }
 
     const url = new URL('/chat/completions', cfg.endpoint);
