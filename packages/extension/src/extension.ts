@@ -264,9 +264,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       if (choice.id === 'gh') {
         const terminal = vscode.window.createTerminal({ name: 'Harness: gh auth login' });
         terminal.show();
-        terminal.sendText('gh auth login --web');
+        // gh auth refresh adds the copilot scope to existing auth without re-login.
+        // Falls back to full login if not yet authenticated.
+        terminal.sendText('gh auth refresh --scopes copilot || gh auth login --web --scopes copilot');
         void vscode.window.showInformationMessage(
-          'Complete the GitHub login in the terminal, then run "Harness: Doctor" or reload VS Code window.',
+          'Complete the GitHub login in the terminal, then reload VS Code to apply the new token.',
           'Reload Window',
         ).then((action) => {
           if (action === 'Reload Window') {
