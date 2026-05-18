@@ -35,7 +35,8 @@ export class CliService extends EventEmitter {
   private subprocess: child_process.ChildProcess | null = null;
   private pendingRequests = new Map<string, PendingRequest>();
   private lineBuffer = '';
-  private isStarting = false;
+  /** Resolves when the daemon is fully started and ping-verified. */
+  private startingPromise: Promise<void> | null = null;
   private restartAttempts = 0;
   private readonly maxRestartAttempts = 5;
   private disposed = false;
@@ -51,13 +52,28 @@ export class CliService extends EventEmitter {
   // Lifecycle
   // ---------------------------------------------------------------------------
 
+  /**
+   * Start the CLI daemon. If a start is already in progress, returns the
+   * same promise so concurrent callers all wait for the same startup.
+   */
   async start(): Promise<void> {
-    if (this.subprocess || this.isStarting || this.disposed) {
-      return;
+    if (this.disposed) return;
+    if (this.subprocess) return;
+
+    // Return the in-flight startup promise so concurrent callers wait properly
+    if (this.startingPromise) {
+      return this.startingPromise;
     }
 
-    this.isStarting = true;
+    this.startingPromise = this.doStart();
+    try {
+      await this.startingPromise;
+    } finally {
+      this.startingPromise = null;
+    }
+  }
 
+  private async doStart(): Promise<void> {
     try {
       const cliPath = this.resolveCliPath();
       this.output.info(`Starting Harness CLI daemon: ${cliPath}`);
@@ -74,13 +90,11 @@ export class CliService extends EventEmitter {
         ...(cwd ? { cwd } : {}),
       });
 
-      // stdout → parse newline-delimited JSON frames
       this.subprocess.stdout!.on('data', (chunk: Buffer) => {
         this.lineBuffer += chunk.toString('utf-8');
         this.flushLineBuffer();
       });
 
-      // stderr → CLI logs (never parse as JSON)
       this.subprocess.stderr!.on('data', (chunk: Buffer) => {
         const text = chunk.toString('utf-8').trimEnd();
         if (text) {
@@ -98,7 +112,6 @@ export class CliService extends EventEmitter {
         this.handleProcessExit();
       });
 
-      // Handshake: confirm the CLI is alive and parsing frames correctly
       await this.ping();
       this.restartAttempts = 0;
       this.output.info('Harness CLI daemon ready.');
@@ -106,8 +119,6 @@ export class CliService extends EventEmitter {
       this.subprocess?.kill('SIGTERM');
       this.subprocess = null;
       throw err;
-    } finally {
-      this.isStarting = false;
     }
   }
 
@@ -117,6 +128,7 @@ export class CliService extends EventEmitter {
   async restart(): Promise<void> {
     this.subprocess?.kill('SIGTERM');
     this.subprocess = null;
+    this.startingPromise = null;
     for (const { reject, timeoutHandle } of this.pendingRequests.values()) {
       clearTimeout(timeoutHandle);
       reject(new Error('CLI daemon restarted'));
@@ -128,6 +140,7 @@ export class CliService extends EventEmitter {
 
   dispose(): void {
     this.disposed = true;
+    this.startingPromise = null;
     this.subprocess?.kill('SIGTERM');
     this.subprocess = null;
     for (const { reject, timeoutHandle } of this.pendingRequests.values()) {
@@ -330,6 +343,11 @@ export class CliService extends EventEmitter {
   }
 
   private async ensureStarted(): Promise<void> {
+    if (this.startingPromise) {
+      // Another caller already started the daemon — wait for it to finish
+      await this.startingPromise;
+      return;
+    }
     if (!this.subprocess) {
       await this.start();
     }
@@ -337,8 +355,8 @@ export class CliService extends EventEmitter {
 
   private handleProcessExit(): void {
     this.subprocess = null;
+    this.startingPromise = null;
 
-    // Reject all pending requests immediately
     for (const { reject, timeoutHandle } of this.pendingRequests.values()) {
       clearTimeout(timeoutHandle);
       reject(new Error('CLI daemon exited unexpectedly'));
