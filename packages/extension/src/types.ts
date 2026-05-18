@@ -220,7 +220,18 @@ export type WebviewCommand =
   | 'saveSpec'
   | 'deleteSpec'
   | 'openConfig'
-  | 'ready';
+  | 'ready'
+  // Chat streaming control
+  | 'stopStream'
+  // Configuration wizard
+  | 'saveSecret'
+  | 'testConnection'
+  | 'getSecretStatus'
+  | 'saveSetting'
+  | 'openChat'
+  | 'openSettingsJson'
+  | 'openExtensionSettings'
+  | 'initWorkspace';
 
 export interface WebviewMessage<T = unknown> {
   command: WebviewCommand;
@@ -240,7 +251,14 @@ export type ExtensionCommand =
   | 'specSaved'
   | 'agentChanged'
   | 'initialize'
-  | 'error';
+  | 'error'
+  // Token usage (for status bar display)
+  | 'tokenUsage'
+  | 'streamStopped'
+  // Configuration wizard responses
+  | 'configLoaded'
+  | 'connectionResult'
+  | 'secretStatus';
 
 export interface ExtensionMessage<T = unknown> {
   command: ExtensionCommand;
@@ -252,4 +270,25 @@ export interface InitializePayload {
   context: ContextItem[];
   history: ChatMessage[];
   agents: AgentDescriptor[];
+}
+
+export interface TokenUsagePayload {
+  sessionTokens: number;
+  dailyTokens: number;
+  budgetTokens: number;
+}
+
+export interface ConnectionResultPayload {
+  agent: AgentId;
+  ok: boolean;
+  error?: string;
+  model?: string;
+}
+
+export interface SecretStatusPayload {
+  copilot: boolean;
+  devin: boolean;
+  cursor: boolean;
+  claude: boolean;
+  kiro: boolean;
 }

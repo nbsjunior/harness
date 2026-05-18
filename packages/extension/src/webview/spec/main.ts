@@ -1,13 +1,4 @@
-import {
-  provideVSCodeDesignSystem,
-  vsCodeButton,
-  vsCodeTextField,
-  vsCodeTextArea,
-  vsCodeDropdown,
-  vsCodeOption,
-  vsCodeDivider,
-  vsCodeBadge,
-} from '@vscode/webview-ui-toolkit';
+import { marked } from 'marked';
 import type {
   AgentId,
   SpecDefinition,
@@ -17,15 +8,7 @@ import type {
   WebviewMessage,
 } from '../../types';
 
-provideVSCodeDesignSystem().register(
-  vsCodeButton(),
-  vsCodeTextField(),
-  vsCodeTextArea(),
-  vsCodeDropdown(),
-  vsCodeOption(),
-  vsCodeDivider(),
-  vsCodeBadge(),
-);
+marked.setOptions({ breaks: true, gfm: true });
 
 const vscode = acquireVsCodeApi();
 
@@ -33,191 +16,274 @@ const vscode = acquireVsCodeApi();
 // State
 // ---------------------------------------------------------------------------
 
+type FilterKind = 'All' | SpecKind;
+
 interface State {
   specs: SpecDefinition[];
   editingSpec: SpecDefinition | null;
   isNew: boolean;
+  filterKind: FilterKind;
+  expandedPath: string | null;
+  validationError: string | null;
 }
 
 const state: State = {
   specs: [],
   editingSpec: null,
   isNew: false,
+  filterKind: 'All',
+  expandedPath: null,
+  validationError: null,
+};
+
+const FILTER_KINDS: FilterKind[] = ['All', 'Skill', 'Tool', 'Workflow'];
+const AGENT_IDS: AgentId[] = ['copilot', 'devin', 'cursor', 'claude', 'kiro'];
+const SPEC_KINDS: SpecKind[] = ['Skill', 'Tool', 'Workflow'];
+
+const KIND_COLOR: Record<SpecKind, string> = {
+  Skill:    '#0ea5e9',
+  Tool:     '#7c3aed',
+  Workflow: '#d97706',
+};
+
+const STARTER_TEMPLATES: Record<SpecKind, Partial<SpecDefinition>> = {
+  Skill: {
+    kind: 'Skill',
+    name: 'my-skill',
+    description: 'Describe what this skill enables the agent to do.',
+    agents: { preferred: 'copilot' },
+  },
+  Tool: {
+    kind: 'Tool',
+    name: 'my-tool',
+    description: 'Describe the external tool this spec exposes.',
+    tools: [{ name: 'execute', description: 'Execute the tool with given parameters.' }],
+    agents: { preferred: 'copilot' },
+  },
+  Workflow: {
+    kind: 'Workflow',
+    name: 'my-workflow',
+    description: 'Describe the multi-step workflow this spec defines.',
+    agents: { preferred: 'copilot' },
+  },
 };
 
 // ---------------------------------------------------------------------------
-// Rendering
+// Root renderer
 // ---------------------------------------------------------------------------
 
 function render(): void {
   const root = document.getElementById('root')!;
-
+  root.innerHTML = '';
   if (state.editingSpec) {
-    root.innerHTML = buildEditorHtml(state.editingSpec);
-    bindEditorEvents();
+    root.appendChild(renderEditor(state.editingSpec));
   } else {
-    root.innerHTML = buildListHtml(state.specs);
-    bindListEvents();
+    root.appendChild(renderList());
   }
 }
 
-function buildListHtml(specs: SpecDefinition[]): string {
-  const items =
-    specs.length === 0
-      ? `<div class="empty-state">
-          <p>No specs found in <code>.harness/specs/</code>.</p>
-          <p>Initialize the workspace first or create a new spec.</p>
-        </div>`
-      : specs
-          .map(
-            (spec) => `
-          <div class="spec-item" data-path="${spec.filePath ?? ''}">
-            <div class="spec-item__header">
-              <vscode-badge>${spec.kind}</vscode-badge>
-              <span class="spec-item__name">${spec.name}</span>
-            </div>
-            <div class="spec-item__desc">${spec.description || '<em>No description</em>'}</div>
-            <div class="spec-item__actions">
-              <vscode-button appearance="secondary" data-action="edit" data-path="${spec.filePath ?? ''}">Edit</vscode-button>
-              <vscode-button appearance="secondary" data-action="delete" data-path="${spec.filePath ?? ''}">Delete</vscode-button>
-            </div>
-          </div>`,
-          )
-          .join('');
+// ---------------------------------------------------------------------------
+// List view
+// ---------------------------------------------------------------------------
 
-  return /* html */ `
+function renderList(): HTMLElement {
+  const el = document.createElement('div');
+  el.className = 'pane';
+
+  const filtered = state.filterKind === 'All'
+    ? state.specs
+    : state.specs.filter(s => s.kind === state.filterKind);
+
+  const filterTabs = FILTER_KINDS.map(k => {
+    const count = k === 'All' ? state.specs.length : state.specs.filter(s => s.kind === k).length;
+    return `<button class="filter-tab ${state.filterKind === k ? 'filter-tab--active' : ''}" data-kind="${k}">${k} <span class="filter-count">${count}</span></button>`;
+  }).join('');
+
+  const listHtml = filtered.length === 0
+    ? renderEmptyState()
+    : filtered.map(spec => renderSpecCard(spec)).join('');
+
+  el.innerHTML = /* html */`
     <div class="toolbar">
-      <span class="toolbar__title">Specs</span>
-      <vscode-button id="new-spec-btn" appearance="primary">+ New Spec</vscode-button>
+      <span class="toolbar__title">Spec Manager</span>
+      <button id="new-spec-btn" class="btn-primary">+ New</button>
     </div>
-    <vscode-divider></vscode-divider>
-    <div class="spec-list">${items}</div>`;
+    <div class="filter-bar">${filterTabs}</div>
+    <div class="spec-list">${listHtml}</div>`;
+
+  el.querySelector('#new-spec-btn')!.addEventListener('click', () => {
+    openEditor({ ...STARTER_TEMPLATES.Skill, tools: [], agents: { preferred: 'copilot' } } as SpecDefinition, true);
+  });
+
+  el.querySelectorAll('.filter-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.filterKind = (btn as HTMLElement).dataset['kind'] as FilterKind;
+      state.expandedPath = null;
+      render();
+    });
+  });
+
+  el.querySelectorAll('[data-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const path = (btn as HTMLElement).dataset['path'] ?? '';
+      const spec = state.specs.find(s => s.filePath === path);
+      if (spec) openEditor({ ...spec }, false);
+    });
+  });
+
+  el.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const path = (btn as HTMLElement).dataset['path'] ?? '';
+      postMessage({ command: 'deleteSpec', payload: { filePath: path } });
+    });
+  });
+
+  el.querySelectorAll('.spec-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const path = (card as HTMLElement).dataset['path'] ?? '';
+      state.expandedPath = state.expandedPath === path ? null : path;
+      render();
+    });
+  });
+
+  return el;
 }
 
-function buildEditorHtml(spec: SpecDefinition): string {
-  const toolsHtml = (spec.tools ?? [])
-    .map(
-      (t, i) => `
-      <div class="tool-row" data-index="${i}">
-        <vscode-text-field class="tool-name" value="${t.name}" placeholder="Tool name"></vscode-text-field>
-        <vscode-text-field class="tool-desc" value="${t.description}" placeholder="Description"></vscode-text-field>
-        <vscode-button appearance="icon" class="tool-remove" data-index="${i}" title="Remove tool">×</vscode-button>
-      </div>`,
-    )
-    .join('');
+function renderEmptyState(): string {
+  if (state.specs.length === 0) {
+    return /* html */`
+      <div class="empty-state">
+        <div class="empty-icon">&#9741;</div>
+        <p class="empty-title">No specs yet</p>
+        <p class="empty-sub">Create your first spec to guide agent behavior with reusable Skills, Tools and Workflows.</p>
+        <div class="empty-actions">
+          ${SPEC_KINDS.map(k => `
+            <button class="btn-new-kind" data-kind="${k}" style="border-left-color:${KIND_COLOR[k]};">
+              <span class="kind-dot" style="background:${KIND_COLOR[k]};"></span>${k}
+            </button>`).join('')}
+        </div>
+      </div>`;
+  }
+  return `<div class="empty-state"><p class="empty-sub">No ${state.filterKind} specs found.</p></div>`;
+}
 
-  const agentOptions: AgentId[] = ['copilot', 'devin', 'cursor', 'claude', 'kiro'];
-  const kindOptions: SpecKind[] = ['Skill', 'Tool', 'Workflow'];
+function renderSpecCard(spec: SpecDefinition): string {
+  const expanded = state.expandedPath === spec.filePath;
+  const color = KIND_COLOR[spec.kind] ?? '#888';
+  const preview = expanded && spec.description
+    ? `<div class="spec-preview markdown-body">${marked.parse(spec.description) as string}</div>`
+    : '';
 
-  return /* html */ `
-    <div class="editor">
-      <div class="editor__header">
-        <vscode-button appearance="icon" id="back-btn" title="Back to list">←</vscode-button>
-        <span class="editor__title">${state.isNew ? 'New Spec' : `Edit: ${spec.name}`}</span>
-      </div>
-      <vscode-divider></vscode-divider>
-
-      <div class="editor__form">
-        <label>Kind
-          <vscode-dropdown id="spec-kind">
-            ${kindOptions.map((k) => `<vscode-option value="${k}" ${spec.kind === k ? 'selected' : ''}>${k}</vscode-option>`).join('')}
-          </vscode-dropdown>
-        </label>
-
-        <label>Name
-          <vscode-text-field id="spec-name" value="${spec.name}" placeholder="e.g. code-review"></vscode-text-field>
-        </label>
-
-        <label>Description
-          <vscode-text-area id="spec-desc" rows="3" placeholder="What does this spec do?">${spec.description}</vscode-text-area>
-        </label>
-
-        <vscode-divider></vscode-divider>
-        <div class="section-label">Tools</div>
-        <div id="tools-list">${toolsHtml}</div>
-        <vscode-button appearance="secondary" id="add-tool-btn">+ Add Tool</vscode-button>
-
-        <vscode-divider></vscode-divider>
-        <div class="section-label">Agent Routing</div>
-        <label>Preferred Agent
-          <vscode-dropdown id="spec-preferred-agent">
-            ${agentOptions.map((a) => `<vscode-option value="${a}" ${spec.agents?.preferred === a ? 'selected' : ''}>${a}</vscode-option>`).join('')}
-          </vscode-dropdown>
-        </label>
-        <label>Fallback Agent
-          <vscode-dropdown id="spec-fallback-agent">
-            <vscode-option value="">None</vscode-option>
-            ${agentOptions.map((a) => `<vscode-option value="${a}" ${spec.agents?.fallback === a ? 'selected' : ''}>${a}</vscode-option>`).join('')}
-          </vscode-dropdown>
-        </label>
-
-        <vscode-divider></vscode-divider>
-        <div class="editor__actions">
-          <vscode-button id="save-spec-btn" appearance="primary">Save Spec</vscode-button>
-          <vscode-button id="cancel-edit-btn" appearance="secondary">Cancel</vscode-button>
+  return /* html */`
+    <div class="spec-card ${expanded ? 'spec-card--expanded' : ''}" data-path="${spec.filePath ?? ''}">
+      <div class="spec-card__header">
+        <span class="kind-badge" style="background:${color};">${spec.kind}</span>
+        <span class="spec-card__name">${spec.name}</span>
+        <div class="spec-card__actions">
+          <button class="icon-btn" data-action="edit" data-path="${spec.filePath ?? ''}" title="Edit">&#9998;</button>
+          <button class="icon-btn icon-btn--danger" data-action="delete" data-path="${spec.filePath ?? ''}" title="Delete">&#128465;</button>
+          <span class="spec-card__chevron">${expanded ? '&#9650;' : '&#9660;'}</span>
         </div>
       </div>
+      ${spec.description && !expanded
+        ? `<div class="spec-card__desc">${spec.description.slice(0, 100)}${spec.description.length > 100 ? '…' : ''}</div>`
+        : ''}
+      ${preview}
+      ${expanded && spec.agents
+        ? `<div class="spec-card__footer">Agent: <strong>${spec.agents.preferred}</strong>${spec.agents.fallback ? ` / fallback: ${spec.agents.fallback}` : ''}</div>`
+        : ''}
     </div>`;
 }
 
 // ---------------------------------------------------------------------------
-// Event binding
+// Editor view
 // ---------------------------------------------------------------------------
 
-function bindListEvents(): void {
-  document.getElementById('new-spec-btn')?.addEventListener('click', () => {
-    state.editingSpec = {
-      kind: 'Skill',
-      name: '',
-      description: '',
-      tools: [],
-      agents: { preferred: 'copilot' },
-    };
-    state.isNew = true;
-    render();
-  });
-
-  document.querySelectorAll('[data-action="edit"]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const filePath = (btn as HTMLElement).dataset['path'] ?? '';
-      const spec = state.specs.find((s) => s.filePath === filePath);
-      if (spec) {
-        state.editingSpec = { ...spec };
-        state.isNew = false;
-        render();
-      }
-    });
-  });
-
-  document.querySelectorAll('[data-action="delete"]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const filePath = (btn as HTMLElement).dataset['path'] ?? '';
-      postMessage({ command: 'deleteSpec', payload: { filePath } });
-    });
-  });
+function openEditor(spec: SpecDefinition, isNew: boolean): void {
+  state.editingSpec = spec;
+  state.isNew = isNew;
+  state.validationError = null;
+  render();
 }
 
-function bindEditorEvents(): void {
-  document.getElementById('back-btn')?.addEventListener('click', () => {
-    state.editingSpec = null;
+function renderEditor(spec: SpecDefinition): HTMLElement {
+  const el = document.createElement('div');
+  el.className = 'pane';
+
+  const toolsHtml = (spec.tools ?? []).map((t, i) => `
+    <div class="tool-row" data-index="${i}">
+      <input class="text-input tool-name" value="${escapeAttr(t.name)}" placeholder="Tool name" />
+      <input class="text-input tool-desc" value="${escapeAttr(t.description)}" placeholder="Description" style="flex:2;" />
+      <button class="icon-btn icon-btn--danger tool-remove" data-index="${i}" title="Remove">&#10005;</button>
+    </div>`).join('');
+
+  el.innerHTML = /* html */`
+    <div class="editor-header">
+      <button id="back-btn" class="icon-btn" title="Back">&#8592;</button>
+      <span class="editor-title">${state.isNew ? 'New Spec' : `Edit: ${spec.name}`}</span>
+    </div>
+
+    <div class="editor-form">
+      <div class="form-row">
+        <div class="form-group" style="flex:0 0 140px;">
+          <label class="form-label">Kind</label>
+          <select id="spec-kind" class="select-input">
+            ${SPEC_KINDS.map(k => `<option value="${k}" ${spec.kind === k ? 'selected' : ''}>${k}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label class="form-label">Name</label>
+          <input type="text" id="spec-name" class="text-input ${state.validationError ? 'input--error' : ''}"
+            value="${escapeAttr(spec.name)}" placeholder="e.g. code-review" autocomplete="off" />
+          ${state.validationError ? `<div class="validation-error">${state.validationError}</div>` : ''}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea id="spec-desc" class="text-input" rows="4" placeholder="What does this spec do? Supports Markdown.">${escapeAttr(spec.description)}</textarea>
+      </div>
+
+      <div class="form-group">
+        <div class="section-label">Tools</div>
+        <div id="tools-list" class="tools-list">${toolsHtml}</div>
+        <button id="add-tool-btn" class="btn-secondary btn-sm">+ Add tool</button>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label class="form-label">Preferred agent</label>
+          <select id="spec-preferred-agent" class="select-input">
+            ${AGENT_IDS.map(a => `<option value="${a}" ${spec.agents?.preferred === a ? 'selected' : ''}>${a}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label class="form-label">Fallback agent</label>
+          <select id="spec-fallback-agent" class="select-input">
+            <option value="">None</option>
+            ${AGENT_IDS.map(a => `<option value="${a}" ${spec.agents?.fallback === a ? 'selected' : ''}>${a}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-footer">
+      <button id="cancel-edit-btn" class="btn-ghost">Cancel</button>
+      <button id="save-spec-btn" class="btn-primary">Save Spec</button>
+    </div>`;
+
+  el.querySelector('#back-btn')!.addEventListener('click', () => { state.editingSpec = null; render(); });
+  el.querySelector('#cancel-edit-btn')!.addEventListener('click', () => { state.editingSpec = null; render(); });
+
+  el.querySelector('#add-tool-btn')!.addEventListener('click', () => {
+    state.editingSpec!.tools = state.editingSpec!.tools ?? [];
+    state.editingSpec!.tools.push({ name: '', description: '' });
     render();
   });
 
-  document.getElementById('cancel-edit-btn')?.addEventListener('click', () => {
-    state.editingSpec = null;
-    render();
-  });
-
-  document.getElementById('add-tool-btn')?.addEventListener('click', () => {
-    if (!state.editingSpec) {
-      return;
-    }
-    state.editingSpec.tools = state.editingSpec.tools ?? [];
-    state.editingSpec.tools.push({ name: '', description: '' });
-    render();
-  });
-
-  document.querySelectorAll('.tool-remove').forEach((btn) => {
+  el.querySelectorAll('.tool-remove').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx = parseInt((btn as HTMLElement).dataset['index'] ?? '0', 10);
       state.editingSpec!.tools?.splice(idx, 1);
@@ -225,28 +291,39 @@ function bindEditorEvents(): void {
     });
   });
 
-  document.getElementById('save-spec-btn')?.addEventListener('click', () => {
-    if (!state.editingSpec) {
+  const nameInput = el.querySelector('#spec-name') as HTMLInputElement;
+  nameInput.addEventListener('input', () => {
+    if (state.validationError && nameInput.value.trim()) {
+      state.validationError = null;
+      nameInput.classList.remove('input--error');
+      const errEl = el.querySelector('.validation-error');
+      if (errEl) errEl.remove();
+    }
+  });
+
+  const saveBtn = el.querySelector('#save-spec-btn') as HTMLButtonElement;
+  saveBtn.addEventListener('click', () => {
+    const kind = (el.querySelector('#spec-kind') as HTMLSelectElement).value as SpecKind;
+    const name = (el.querySelector('#spec-name') as HTMLInputElement).value.trim();
+    const description = (el.querySelector('#spec-desc') as HTMLTextAreaElement).value.trim();
+    const preferredAgent = (el.querySelector('#spec-preferred-agent') as HTMLSelectElement).value as AgentId;
+    const fallbackAgent = (el.querySelector('#spec-fallback-agent') as HTMLSelectElement).value as AgentId | '';
+
+    if (!name) {
+      state.validationError = 'Name is required.';
+      render();
       return;
     }
 
-    const kind = (document.getElementById('spec-kind') as HTMLSelectElement).value as SpecKind;
-    const name = (document.getElementById('spec-name') as HTMLInputElement).value.trim();
-    const description = (document.getElementById('spec-desc') as HTMLTextAreaElement).value.trim();
-    const preferredAgent = (document.getElementById('spec-preferred-agent') as HTMLSelectElement).value as AgentId;
-    const fallbackAgent = (document.getElementById('spec-fallback-agent') as HTMLSelectElement).value as AgentId | '';
-
     const tools: SpecTool[] = [];
-    document.querySelectorAll('.tool-row').forEach((row) => {
+    el.querySelectorAll('.tool-row').forEach(row => {
       const toolName = (row.querySelector('.tool-name') as HTMLInputElement).value.trim();
       const toolDesc = (row.querySelector('.tool-desc') as HTMLInputElement).value.trim();
-      if (toolName) {
-        tools.push({ name: toolName, description: toolDesc });
-      }
+      if (toolName) tools.push({ name: toolName, description: toolDesc });
     });
 
-    const spec: SpecDefinition = {
-      ...state.editingSpec,
+    const finalSpec: SpecDefinition = {
+      ...state.editingSpec!,
       kind,
       name,
       description,
@@ -257,10 +334,12 @@ function bindEditorEvents(): void {
       },
     };
 
-    postMessage({ command: 'saveSpec', payload: spec });
+    postMessage({ command: 'saveSpec', payload: finalSpec });
     state.editingSpec = null;
     render();
   });
+
+  return el;
 }
 
 // ---------------------------------------------------------------------------
@@ -273,23 +352,13 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
   switch (msg.command) {
     case 'specsLoaded':
       state.specs = msg.payload as SpecDefinition[];
-      if (!state.editingSpec) {
-        render();
-      }
+      if (!state.editingSpec) render();
       break;
 
     case 'specSaved': {
       const payload = msg.payload as { action: string };
       if (payload.action === 'new') {
-        state.editingSpec = {
-          kind: 'Skill',
-          name: '',
-          description: '',
-          tools: [],
-          agents: { preferred: 'copilot' },
-        };
-        state.isNew = true;
-        render();
+        openEditor({ ...STARTER_TEMPLATES.Skill, tools: [], agents: { preferred: 'copilot' } } as SpecDefinition, true);
       }
       break;
     }
@@ -300,73 +369,342 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Utilities
+// ---------------------------------------------------------------------------
+
 function postMessage(msg: WebviewMessage): void {
   vscode.postMessage(msg);
 }
 
-// Inject styles
-const style = document.createElement('style');
-style.textContent = /* css */ `
-  * { box-sizing: border-box; }
-  body {
-    font-family: var(--vscode-font-family);
-    font-size: var(--vscode-font-size);
-    color: var(--vscode-foreground);
-    background: var(--vscode-sideBar-background);
-    margin: 0; padding: 0;
-  }
-  #root { padding: 0; }
+function escapeAttr(s: string): string {
+  return (s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#039;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
-  .toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-  }
-  .toolbar__title {
-    font-weight: 600;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--vscode-sideBarSectionHeader-foreground);
-  }
+// ---------------------------------------------------------------------------
+// CSS
+// ---------------------------------------------------------------------------
 
-  .spec-list { padding: 8px 12px; display: flex; flex-direction: column; gap: 8px; }
-  .spec-item {
-    border: 1px solid var(--vscode-widget-border);
-    border-radius: 4px;
-    padding: 8px;
-    background: var(--vscode-editor-inactiveSelectionBackground);
-  }
-  .spec-item__header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-  .spec-item__name { font-weight: 600; }
-  .spec-item__desc { font-size: 11px; color: var(--vscode-descriptionForeground); margin-bottom: 6px; }
-  .spec-item__actions { display: flex; gap: 4px; }
+const CSS = /* css */`
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  .empty-state { padding: 24px; text-align: center; color: var(--vscode-descriptionForeground); }
-  .empty-state code { font-family: var(--vscode-editor-font-family); }
+body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+  background: var(--vscode-sideBar-background);
+}
 
-  .editor { padding: 0; }
-  .editor__header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; }
-  .editor__title { font-weight: 600; }
-  .editor__form { padding: 8px 12px; display: flex; flex-direction: column; gap: 10px; }
-  .editor__actions { display: flex; gap: 8px; }
+#root { height: 100%; }
+.pane { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-  label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
+/* ── Toolbar ─────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
+  flex-shrink: 0;
+}
+.toolbar__title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--vscode-sideBarSectionHeader-foreground);
+}
 
-  .section-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--vscode-descriptionForeground);
-    font-weight: 600;
-  }
+/* ── Filter tabs ─────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  gap: 2px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.filter-tab {
+  background: none;
+  border: none;
+  color: var(--vscode-foreground);
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  cursor: pointer;
+  opacity: 0.6;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.filter-tab:hover { opacity: 1; background: var(--vscode-toolbar-hoverBackground); }
+.filter-tab--active {
+  opacity: 1;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+.filter-count {
+  background: rgba(128,128,128,0.25);
+  border-radius: 8px;
+  padding: 0 5px;
+  font-size: 10px;
+}
+.filter-tab--active .filter-count { background: rgba(255,255,255,0.2); }
 
-  .tool-row { display: flex; gap: 4px; align-items: center; }
-  .tool-name { flex: 1; }
-  .tool-desc { flex: 2; }
+/* ── Spec list ───────────────────────────────────────── */
+.spec-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Empty state ─────────────────────────────────────── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px;
+  text-align: center;
+  gap: 8px;
+  color: var(--vscode-descriptionForeground);
+}
+.empty-icon { font-size: 32px; opacity: 0.3; }
+.empty-title { font-size: 14px; font-weight: 600; color: var(--vscode-foreground); }
+.empty-sub { font-size: 12px; max-width: 240px; line-height: 1.5; }
+.empty-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; width: 100%; max-width: 200px; }
+.btn-new-kind {
+  background: var(--vscode-editor-inactiveSelectionBackground);
+  color: var(--vscode-foreground);
+  border: none;
+  border-left: 3px solid transparent;
+  border-radius: 5px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-family: var(--vscode-font-family);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-new-kind:hover { background: var(--vscode-list-hoverBackground); }
+.kind-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── Spec card ───────────────────────────────────────── */
+.spec-card {
+  border: 1px solid var(--vscode-widget-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--vscode-editor-inactiveSelectionBackground);
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+.spec-card:hover { border-color: var(--vscode-focusBorder); }
+.spec-card--expanded { border-color: var(--vscode-focusBorder); }
+
+.spec-card__header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.kind-badge {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.spec-card__name { font-weight: 600; font-size: 12px; flex: 1; }
+.spec-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.spec-card:hover .spec-card__actions { opacity: 1; }
+.spec-card__chevron { font-size: 9px; color: var(--vscode-descriptionForeground); margin-left: 4px; }
+
+.spec-card__desc {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 4px;
+}
+.spec-card__footer {
+  font-size: 10px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--vscode-widget-border);
+}
+
+.spec-preview {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--vscode-widget-border);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--vscode-foreground);
+}
+
+/* Markdown in preview */
+.markdown-body p { margin: 0 0 6px; }
+.markdown-body p:last-child { margin-bottom: 0; }
+.markdown-body ul, .markdown-body ol { padding-left: 18px; margin: 4px 0; }
+.markdown-body code {
+  background: var(--vscode-textCodeBlock-background);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.9em;
+}
+
+/* ── Editor ──────────────────────────────────────────── */
+.editor-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
+  flex-shrink: 0;
+}
+.editor-title { font-weight: 600; font-size: 13px; }
+
+.editor-form {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--vscode-sideBarSectionHeader-border);
+  flex-shrink: 0;
+}
+
+.form-row { display: flex; gap: 10px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-label { font-size: 11px; font-weight: 600; }
+.section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--vscode-descriptionForeground);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.text-input {
+  width: 100%;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, var(--vscode-widget-border));
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: var(--vscode-font-size);
+  font-family: var(--vscode-font-family);
+  resize: vertical;
+}
+.text-input:focus { outline: 1px solid var(--vscode-focusBorder); border-color: var(--vscode-focusBorder); }
+.input--error { border-color: var(--vscode-inputValidation-errorBorder) !important; }
+.validation-error {
+  font-size: 11px;
+  color: var(--vscode-errorForeground);
+  margin-top: 2px;
+}
+
+.select-input {
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+  border: 1px solid var(--vscode-dropdown-border);
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: var(--vscode-font-size);
+  font-family: var(--vscode-font-family);
+  width: 100%;
+}
+
+.tools-list { display: flex; flex-direction: column; gap: 4px; }
+.tool-row { display: flex; gap: 6px; align-items: center; }
+.tool-name { flex: 1; }
+
+/* ── Buttons ─────────────────────────────────────────── */
+.btn-primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  border-radius: 4px;
+  padding: 5px 14px;
+  font-size: var(--vscode-font-size);
+  font-family: var(--vscode-font-family);
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-primary:hover { background: var(--vscode-button-hoverBackground); }
+
+.btn-secondary {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: var(--vscode-font-size);
+  font-family: var(--vscode-font-family);
+  cursor: pointer;
+}
+.btn-secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
+.btn-sm { padding: 3px 10px; font-size: 11px; }
+
+.btn-ghost {
+  background: none;
+  border: none;
+  color: var(--vscode-foreground);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: var(--vscode-font-size);
+  font-family: var(--vscode-font-family);
+  cursor: pointer;
+  opacity: 0.7;
+}
+.btn-ghost:hover { opacity: 1; background: var(--vscode-toolbar-hoverBackground); }
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  padding: 3px 5px;
+  border-radius: 3px;
+  font-size: 13px;
+  opacity: 0.6;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.icon-btn:hover { opacity: 1; background: var(--vscode-toolbar-hoverBackground); }
+.icon-btn--danger:hover { color: var(--vscode-errorForeground); }
 `;
-document.head.appendChild(style);
 
-document.getElementById('root')!.innerHTML = `<div class="toolbar"><span class="toolbar__title">Loading…</span></div>`;
+// ---------------------------------------------------------------------------
+// Bootstrap
+// ---------------------------------------------------------------------------
+
+const styleEl = document.createElement('style');
+styleEl.textContent = CSS;
+document.head.appendChild(styleEl);
+
+document.getElementById('root')!.innerHTML = `<div class="pane"><div class="toolbar"><span class="toolbar__title">Loading…</span></div></div>`;
 postMessage({ command: 'ready' });
