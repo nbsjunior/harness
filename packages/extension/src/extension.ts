@@ -222,12 +222,91 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       channel.appendLine(result.stderr || result.stdout || 'Doctor completed.');
       channel.show();
       if (!result.success) {
-        void vscode.window.showWarningMessage(
+        const action = await vscode.window.showWarningMessage(
           'Harness doctor: no agents ready. See Output → Harness Doctor.',
+          'Login GitHub Copilot',
         );
+        if (action === 'Login GitHub Copilot') {
+          await vscode.commands.executeCommand('harness.copilotLogin');
+        }
       } else {
         void vscode.window.showInformationMessage('Harness doctor: at least one agent is ready.');
       }
+    }),
+
+    // Login GitHub Copilot via gh auth login (terminal) or token input box
+    vscode.commands.registerCommand('harness.copilotLogin', async () => {
+      const choice = await vscode.window.showQuickPick(
+        [
+          {
+            label: '$(terminal) Use GitHub CLI (gh auth login)',
+            description: 'Opens a terminal. Run `gh auth login`, then reload VS Code.',
+            detail: 'Recommended — no token to copy/paste',
+            id: 'gh',
+          },
+          {
+            label: '$(key) Paste token manually',
+            description: 'Enter a GitHub OAuth token (gho_… or github_pat_…)',
+            detail: 'Use this when `gh` CLI is not installed',
+            id: 'paste',
+          },
+        ],
+        {
+          title: 'GitHub Copilot — Authentication',
+          placeHolder: 'How would you like to authenticate?',
+        },
+      );
+
+      if (!choice) {
+        return;
+      }
+
+      if (choice.id === 'gh') {
+        const terminal = vscode.window.createTerminal({ name: 'Harness: gh auth login' });
+        terminal.show();
+        terminal.sendText('gh auth login --web');
+        void vscode.window.showInformationMessage(
+          'Complete the GitHub login in the terminal, then run "Harness: Doctor" or reload VS Code window.',
+          'Reload Window',
+        ).then((action) => {
+          if (action === 'Reload Window') {
+            void vscode.commands.executeCommand('workbench.action.reloadWindow');
+          }
+        });
+        return;
+      }
+
+      // Manual paste
+      const token = await vscode.window.showInputBox({
+        title: 'GitHub Copilot Token',
+        prompt: 'Paste your GitHub OAuth token (starts with gho_ or github_pat_)',
+        password: true,
+        validateInput: (v) => {
+          if (!v) {
+            return 'Token cannot be empty';
+          }
+          if (v.startsWith('ghp_')) {
+            return 'Classic PATs (ghp_) are not accepted by Copilot. Use gh auth login to get an OAuth token.';
+          }
+          if (!v.startsWith('gho_') && !v.startsWith('github_pat_')) {
+            return 'Token should start with gho_ or github_pat_';
+          }
+          return null;
+        },
+      });
+
+      if (!token) {
+        return;
+      }
+
+      await context.secrets.store('harness.connectors.copilot.token', token);
+      void vscode.window.showInformationMessage(
+        'GitHub Copilot token saved. Restarting Harness daemon...',
+      );
+      cliService.dispose();
+      void cliService.start().then(() => {
+        void vscode.window.showInformationMessage('Harness daemon restarted with new token.');
+      });
     }),
 
     // Initialize workspace .harness/ directory

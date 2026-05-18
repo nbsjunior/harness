@@ -122,6 +122,12 @@
         "icon": "$(pulse)"
       },
       {
+        "command": "harness.copilotLogin",
+        "title": "Login: GitHub Copilot",
+        "category": "Harness",
+        "icon": "$(account)"
+      },
+      {
         "command": "harness.aidlcInstall",
         "title": "Install AI-DLC Workflow (Kiro)",
         "category": "Harness",
