@@ -114,6 +114,24 @@
         "command": "harness.showContext",
         "title": "Show Current Context",
         "category": "Harness"
+      },
+      {
+        "command": "harness.doctor",
+        "title": "Run Doctor (Check Setup)",
+        "category": "Harness",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "harness.aidlcInstall",
+        "title": "Install AI-DLC Workflow (Kiro)",
+        "category": "Harness",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "harness.setup",
+        "title": "Run Setup (Kiro CLI + AI-DLC)",
+        "category": "Harness",
+        "icon": "$(rocket)"
       }
     ],
     "menus": {
@@ -179,6 +197,15 @@
         },
         {
           "command": "harness.showContext"
+        },
+        {
+          "command": "harness.doctor"
+        },
+        {
+          "command": "harness.aidlcInstall"
+        },
+        {
+          "command": "harness.setup"
         }
       ]
     },
@@ -267,17 +294,48 @@
           "description": "Anthropic API key for Claude (used when not relying on Claude Code CLI auth).",
           "scope": "machine"
         },
-        "harness.connectors.kiro.endpoint": {
+        "harness.connectors.kiro.cliPath": {
           "type": "string",
-          "default": "",
-          "description": "AWS KIRO API endpoint.",
+          "default": "kiro-cli",
+          "description": "Path to the Kiro CLI binary (AI-DLC via steering files).",
           "scope": "machine"
         },
         "harness.connectors.kiro.apiKey": {
           "type": "string",
           "default": "",
-          "description": "AWS KIRO API key.",
+          "description": "Kiro Pro API key (KIRO_API_KEY) for headless CLI mode.",
           "scope": "machine"
+        },
+        "harness.connectors.kiro.trustTools": {
+          "type": "string",
+          "default": "read,grep,write",
+          "description": "Tool categories auto-approved for kiro-cli (--trust-tools).",
+          "scope": "machine"
+        },
+        "harness.connectors.kiro.trustAllTools": {
+          "type": "boolean",
+          "default": false,
+          "description": "Pass --trust-all-tools to kiro-cli (use with caution).",
+          "scope": "machine"
+        },
+        "harness.connectors.kiro.mode": {
+          "type": "string",
+          "enum": ["cli", "rest"],
+          "default": "cli",
+          "description": "Kiro connector mode: cli (AI-DLC steering) or legacy rest.",
+          "scope": "machine"
+        },
+        "harness.connectors.kiro.endpoint": {
+          "type": "string",
+          "default": "",
+          "description": "Legacy REST endpoint (only when harness.connectors.kiro.mode is rest).",
+          "scope": "machine"
+        },
+        "harness.aidlc.autoInstall": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-install AI-DLC rules into .kiro/steering before Kiro chat.",
+          "scope": "resource"
         },
         "harness.mcp.enabled": {
           "type": "boolean",

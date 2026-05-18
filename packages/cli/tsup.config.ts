@@ -9,11 +9,9 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   splitting: false,
-  shims: true,
-  // Needed for the --ipc mode worker that the extension host spawns
-  banner: {
-    js: '#!/usr/bin/env node',
-  },
+  shims: false,
+  // No shebang — extension/scripts use `node dist/index.js` (see bundle-cli / CliService).
+  // npm `bin` field runs the file via node on all platforms.
   // Keep these external so they resolve from the install location
   external: [],
   esbuildOptions(options) {

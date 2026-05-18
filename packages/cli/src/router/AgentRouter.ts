@@ -5,6 +5,11 @@ import { execa } from 'execa';
 import type { ChatMessage, ContextItem, AgentId } from '../types.js';
 import type { AgentConnectorConfig } from '../config.js';
 import { buildCopilotAuthHeaders, validateCopilotToken } from '../connectors/copilotAuth.js';
+import { runKiroCli } from '../connectors/kiroCli.js';
+import { ensureAidlcInstalled } from '../aidlc/install.js';
+import { ensureKiroCli } from '../kiro/bootstrap.js';
+import { buildKiroPrompt } from '../aidlc/prompt.js';
+import { checkAgentReadiness } from './agentReadiness.js';
 
 export interface AgentRequest {
   sessionId: string;
@@ -28,6 +33,12 @@ export interface AgentRequest {
  */
 export class AgentRouter {
   async route(request: AgentRequest): Promise<void> {
+    const readiness = checkAgentReadiness(request.agent, request.config);
+    if (!readiness.ready) {
+      request.onError(readiness.hint);
+      return;
+    }
+
     switch (request.agent) {
       case 'copilot':
         await this.routeCopilot(request);
@@ -216,13 +227,53 @@ export class AgentRouter {
   }
 
   // ---------------------------------------------------------------------------
-  // AWS KIRO — REST API
+  // Kiro + AI-DLC — kiro-cli headless (steering: .kiro/steering/aws-aidlc-rules)
+  // @see https://github.com/awslabs/aidlc-workflows
   // ---------------------------------------------------------------------------
 
   private async routeKiro(req: AgentRequest): Promise<void> {
     const cfg = req.config.kiro;
+
+    if (cfg.mode === 'rest' && cfg.endpoint) {
+      await this.routeKiroRest(req);
+      return;
+    }
+
+    const workspace = process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+
+    try {
+      const kiro = await ensureKiroCli({ allowDownload: true });
+      cfg.cliPath = kiro.cliPath;
+    } catch (err) {
+      req.onError((err as Error).message);
+      return;
+    }
+
+    const aidlcOk = await ensureAidlcInstalled(workspace, cfg.aidlcAutoInstall);
+    if (!aidlcOk) {
+      req.onError(
+        'AI-DLC rules not installed. Run `harness aidlc install` or enable harness.aidlc.autoInstall.',
+      );
+      return;
+    }
+
+    const prompt = buildKiroPrompt(req.messages, { forceAidlc: true });
+
+    await runKiroCli({
+      config: cfg,
+      prompt,
+      cwd: workspace,
+      onChunk: req.onChunk,
+      onDone: req.onDone,
+      onError: req.onError,
+    });
+  }
+
+  /** Legacy REST connector (optional). Prefer kiro-cli + AI-DLC steering. */
+  private async routeKiroRest(req: AgentRequest): Promise<void> {
+    const cfg = req.config.kiro;
     if (!cfg.apiKey || !cfg.endpoint) {
-      req.onError('AWS KIRO not configured. Set harness.connectors.kiro.apiKey and endpoint.');
+      req.onError('Kiro REST mode: set KIRO_API_KEY and harness.connectors.kiro.endpoint.');
       return;
     }
 
@@ -240,7 +291,7 @@ export class AgentRouter {
       req.onChunk(data.response ?? data.output ?? text);
       req.onDone();
     } catch (err) {
-      req.onError(`KIRO request failed: ${(err as Error).message}`);
+      req.onError(`Kiro REST request failed: ${(err as Error).message}`);
     }
   }
 
@@ -279,7 +330,7 @@ export class AgentRouter {
         if (res.statusCode !== undefined && res.statusCode >= 400) {
           const msg = `HTTP ${res.statusCode} from ${url.hostname}`;
           onError(msg);
-          reject(new Error(msg));
+          resolve();
           return;
         }
 
@@ -313,10 +364,16 @@ export class AgentRouter {
         });
 
         res.on('end', () => { onDone(); resolve(); });
-        res.on('error', (err: Error) => { onError(err.message); reject(err); });
+        res.on('error', (err: Error) => {
+          onError(err.message);
+          resolve();
+        });
       });
 
-      req.on('error', (err: Error) => { onError(err.message); reject(err); });
+      req.on('error', (err: Error) => {
+        onError(err.message);
+        resolve();
+      });
       req.write(bodyBuffer);
       req.end();
     });

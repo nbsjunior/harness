@@ -29,3 +29,13 @@ npm-debug.log*
 # Harness runtime data
 .harness/context/
 .harness/.session/
+.harness/cache/
+
+# AI-DLC / Kiro local install (use packages/cli/vendor/aidlc-rules in repo)
+.kiro/
+aidlc-docs/
+
+# Local test artifacts
+ipc-in.pipe
+ipc-out.txt
+ipc-err.txt

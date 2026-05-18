@@ -49,10 +49,10 @@ export const AGENT_DESCRIPTORS: Record<AgentId, AgentDescriptor> = {
   },
   kiro: {
     id: 'kiro',
-    label: 'AWS KIRO',
-    description: 'AWS KIRO via REST API',
+    label: 'Kiro (AI-DLC)',
+    description: 'Kiro CLI with AWS AI-DLC steering rules (.kiro/steering)',
     supportsStreaming: false,
-    supportsMcp: false,
+    supportsMcp: true,
   },
 };
 
@@ -141,7 +141,13 @@ export type IpcAction =
   | 'mcp:call'
   | 'mcp:result'
   | 'ping'
-  | 'pong';
+  | 'pong'
+  | 'aidlc:install'
+  | 'aidlc:install:result'
+  | 'aidlc:status'
+  | 'aidlc:status:result'
+  | 'setup:bootstrap'
+  | 'setup:bootstrap:result';
 
 /**
  * Base IPC message envelope. All extension ↔ CLI communication uses this shape.

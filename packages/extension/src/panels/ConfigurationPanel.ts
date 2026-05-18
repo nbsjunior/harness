@@ -188,9 +188,13 @@ export class ConfigurationPanel {
           return { agent, ok: true };
         }
         case 'kiro': {
-          if (!endpoint) return { agent, ok: false, error: 'Endpoint is required for AWS KIRO' };
-          await this.httpGet(new URL('/ping', endpoint), { Authorization: `Bearer ${token}` });
-          return { agent, ok: true };
+          if (!token) {
+            return { agent, ok: false, error: 'KIRO_API_KEY is required for Kiro CLI headless mode' };
+          }
+          const cliPath = vscode.workspace
+            .getConfiguration('harness')
+            .get<string>('connectors.kiro.cliPath', 'kiro-cli');
+          return { agent, ok: true, model: `kiro-cli (${cliPath}) + AI-DLC steering` };
         }
         default:
           return { agent, ok: false, error: 'Unknown agent' };

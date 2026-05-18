@@ -31,4 +31,31 @@ for (const file of fs.readdirSync(srcDir)) {
   fs.copyFileSync(path.join(srcDir, file), path.join(destDir, file));
 }
 
+const cliPkg = path.join(root, 'packages', 'extension', 'cli', 'package.json');
+if (!fs.existsSync(cliPkg)) {
+  fs.writeFileSync(cliPkg, JSON.stringify({ type: 'module', private: true }, null, 2) + '\n');
+}
+
+function copyDirRecursive(src, dest) {
+  fs.mkdirSync(dest, { recursive: true });
+  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+    const s = path.join(src, entry.name);
+    const d = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyDirRecursive(s, d);
+    } else {
+      fs.copyFileSync(s, d);
+    }
+  }
+}
+
+const vendorSrc = path.join(root, 'packages', 'cli', 'vendor', 'aidlc-rules');
+const vendorDest = path.join(root, 'packages', 'extension', 'cli', 'vendor', 'aidlc-rules');
+if (fs.existsSync(vendorSrc)) {
+  copyDirRecursive(vendorSrc, vendorDest);
+  console.log('[bundle-cli] Copied AI-DLC vendor rules → packages/extension/cli/vendor/aidlc-rules/');
+} else {
+  console.warn('[bundle-cli] vendor/aidlc-rules missing — run aidlc rules setup in packages/cli/vendor');
+}
+
 console.log(`[bundle-cli] Copied CLI → packages/extension/cli/dist/ (${fs.statSync(path.join(destDir, 'index.js')).size} bytes)`);

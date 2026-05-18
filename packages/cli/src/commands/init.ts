@@ -1,5 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { installAidlcRules } from '../aidlc/install.js';
+import { ensureKiroCli } from '../kiro/bootstrap.js';
+import { harnessLog, harnessWarn } from '../log.js';
 
 const HARNESS_DIR = '.harness';
 const SPECS_DIR = 'specs';
@@ -23,7 +26,15 @@ connectors:
   claude:
     path: claude
   kiro:
-    endpoint: ''
+    cliPath: kiro-cli
+    # KIRO_API_KEY env var or harness.connectors.kiro.apiKey (Kiro Pro API key)
+    trustTools: read,grep,write
+    aidlcAutoInstall: true
+    mode: cli
+
+# AI-DLC (https://github.com/awslabs/aidlc-workflows)
+aidlc:
+  autoInstall: true
 
 # MCP server definitions
 mcp:
@@ -66,6 +77,7 @@ const GITIGNORE_ADDITIONS = `
 # Harness runtime
 .harness/context/
 .harness/.session/
+.harness/cache/
 `;
 
 /**
@@ -87,9 +99,9 @@ export async function initCommand(dir: string = process.cwd()): Promise<void> {
   for (const d of [harnessDir, specsDir, contextDir]) {
     if (!fs.existsSync(d)) {
       fs.mkdirSync(d, { recursive: true });
-      console.log(`  created  ${path.relative(targetDir, d)}/`);
+      harnessLog(`  created  ${path.relative(targetDir, d)}/`);
     } else {
-      console.log(`  exists   ${path.relative(targetDir, d)}/`);
+      harnessLog(`  exists   ${path.relative(targetDir, d)}/`);
     }
   }
 
@@ -97,22 +109,22 @@ export async function initCommand(dir: string = process.cwd()): Promise<void> {
   const configPath = path.join(harnessDir, 'config.yaml');
   if (!fs.existsSync(configPath)) {
     fs.writeFileSync(configPath, CONFIG_YAML, 'utf-8');
-    console.log(`  created  .harness/config.yaml`);
+    harnessLog(`  created  .harness/config.yaml`);
   } else {
-    console.log(`  exists   .harness/config.yaml`);
+    harnessLog(`  exists   .harness/config.yaml`);
   }
 
   // Write example specs
   const exampleSkillPath = path.join(specsDir, 'skill-code-review.yaml');
   if (!fs.existsSync(exampleSkillPath)) {
     fs.writeFileSync(exampleSkillPath, EXAMPLE_SKILL, 'utf-8');
-    console.log(`  created  .harness/specs/skill-code-review.yaml`);
+    harnessLog(`  created  .harness/specs/skill-code-review.yaml`);
   }
 
   const exampleWorkflowPath = path.join(specsDir, 'workflow-refactor-solid.yaml');
   if (!fs.existsSync(exampleWorkflowPath)) {
     fs.writeFileSync(exampleWorkflowPath, EXAMPLE_WORKFLOW, 'utf-8');
-    console.log(`  created  .harness/specs/workflow-refactor-solid.yaml`);
+    harnessLog(`  created  .harness/specs/workflow-refactor-solid.yaml`);
   }
 
   // Update .gitignore if present
@@ -121,13 +133,38 @@ export async function initCommand(dir: string = process.cwd()): Promise<void> {
     const current = fs.readFileSync(gitignorePath, 'utf-8');
     if (!current.includes('.harness/context/')) {
       fs.appendFileSync(gitignorePath, GITIGNORE_ADDITIONS, 'utf-8');
-      console.log(`  updated  .gitignore`);
+      harnessLog(`  updated  .gitignore`);
     }
   }
 
-  console.log(`\nHarness workspace initialized in ${targetDir}`);
-  console.log('Next steps:');
-  console.log('  1. Configure your agent connectors in .harness/config.yaml');
-  console.log('  2. Open VSCode and click the Harness icon in the Activity Bar');
-  console.log('  3. Start chatting with your AI agent!');
+  try {
+    const kiro = await ensureKiroCli({ allowDownload: true });
+    harnessLog(`  kiro-cli  ${kiro.cliPath} (${kiro.source})`);
+  } catch (err) {
+    harnessLog(
+      `  warn      Kiro CLI: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    harnessLog('            Run: harness setup');
+  }
+
+  try {
+    const aidlc = await installAidlcRules(targetDir);
+    if (aidlc.created.length > 0) {
+      harnessLog('\nAI-DLC (Kiro steering):');
+      for (const line of aidlc.created) {
+        harnessLog(`  created  ${line}`);
+      }
+    }
+  } catch (err) {
+    harnessLog(
+      `\n  warn     AI-DLC install skipped: ${err instanceof Error ? err.message : String(err)}`,
+    );
+    harnessLog('           Run later: harness aidlc install');
+  }
+
+  harnessLog(`\nHarness workspace initialized in ${targetDir}`);
+  harnessLog('Next steps:');
+  harnessLog('  1. Set KIRO_API_KEY (https://kiro.dev/docs/cli/authentication) for Kiro + AI-DLC');
+  harnessLog('  2. Configure other agents in .harness/config.yaml or Harness settings');
+  harnessLog('  3. Chat with Kiro: "Using AI-DLC, <your request>" — artifacts go to aidlc-docs/');
 }

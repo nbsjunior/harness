@@ -1,9 +1,13 @@
-#!/usr/bin/env node
-import { program } from '@commander-js/extra-typings';
+import { Command } from 'commander';
+
+const program = new Command();
 import { initCommand } from './commands/init.js';
 import { agentRunCommand } from './commands/agentRun.js';
 import { specParseCommand } from './commands/specParse.js';
 import { contextBuildCommand } from './commands/contextBuild.js';
+import { doctorCommand } from './commands/doctor.js';
+import { aidlcInstallCommand, aidlcStatusCommand } from './commands/aidlc.js';
+import { setupCommand } from './commands/setup.js';
 import { startIpcServer } from './ipc/IpcServer.js';
 import type { AgentId } from './types.js';
 
@@ -69,7 +73,7 @@ if (process.argv.includes('--ipc')) {
         await agentRunCommand({
           agent,
           prompt: options.prompt,
-          ...(options.dirs ? { contextDirs: options.dirs.split(',').map((d) => d.trim()) } : {}),
+          ...(options.dirs ? { contextDirs: options.dirs.split(',').map((d: string) => d.trim()) } : {}),
           ...(options.specsDir ? { specsDir: options.specsDir } : {}),
           ...(options.config ? { configFile: options.config } : {}),
         });
@@ -99,6 +103,85 @@ if (process.argv.includes('--ipc')) {
         console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
         process.exit(1);
       }
+    });
+
+  // ---------------------------------------------------------------------------
+  // harness doctor
+  // ---------------------------------------------------------------------------
+
+  program
+    .command('doctor')
+    .description('Check workspace setup and agent connector readiness')
+    .option('-s, --specs-dir <dir>', 'Path to the specs directory')
+    .option('--json', 'Output JSON to stdout', false)
+    .action(async (options: { specsDir?: string; json?: boolean }) => {
+      const code = await doctorCommand({
+        ...(options.specsDir ? { specsDir: options.specsDir } : {}),
+        ...(options.json !== undefined ? { json: options.json } : {}),
+      });
+      process.exit(code);
+    });
+
+  // ---------------------------------------------------------------------------
+  // harness setup — Kiro CLI + AI-DLC + workspace
+  // ---------------------------------------------------------------------------
+
+  program
+    .command('setup')
+    .description('Bootstrap Kiro CLI, AI-DLC rules, and Harness workspace (run after install)')
+    .argument('[dir]', 'Workspace directory', '.')
+    .option('--skip-init', 'Do not run harness init')
+    .option('--skip-kiro', 'Do not install or locate Kiro CLI')
+    .option('--skip-aidlc', 'Do not install AI-DLC steering rules')
+    .option('-q, --quiet', 'Minimal output', false)
+    .action(async (dir: string, options: {
+      skipInit?: boolean;
+      skipKiro?: boolean;
+      skipAidlc?: boolean;
+      quiet?: boolean;
+    }) => {
+      try {
+        const code = await setupCommand({
+          dir,
+          ...(options.skipInit ? { skipInit: true } : {}),
+          ...(options.skipKiro ? { skipKiro: true } : {}),
+          ...(options.skipAidlc ? { skipAidlc: true } : {}),
+          ...(options.quiet ? { quiet: true } : {}),
+        });
+        process.exit(code);
+      } catch (err) {
+        console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+        process.exit(1);
+      }
+    });
+
+  // ---------------------------------------------------------------------------
+  // harness aidlc install | status
+  // ---------------------------------------------------------------------------
+
+  const aidlc = program.command('aidlc').description('AI-DLC workflow rules (Kiro steering)');
+
+  aidlc
+    .command('install')
+    .description('Install AWS AI-DLC rules into .kiro/steering (Kiro + aidlc-docs/)')
+    .argument('[dir]', 'Workspace directory', '.')
+    .option('-f, --force', 'Reinstall even if rules exist', false)
+    .action(async (dir: string, options: { force?: boolean }) => {
+      try {
+        await aidlcInstallCommand(dir, options.force ? { force: true } : {});
+      } catch (err) {
+        console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+        process.exit(1);
+      }
+    });
+
+  aidlc
+    .command('status')
+    .description('Check whether AI-DLC rules are installed in the workspace')
+    .argument('[dir]', 'Workspace directory', '.')
+    .action(async (dir: string) => {
+      const code = await aidlcStatusCommand(dir);
+      process.exit(code);
     });
 
   // ---------------------------------------------------------------------------

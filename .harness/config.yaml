@@ -24,8 +24,13 @@ connectors:
     # API Key: set ANTHROPIC_API_KEY env var or harness.connectors.claude.apiKey in VSCode settings
 
   kiro:
-    # API Key: set KIRO_API_KEY env var or harness.connectors.kiro.apiKey in VSCode settings
-    endpoint: ''
+    cliPath: kiro-cli
+    # KIRO_API_KEY — Kiro Pro API key (https://kiro.dev/docs/cli/authentication)
+    trustTools: read,grep,write
+    mode: cli
+
+aidlc:
+  autoInstall: true
 
 mcp:
   enabled: true
