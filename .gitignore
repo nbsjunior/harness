@@ -1,0 +1,30 @@
+node_modules/
+dist/
+out/
+*.vsix
+.env
+.env.local
+*.js.map
+*.d.ts.map
+
+# CLI build output
+packages/cli/dist/
+
+# Extension build output
+packages/extension/dist/
+
+# VSCode
+.vscode-test/
+*.vsix
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Harness runtime data
+.harness/context/
+.harness/.session/

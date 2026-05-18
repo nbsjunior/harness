@@ -1,0 +1,13 @@
+kind: Skill
+name: test-generation
+description: "Generates unit and integration tests for a given module or function"
+tools:
+  - name: read_file
+    description: "Reads the source file to generate tests for"
+  - name: write_file
+    description: "Writes the generated test file to disk"
+  - name: run_tests
+    description: "Executes the generated tests to validate them"
+agents:
+  preferred: claude
+  fallback: copilot

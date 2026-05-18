@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build Extension",
+      "type": "shell",
+      "command": "node esbuild.mjs",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "silent"
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Watch Extension",
+      "type": "shell",
+      "command": "node esbuild.mjs --watch",
+      "isBackground": true,
+      "group": "build",
+      "presentation": {
+        "reveal": "never"
+      },
+      "problemMatcher": ["$tsc-watch"]
+    }
+  ]
+}

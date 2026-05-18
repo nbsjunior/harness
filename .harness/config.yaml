@@ -1,0 +1,41 @@
+# Harness configuration file
+# This file is committed to version control (without secrets).
+# Set API keys via environment variables or VSCode settings (harness.connectors.*).
+
+defaultAgent: copilot
+
+connectors:
+  copilot:
+    # Token: set GITHUB_TOKEN env var or harness.connectors.copilot.token in VSCode settings
+    endpoint: https://api.githubcopilot.com
+
+  devin:
+    # API Key: set DEVIN_API_KEY env var or harness.connectors.devin.apiKey in VSCode settings
+    endpoint: https://api.devin.ai/v1
+
+  cursor:
+    # API Key: set CURSOR_API_KEY env var or harness.connectors.cursor.apiKey in VSCode settings
+    # Endpoint: your Cursor AI MCP/HTTP endpoint
+    endpoint: ''
+
+  claude:
+    # Path to the Claude Code CLI binary (must be on PATH or provide full path)
+    path: claude
+    # API Key: set ANTHROPIC_API_KEY env var or harness.connectors.claude.apiKey in VSCode settings
+
+  kiro:
+    # API Key: set KIRO_API_KEY env var or harness.connectors.kiro.apiKey in VSCode settings
+    endpoint: ''
+
+mcp:
+  enabled: true
+  servers:
+    # Add your MCP servers here. Example:
+    # - name: filesystem
+    #   transport: stdio
+    #   command: npx
+    #   args: ['-y', '@modelcontextprotocol/server-filesystem', '/path/to/workspace']
+    #
+    # - name: my-http-mcp
+    #   transport: http
+    #   url: http://localhost:3000/mcp
