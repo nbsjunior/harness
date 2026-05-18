@@ -1,12 +1,13 @@
 /**
- * CLI-side type definitions (mirrors the extension's types.ts).
- * Kept as a standalone file to avoid importing from the extension package.
+ * CLI-side type definitions — mirrors the extension's types.ts.
+ * Kept standalone to avoid cross-package imports at runtime.
  */
 
 export type AgentId = 'copilot' | 'devin' | 'cursor' | 'claude' | 'kiro';
 export type ChatRole = 'user' | 'assistant' | 'system';
 export type ContextItemKind = 'file' | 'directory' | 'snippet';
-export type IpcMessageType =
+
+export type IpcAction =
   | 'chat:send'
   | 'chat:chunk'
   | 'chat:done'
@@ -22,6 +23,17 @@ export type IpcMessageType =
   | 'ping'
   | 'pong';
 
+/**
+ * Base IPC message envelope used for all stdin/stdout newline-delimited JSON
+ * communication between the VSCode Extension Host and the CLI daemon.
+ */
+export interface IPCMessage<TPayload = unknown> {
+  id: string;
+  action: IpcAction;
+  payload: TPayload;
+  error?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: ChatRole;
@@ -31,22 +43,18 @@ export interface ChatMessage {
 }
 
 export interface ContextItem {
-  uri: string;
+  /** Absolute file-system path — CLI reads this directly */
+  absolutePath: string;
   kind: ContextItemKind;
   label: string;
   tokenEstimate?: number;
 }
 
-export interface IpcMessage<T = unknown> {
-  id: string;
-  type: IpcMessageType;
-  payload: T;
-}
-
 export interface ChatSendPayload {
   sessionId: string;
   messages: ChatMessage[];
-  context: ContextItem[];
+  /** Absolute paths resolved by the extension before dispatching */
+  contextPaths: string[];
   agent: AgentId;
   specsDir?: string;
 }
@@ -58,14 +66,8 @@ export interface ChatChunkPayload {
   done: boolean;
 }
 
-export interface ChatErrorPayload {
-  sessionId: string;
-  messageId: string;
-  error: string;
-}
-
 export interface ContextBuildPayload {
-  directories: string[];
+  paths: string[];
   workspaceRoot: string;
 }
 
@@ -75,9 +77,15 @@ export interface ContextResultPayload {
 }
 
 export interface SpecParsePayload {
-  filePath: string;
+  path: string;
 }
 
 export interface SpecResultPayload {
   specs: unknown[];
+}
+
+export interface McpCallPayload {
+  serverName: string;
+  toolName: string;
+  arguments: Record<string, unknown>;
 }

@@ -8,7 +8,8 @@ import { startIpcServer } from './ipc/IpcServer.js';
 import type { AgentId } from './types.js';
 
 // ---------------------------------------------------------------------------
-// IPC mode — started by the VSCode extension host via execaNode
+// IPC mode — started by the VSCode extension host (stdin/stdout JSON framing)
+// In IPC mode, stdout is RESERVED for JSON frames; all logging goes to stderr.
 // ---------------------------------------------------------------------------
 
 if (process.argv.includes('--ipc')) {

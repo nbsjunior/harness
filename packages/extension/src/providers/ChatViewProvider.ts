@@ -109,7 +109,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     await this.agentService.chat({
       sessionId: this.activeSessionId,
       messages: this.history.slice(0, -1), // exclude the empty assistant placeholder
-      context: this.contextProvider.getItems(),
+      contextPaths: this.contextProvider.getAbsolutePaths(),
       agent: this.selectedAgent,
       onChunk: (chunk: string, messageId: string) => {
         // Accumulate chunk in local history
@@ -170,15 +170,15 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       }
 
       case 'addContext': {
-        const payload = msg.payload as { uri: string };
-        await this.contextProvider.add(vscode.Uri.parse(payload.uri));
+        const payload = msg.payload as { absolutePath: string };
+        await this.contextProvider.add(vscode.Uri.file(payload.absolutePath));
         this.notifyContextChanged();
         break;
       }
 
       case 'removeContext': {
-        const payload = msg.payload as { uri: string };
-        this.contextProvider.remove(payload.uri);
+        const payload = msg.payload as { absolutePath: string };
+        this.contextProvider.remove(payload.absolutePath);
         this.notifyContextChanged();
         break;
       }
