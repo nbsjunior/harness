@@ -1,0 +1,32 @@
+# Files excluded from the .vsix package
+
+# Source (bundled by esbuild into dist/)
+src/**
+**/*.ts
+!**/*.d.ts
+
+# Config files
+tsconfig*.json
+esbuild.mjs
+.vscode/tasks.json
+
+# Tests
+test/**
+**/*.test.*
+**/*.spec.*
+
+# Dev artifacts
+node_modules/**
+.eslintrc*
+.prettierrc*
+*.log
+*.map
+
+# Keep in package:
+# dist/extension.js       ✓ extension host bundle
+# dist/webview/**         ✓ webview bundles
+# resources/**            ✓ icons
+# package.json            ✓ manifest
+# README.md               ✓ marketplace page
+# CHANGELOG.md            ✓ release notes
+# LICENSE                 ✓ license
