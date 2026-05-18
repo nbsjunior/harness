@@ -243,6 +243,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         await vscode.commands.executeCommand('harness.openConfig');
         break;
 
+      case 'openFile': {
+        const payload = msg.payload as { path: string; line?: number; column?: number };
+        await this.openFileAtLocation(payload.path, payload.line, payload.column);
+        break;
+      }
+
       case 'stopStream': {
         traceLog(this.output, 'ChatView', 'stopStream', { sessionId: this.activeSessionId });
         const streaming = this.history.find((m) => m.streaming);
@@ -298,6 +304,37 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
   private post(msg: ExtensionMessage): void {
     void this.view?.webview.postMessage(msg);
+  }
+
+  /** Open a file in the editor, optionally at a specific line/column (Cursor-style refs). */
+  private async openFileAtLocation(
+    filePath: string,
+    line?: number,
+    column?: number,
+  ): Promise<void> {
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const abs = path.isAbsolute(filePath)
+      ? filePath
+      : workspaceRoot
+        ? path.join(workspaceRoot, filePath)
+        : filePath;
+
+    if (!fs.existsSync(abs)) {
+      void vscode.window.showWarningMessage(`File not found: ${filePath}`);
+      return;
+    }
+
+    const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(abs));
+    const editor = await vscode.window.showTextDocument(doc, { preview: true });
+
+    if (line !== undefined && line > 0) {
+      const pos = new vscode.Position(line - 1, column ?? 0);
+      editor.selection = new vscode.Selection(pos, pos);
+      editor.revealRange(
+        new vscode.Range(pos, pos),
+        vscode.TextEditorRevealType.InCenter,
+      );
+    }
   }
 
   // ---------------------------------------------------------------------------
