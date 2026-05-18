@@ -24,5 +24,11 @@ export default defineConfig({
   ],
   esbuildOptions(options) {
     options.platform = 'node';
+    // Inject a proper `require` at the top of the ESM bundle so that CJS
+    // packages bundled inside (e.g. commander) can call require('events').
+    // esbuild's __require stub only works when `require` is in scope.
+    options.banner = {
+      js: `import { createRequire } from 'module';\nconst require = createRequire(import.meta.url);`,
+    };
   },
 });
