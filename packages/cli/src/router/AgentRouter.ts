@@ -2,7 +2,7 @@ import https from 'https';
 import http from 'http';
 import { URL } from 'url';
 import { execa } from 'execa';
-import type { ChatMessage, ContextItem, AgentId } from '../types.js';
+import type { ChatMessage, ContextItem, AgentId, CopilotMode } from '../types.js';
 import type { AgentConnectorConfig } from '../config.js';
 import { buildCopilotAuthHeaders, validateCopilotToken, getCopilotApiToken } from '../connectors/copilotAuth.js';
 import { runKiroCli } from '../connectors/kiroCli.js';
@@ -16,6 +16,8 @@ export interface AgentRequest {
   messages: ChatMessage[];
   context: ContextItem[];
   agent: AgentId;
+  /** Interaction mode: ask | agent | spec+agent */
+  mode?: CopilotMode;
   config: AgentConnectorConfig;
   onChunk: (chunk: string) => void;
   onDone: () => void;
@@ -93,21 +95,107 @@ export class AgentRouter {
       // Fall through: use the OAuth/PAT token directly (works when it has `copilot` scope)
     }
 
+    const mode = req.mode ?? 'ask';
+    const messages = this.buildOpenAiMessages(req.messages, mode);
     const url = new URL('/chat/completions', cfg.endpoint);
-    const body = JSON.stringify({
-      model: 'gpt-4o',
-      stream: true,
-      messages: this.buildOpenAiMessages(req.messages),
-    });
 
-    await this.streamSseRequest(
-      url,
-      { ...buildCopilotAuthHeaders(copilotToken), 'Content-Type': 'application/json' },
-      body,
-      req.onChunk,
-      req.onDone,
-      req.onError,
-    );
+    if (mode === 'agent' || mode === 'spec+agent') {
+      await this.routeCopilotAgent(url, copilotToken, messages, req);
+    } else {
+      // Ask mode — simple streaming chat completions
+      const body = JSON.stringify({ model: 'gpt-4o', stream: true, messages });
+      await this.streamSseRequest(
+        url,
+        { ...buildCopilotAuthHeaders(copilotToken), 'Content-Type': 'application/json' },
+        body,
+        req.onChunk,
+        req.onDone,
+        req.onError,
+      );
+    }
+  }
+
+  /**
+   * Agent / Spec+Agent mode: function-calling loop.
+   * Provides read_file, list_files, write_file, search tools and executes
+   * them autonomously until the model returns finish_reason = "stop".
+   */
+  private async routeCopilotAgent(
+    url: URL,
+    copilotToken: string,
+    messages: Array<{ role: string; content: string }>,
+    req: AgentRequest,
+  ): Promise<void> {
+    const tools = buildCopilotTools();
+    const maxIterations = 10;
+
+    for (let iteration = 0; iteration < maxIterations; iteration++) {
+      // Non-streaming call so we can inspect tool_calls
+      const bodyObj: Record<string, unknown> = {
+        model: 'gpt-4o',
+        stream: false,
+        messages,
+        tools,
+        tool_choice: 'auto',
+      };
+
+      let responseText: string;
+      try {
+        responseText = await this.httpPostJson(
+          url,
+          buildCopilotAuthHeaders(copilotToken),
+          JSON.stringify(bodyObj),
+        );
+      } catch (err) {
+        req.onError(`Copilot agent request failed: ${(err as Error).message}`);
+        return;
+      }
+
+      let parsed: CopilotChatResponse;
+      try {
+        parsed = JSON.parse(responseText) as CopilotChatResponse;
+      } catch {
+        req.onError(`Failed to parse Copilot response: ${responseText.slice(0, 300)}`);
+        return;
+      }
+
+      const choice = parsed.choices?.[0];
+      if (!choice) {
+        req.onError('Copilot returned no choices.');
+        return;
+      }
+
+      const assistantMsg = choice.message;
+
+      // No tool calls — final answer
+      if (!assistantMsg.tool_calls || assistantMsg.tool_calls.length === 0) {
+        req.onChunk(assistantMsg.content ?? '');
+        req.onDone();
+        return;
+      }
+
+      // Stream tool-call summary to keep the user informed
+      req.onChunk(`\`[Agent] Calling tools: ${assistantMsg.tool_calls.map(t => t.function.name).join(', ')}\`\n\n`);
+
+      // Execute each tool and collect results
+      messages.push({ role: 'assistant', content: assistantMsg.content ?? '' });
+
+      for (const toolCall of assistantMsg.tool_calls) {
+        const result = await executeCopilotTool(
+          toolCall.function.name,
+          toolCall.function.arguments,
+          req.context,
+        );
+        // OpenAI tool result message shape
+        (messages as Array<Record<string, string>>).push({
+          role: 'tool',
+          tool_call_id: toolCall.id,
+          content: result,
+        });
+      }
+    }
+
+    req.onError('Agent reached maximum iterations without completing the task.');
   }
 
   // ---------------------------------------------------------------------------
@@ -160,7 +248,7 @@ export class AgentRouter {
     const body = JSON.stringify({
       model: 'claude-3-5-sonnet',
       stream: true,
-      messages: this.buildOpenAiMessages(req.messages),
+      messages: this.buildOpenAiMessages(req.messages, 'ask'),
     });
 
     await this.streamSseRequest(url, headers, body, req.onChunk, req.onDone, req.onError);
@@ -311,10 +399,30 @@ export class AgentRouter {
 
   private buildOpenAiMessages(
     messages: ChatMessage[],
+    mode: CopilotMode = 'ask',
   ): Array<{ role: string; content: string }> {
-    return messages
+    const mapped = messages
       .filter((m) => m.role !== 'system' || m.content.trim().length > 0)
       .map((m) => ({ role: m.role, content: m.content }));
+
+    // Inject mode-specific system prompt if there isn't one already
+    const hasSystemPrompt = mapped.some(m => m.role === 'system');
+    if (!hasSystemPrompt && (mode === 'agent' || mode === 'spec+agent')) {
+      mapped.unshift({
+        role: 'system',
+        content:
+          `You are an autonomous coding agent with full access to read and write files in the workspace. ` +
+          `When the user describes a task, use the available tools to read relevant files first, ` +
+          `then produce the changes needed. Always explain what you changed and why. ` +
+          `For file edits, use write_file to apply the changes directly. ` +
+          (mode === 'spec+agent'
+            ? `Active Harness Spec definitions are provided as <spec> blocks in the system context — ` +
+              `treat them as authoritative guidance for behaviour, tools, and constraints.`
+            : ''),
+      });
+    }
+
+    return mapped;
   }
 
   /**
@@ -389,6 +497,37 @@ export class AgentRouter {
     });
   }
 
+  /** Non-streaming POST — returns full response body. Used for agent tool-call loop. */
+  private httpPostJson(url: URL, headers: Record<string, string>, body: string): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+      const lib = url.protocol === 'https:' ? https : http;
+      const bodyBuffer = Buffer.from(body, 'utf-8');
+      const req = lib.request(url, {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+          'Content-Length': bodyBuffer.length,
+        },
+      }, (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (c: Buffer) => chunks.push(c));
+        res.on('end', () => {
+          const text = Buffer.concat(chunks).toString('utf-8');
+          if (res.statusCode !== undefined && res.statusCode >= 400) {
+            reject(new Error(`HTTP ${res.statusCode} from ${url.hostname}: ${text.slice(0, 300)}`));
+          } else {
+            resolve(text);
+          }
+        });
+        res.on('error', reject);
+      });
+      req.on('error', reject);
+      req.write(bodyBuffer);
+      req.end();
+    });
+  }
+
   private httpPost(url: URL, apiKey: string, body: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {
       const lib = url.protocol === 'https:' ? https : http;
@@ -419,5 +558,179 @@ export class AgentRouter {
       req.write(bodyBuffer);
       req.end();
     });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Copilot Agent tools
+// ---------------------------------------------------------------------------
+
+import * as fs from 'fs';
+import * as fsPath from 'path';
+
+interface CopilotChatResponse {
+  choices?: Array<{
+    message: {
+      role: string;
+      content: string;
+      tool_calls?: Array<{
+        id: string;
+        type: string;
+        function: { name: string; arguments: string };
+      }>;
+    };
+    finish_reason?: string;
+  }>;
+}
+
+function buildCopilotTools(): unknown[] {
+  return [
+    {
+      type: 'function',
+      function: {
+        name: 'read_file',
+        description: 'Read the full content of a file at the given path.',
+        parameters: {
+          type: 'object',
+          properties: {
+            path: { type: 'string', description: 'Absolute or workspace-relative file path.' },
+          },
+          required: ['path'],
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'write_file',
+        description: 'Write (create or overwrite) a file with the given content.',
+        parameters: {
+          type: 'object',
+          properties: {
+            path: { type: 'string', description: 'Absolute or workspace-relative file path.' },
+            content: { type: 'string', description: 'Full file content to write.' },
+          },
+          required: ['path', 'content'],
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'list_files',
+        description: 'List files in a directory (non-recursive, first level only).',
+        parameters: {
+          type: 'object',
+          properties: {
+            directory: { type: 'string', description: 'Absolute or workspace-relative directory path.' },
+          },
+          required: ['directory'],
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'search_in_files',
+        description: 'Search for a text pattern in files under a directory using ripgrep-style matching.',
+        parameters: {
+          type: 'object',
+          properties: {
+            pattern: { type: 'string', description: 'Search pattern (plain text or regex).' },
+            directory: { type: 'string', description: 'Directory to search in.' },
+          },
+          required: ['pattern', 'directory'],
+        },
+      },
+    },
+  ];
+}
+
+async function executeCopilotTool(
+  name: string,
+  argsJson: string,
+  context: ContextItem[],
+): Promise<string> {
+  const workspace = process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+
+  function resolvePath(p: string): string {
+    if (fsPath.isAbsolute(p)) return p;
+    // Try to resolve relative to a context item directory first
+    const ctxDir = context[0]
+      ? fsPath.dirname(context[0].absolutePath)
+      : workspace;
+    return fsPath.resolve(ctxDir, p);
+  }
+
+  try {
+    const args = JSON.parse(argsJson) as Record<string, string>;
+
+    switch (name) {
+      case 'read_file': {
+        const abs = resolvePath(args['path'] ?? '');
+        if (!fs.existsSync(abs)) return `Error: file not found: ${abs}`;
+        const content = fs.readFileSync(abs, 'utf-8');
+        return content.length > 20_000
+          ? content.slice(0, 20_000) + '\n[…truncated]'
+          : content;
+      }
+
+      case 'write_file': {
+        const abs = resolvePath(args['path'] ?? '');
+        fs.mkdirSync(fsPath.dirname(abs), { recursive: true });
+        fs.writeFileSync(abs, args['content'] ?? '', 'utf-8');
+        return `Written ${abs} (${(args['content'] ?? '').length} bytes)`;
+      }
+
+      case 'list_files': {
+        const abs = resolvePath(args['directory'] ?? '.');
+        if (!fs.existsSync(abs)) return `Error: directory not found: ${abs}`;
+        const entries = fs.readdirSync(abs, { withFileTypes: true });
+        return entries
+          .map(e => `${e.isDirectory() ? 'd' : 'f'} ${e.name}`)
+          .join('\n');
+      }
+
+      case 'search_in_files': {
+        const abs = resolvePath(args['directory'] ?? '.');
+        const pattern = args['pattern'] ?? '';
+        const results: string[] = [];
+
+        function walkSearch(dir: string, depth = 0): void {
+          if (depth > 5) return;
+          let entries: fs.Dirent[];
+          try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+          catch { return; }
+          for (const e of entries) {
+            if (e.name.startsWith('.') || e.name === 'node_modules') continue;
+            const full = fsPath.join(dir, e.name);
+            if (e.isDirectory()) {
+              walkSearch(full, depth + 1);
+            } else if (e.isFile()) {
+              try {
+                const content = fs.readFileSync(full, 'utf-8');
+                const lines = content.split('\n');
+                lines.forEach((line, i) => {
+                  if (line.includes(pattern)) {
+                    results.push(`${full}:${i + 1}: ${line.trim()}`);
+                  }
+                });
+              } catch { /* skip binary/unreadable */ }
+            }
+            if (results.length >= 50) return;
+          }
+        }
+
+        walkSearch(abs);
+        return results.length > 0
+          ? results.join('\n')
+          : `No matches for "${pattern}" in ${abs}`;
+      }
+
+      default:
+        return `Unknown tool: ${name}`;
+    }
+  } catch (err) {
+    return `Tool execution error: ${(err as Error).message}`;
   }
 }

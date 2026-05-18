@@ -4,6 +4,7 @@ import type {
   AgentId,
   ChatMessage,
   ContextItem,
+  CopilotMode,
   ExtensionMessage,
   InitializePayload,
   TokenUsagePayload,
@@ -57,6 +58,7 @@ interface State {
   context: ContextItem[];
   agents: AgentDescriptor[];
   selectedAgent: AgentId;
+  selectedMode: CopilotMode;
   isStreaming: boolean;
   sessionTokens: number;
   dailyTokens: number;
@@ -68,6 +70,7 @@ const state: State = {
   context: [],
   agents: [],
   selectedAgent: 'copilot',
+  selectedMode: 'ask',
   isStreaming: false,
   sessionTokens: 0,
   dailyTokens: 0,
@@ -91,6 +94,13 @@ function injectShell(): void {
     <div style="display:flex;gap:4px;">
       <button id="config-btn" class="icon-btn" title="Harness Settings">&#9881;</button>
     </div>
+  </div>
+
+  <div id="mode-bar">
+    <button class="mode-btn mode-btn--active" data-mode="ask"     title="Conversational Q&amp;A — no code modifications">Ask</button>
+    <button class="mode-btn"                  data-mode="agent"   title="Autonomous coding agent — suggests file edits">Agent</button>
+    <button class="mode-btn"                  data-mode="spec+agent" title="Agent + Spec context — injects your Spec Manager specs as context">Spec+Agent</button>
+    <span id="mode-hint" class="mode-hint"></span>
   </div>
 
   <div id="context-bar">
@@ -135,6 +145,7 @@ let contextList: HTMLDivElement;
 let configBtn: HTMLButtonElement;
 let slashPopover: HTMLDivElement;
 let tokenFooter: HTMLSpanElement;
+let modeHint: HTMLSpanElement;
 
 function bindRefs(): void {
   messagesEl       = document.getElementById('messages') as HTMLDivElement;
@@ -147,6 +158,7 @@ function bindRefs(): void {
   configBtn        = document.getElementById('config-btn') as HTMLButtonElement;
   slashPopover     = document.getElementById('slash-popover') as HTMLDivElement;
   tokenFooter      = document.getElementById('token-footer') as HTMLSpanElement;
+  modeHint         = document.getElementById('mode-hint') as HTMLSpanElement;
 }
 
 // ---------------------------------------------------------------------------
@@ -324,6 +336,31 @@ function updateAgentBadge(): void {
   agentBadgeDisplay.title = m.label;
 }
 
+const MODE_HINTS: Record<CopilotMode, string> = {
+  ask:          '',
+  agent:        'Agent will suggest file edits autonomously',
+  'spec+agent': 'Spec context + autonomous agent mode',
+};
+
+function updateModeBar(): void {
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    const b = btn as HTMLElement;
+    b.classList.toggle('mode-btn--active', b.dataset['mode'] === state.selectedMode);
+  });
+  if (modeHint) {
+    modeHint.textContent = MODE_HINTS[state.selectedMode] ?? '';
+  }
+  // Update placeholder to guide the user
+  if (inputEl) {
+    const hints: Record<CopilotMode, string> = {
+      ask:          'Ask a question… (Ctrl+Enter to send)',
+      agent:        'Describe the change you want… (Ctrl+Enter to send)',
+      'spec+agent': 'Describe the task — specs will be injected as context… (Ctrl+Enter to send)',
+    };
+    inputEl.placeholder = hints[state.selectedMode];
+  }
+}
+
 function setStreaming(streaming: boolean): void {
   state.isStreaming = streaming;
   sendBtn.textContent = streaming ? 'Stop' : 'Send';
@@ -416,7 +453,7 @@ function sendMessage(): void {
   hideSlashPopover();
   setStreaming(true);
 
-  postMessage({ command: 'sendMessage', payload: { text, agent: state.selectedAgent } });
+  postMessage({ command: 'sendMessage', payload: { text, agent: state.selectedAgent, mode: state.selectedMode } });
 }
 
 // ---------------------------------------------------------------------------
@@ -451,6 +488,17 @@ function bindEvents(): void {
     postMessage({ command: 'selectAgent', payload: { agent: state.selectedAgent } });
   });
 
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = (btn as HTMLElement).dataset['mode'] as CopilotMode;
+      if (mode && mode !== state.selectedMode) {
+        state.selectedMode = mode;
+        updateModeBar();
+        postMessage({ command: 'selectMode', payload: { mode } });
+      }
+    });
+  });
+
   clearCtxBtn.addEventListener('click', () => {
     postMessage({ command: 'clearContext' });
   });
@@ -478,11 +526,13 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       const p = msg.payload as InitializePayload;
       state.agents = p.agents;
       state.selectedAgent = p.agent;
+      state.selectedMode = p.mode ?? 'ask';
       state.history = p.history;
       state.context = p.context;
       renderAgentDropdown();
       renderMessages();
       renderContext();
+      updateModeBar();
       break;
     }
 
@@ -545,6 +595,13 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       state.selectedAgent = p.agent;
       if (agentDropdown) agentDropdown.value = p.agent;
       updateAgentBadge();
+      break;
+    }
+
+    case 'modeChanged': {
+      const p = msg.payload as { mode: CopilotMode };
+      state.selectedMode = p.mode;
+      updateModeBar();
       break;
     }
 
@@ -670,6 +727,56 @@ body {
   line-height: 1;
 }
 .icon-btn:hover { opacity: 1; background: var(--vscode-toolbar-hoverBackground); }
+
+/* ── Mode bar ────────────────────────────────────────── */
+#mode-bar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 10px 4px;
+  border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
+  background: var(--vscode-sideBar-background);
+  flex-shrink: 0;
+}
+
+.mode-btn {
+  background: none;
+  border: 1px solid var(--vscode-button-secondaryBackground);
+  color: var(--vscode-descriptionForeground);
+  border-radius: 12px;
+  padding: 2px 10px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  white-space: nowrap;
+  line-height: 18px;
+}
+.mode-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+}
+.mode-btn--active {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-color: var(--vscode-button-background);
+}
+.mode-btn--active:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.mode-hint {
+  font-size: 10px;
+  color: var(--vscode-descriptionForeground);
+  margin-left: 4px;
+  font-style: italic;
+  opacity: 0.8;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 /* ── Context bar ─────────────────────────────────────── */
 #context-bar {

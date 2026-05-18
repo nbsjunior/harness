@@ -6,6 +6,7 @@
 export type AgentId = 'copilot' | 'devin' | 'cursor' | 'claude' | 'kiro';
 export type ChatRole = 'user' | 'assistant' | 'system';
 export type ContextItemKind = 'file' | 'directory' | 'snippet';
+export type CopilotMode = 'ask' | 'agent' | 'spec+agent';
 
 export type IpcAction =
   | 'chat:send'
@@ -63,6 +64,10 @@ export interface ChatSendPayload {
   contextPaths: string[];
   agent: AgentId;
   specsDir?: string;
+  /** Interaction mode — defaults to 'ask' */
+  mode?: CopilotMode;
+  /** Resolved spec file paths for spec+agent mode */
+  specPaths?: string[];
 }
 
 export interface ChatChunkPayload {
