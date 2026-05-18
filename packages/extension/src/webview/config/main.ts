@@ -154,6 +154,7 @@ const AGENTS: AgentInfo[] = [
 // ---------------------------------------------------------------------------
 
 type Step = 'welcome' | 'agentSelect' | 'configureAgent' | 'workspace' | 'mcp' | 'done';
+type ConfigTab = 'agents' | 'api' | 'mcp' | 'workspace';
 
 interface McpServer {
   name: string;
@@ -163,6 +164,14 @@ interface McpServer {
   url?: string;
 }
 
+interface ApiServerEntry {
+  id: string;
+  name: string;
+  baseUrl: string;
+  apiKey?: string;
+  model?: string;
+}
+
 interface WizardState {
   step: Step;
   agentQueue: AgentId[];
@@ -170,15 +179,21 @@ interface WizardState {
   secretStatus: Record<AgentId, boolean>;
   connectionResults: Record<AgentId, { ok: boolean; error?: string; model?: string }>;
   pendingTestAgent: AgentId | null;
-  // workspace settings
   specsDirectory: string;
   defaultAgent: AgentId;
   cliPath: string;
-  // mcp
   mcpEnabled: boolean;
   mcpServers: McpServer[];
+  apiServers: ApiServerEntry[];
+  agentEndpoints: Record<string, string>;
   selectedAgents: Set<AgentId>;
+  /** When set, agents tab shows inline configure form for one agent */
+  editingAgent: AgentId | null;
 }
+
+/** Tabbed settings (gear icon) vs first-run wizard */
+let uiMode: 'tabs' | 'wizard' = 'tabs';
+let activeTab: ConfigTab = 'agents';
 
 const state: WizardState = {
   step: 'welcome',
@@ -192,7 +207,10 @@ const state: WizardState = {
   cliPath: '',
   mcpEnabled: true,
   mcpServers: [],
+  apiServers: [],
+  agentEndpoints: {},
   selectedAgents: new Set<AgentId>(),
+  editingAgent: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -203,6 +221,11 @@ function render(): void {
   const root = document.getElementById('root')!;
   root.innerHTML = '';
 
+  if (uiMode === 'tabs') {
+    root.appendChild(renderTabsShell());
+    return;
+  }
+
   switch (state.step) {
     case 'welcome':       root.appendChild(renderWelcome()); break;
     case 'agentSelect':   root.appendChild(renderAgentSelect()); break;
@@ -211,6 +234,196 @@ function render(): void {
     case 'mcp':           root.appendChild(renderMcp()); break;
     case 'done':          root.appendChild(renderDone()); break;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Tabbed configuration (Harness: Open Configuration)
+// ---------------------------------------------------------------------------
+
+function renderTabsShell(): HTMLElement {
+  const shell = div('tabs-shell');
+  shell.innerHTML = /* html */`
+    <header class="tabs-header">
+      <h1 class="tabs-title">Harness Configuration</h1>
+      <button type="button" id="btn-run-wizard" class="btn-ghost btn-sm">Setup wizard</button>
+    </header>
+    <nav class="config-tabs" role="tablist">
+      <button type="button" class="config-tab ${activeTab === 'agents' ? 'config-tab--active' : ''}" data-tab="agents">Agents</button>
+      <button type="button" class="config-tab ${activeTab === 'api' ? 'config-tab--active' : ''}" data-tab="api">API Servers</button>
+      <button type="button" class="config-tab ${activeTab === 'mcp' ? 'config-tab--active' : ''}" data-tab="mcp">MCP</button>
+      <button type="button" class="config-tab ${activeTab === 'workspace' ? 'config-tab--active' : ''}" data-tab="workspace">Workspace</button>
+    </nav>
+    <div class="config-tab-panel"></div>`;
+
+  const panel = shell.querySelector('.config-tab-panel') as HTMLElement;
+  if (state.editingAgent && activeTab === 'agents') {
+    panel.appendChild(renderConfigureAgent());
+  } else {
+    switch (activeTab) {
+      case 'agents':
+        panel.appendChild(renderAgentsTab());
+        break;
+      case 'api':
+        panel.appendChild(renderApiServersTab());
+        break;
+      case 'mcp':
+        panel.appendChild(renderMcpTabPanel());
+        break;
+      case 'workspace':
+        panel.appendChild(renderWorkspaceTabPanel());
+        break;
+    }
+  }
+
+  shell.querySelectorAll('.config-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeTab = (btn as HTMLElement).dataset['tab'] as ConfigTab;
+      state.editingAgent = null;
+      render();
+    });
+  });
+
+  shell.querySelector('#btn-run-wizard')!.addEventListener('click', () => {
+    uiMode = 'wizard';
+    state.step = 'welcome';
+    render();
+  });
+
+  return shell;
+}
+
+function renderAgentsTab(): HTMLElement {
+  const el = div('tab-content');
+  const cards = AGENTS.map((a) => {
+    const ok = state.secretStatus[a.id];
+    return /* html */`
+      <div class="agent-card" data-agent="${a.id}">
+        <div class="agent-card__badge" style="background:${a.color}">${a.initials}</div>
+        <div class="agent-card__body">
+          <div class="agent-card__name">${a.label}</div>
+          <div class="agent-card__desc">${a.description}</div>
+          <div class="agent-card__status ${ok ? 'status--ok' : 'status--warn'}">
+            ${ok ? '&#10003; Configured' : '&#9888; Not configured'}
+          </div>
+        </div>
+        <button type="button" class="btn-secondary btn-sm btn-configure-agent" data-agent="${a.id}">
+          ${ok ? 'Edit' : 'Configure'}
+        </button>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = /* html */`
+    <p class="tab-intro">Connect AI agents. Tokens are stored securely in VS Code Secret Storage.</p>
+    <div class="agent-grid">${cards}</div>
+    <p class="form-hint">Default agent: <strong>${state.defaultAgent}</strong> (change in Workspace tab)</p>`;
+
+  el.querySelectorAll('.btn-configure-agent').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.editingAgent = (btn as HTMLElement).dataset['agent'] as AgentId;
+      state.agentQueue = [state.editingAgent];
+      state.agentQueueIndex = 0;
+      render();
+    });
+  });
+
+  return el;
+}
+
+function renderApiServersTab(): HTMLElement {
+  const el = div('tab-content');
+  const builtin = AGENTS.filter((a) => a.hasEndpoint)
+    .map((a) => /* html */`
+      <div class="api-row api-row--builtin">
+        <span class="api-row__name">${a.label}</span>
+        <code class="api-row__url">${state.agentEndpoints[a.id] || a.defaultEndpoint || '—'}</code>
+        <span class="badge">built-in</span>
+      </div>`)
+    .join('');
+
+  const custom = state.apiServers
+    .map(
+      (s, i) => /* html */`
+      <div class="api-row" data-index="${i}">
+        <span class="api-row__name">${s.name}</span>
+        <code class="api-row__url">${s.baseUrl}</code>
+        <span class="badge">${s.model || 'OpenAI-compatible'}</span>
+        <button type="button" class="icon-btn btn-remove-api" data-index="${i}" title="Remove">&#10005;</button>
+      </div>`,
+    )
+    .join('');
+
+  el.innerHTML = /* html */`
+    <p class="tab-intro">Built-in agent endpoints and custom OpenAI-compatible API servers.</p>
+    <h3 class="tab-h3">Built-in agents</h3>
+    <div class="api-list">${builtin}</div>
+    <h3 class="tab-h3">Custom API servers</h3>
+    <div class="api-list" id="custom-api-list">${custom || '<p class="form-hint">No custom servers yet.</p>'}</div>
+    <button type="button" id="btn-add-api" class="btn-secondary">+ Add API server</button>
+    <div id="api-add-form" style="display:none;margin-top:12px;"></div>`;
+
+  el.querySelectorAll('.btn-remove-api').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = Number((btn as HTMLElement).dataset['index']);
+      state.apiServers.splice(idx, 1);
+      postMessage({ command: 'saveSetting', payload: { key: 'harness.apiServers', value: state.apiServers } });
+      render();
+    });
+  });
+
+  el.querySelector('#btn-add-api')!.addEventListener('click', () => {
+    const form = el.querySelector('#api-add-form') as HTMLElement;
+    form.style.display = 'block';
+    form.innerHTML = /* html */`
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="api-name" class="text-input" placeholder="My Local LLM" />
+      </div>
+      <div class="form-group">
+        <label>Base URL</label>
+        <input type="text" id="api-url" class="text-input" placeholder="http://localhost:11434/v1" />
+      </div>
+      <div class="form-group">
+        <label>API Key <span class="form-optional">(optional)</span></label>
+        <input type="password" id="api-key" class="text-input" placeholder="sk-…" />
+      </div>
+      <div class="form-actions">
+        <button type="button" id="btn-save-api" class="btn-primary">Save</button>
+        <button type="button" id="btn-cancel-api" class="btn-ghost">Cancel</button>
+      </div>`;
+    form.querySelector('#btn-cancel-api')!.addEventListener('click', () => {
+      form.style.display = 'none';
+    });
+    form.querySelector('#btn-save-api')!.addEventListener('click', () => {
+      const name = (form.querySelector('#api-name') as HTMLInputElement).value.trim();
+      const baseUrl = (form.querySelector('#api-url') as HTMLInputElement).value.trim();
+      const apiKey = (form.querySelector('#api-key') as HTMLInputElement).value.trim();
+      if (!name || !baseUrl) return;
+      state.apiServers.push({
+        id: `api-${Date.now()}`,
+        name,
+        baseUrl,
+        ...(apiKey ? { apiKey } : {}),
+      });
+      postMessage({ command: 'saveSetting', payload: { key: 'harness.apiServers', value: state.apiServers } });
+      render();
+    });
+  });
+
+  return el;
+}
+
+function renderMcpTabPanel(): HTMLElement {
+  const el = div('tab-content');
+  const mcpSection = renderMcp();
+  el.appendChild(mcpSection);
+  return el;
+}
+
+function renderWorkspaceTabPanel(): HTMLElement {
+  const el = div('tab-content');
+  const ws = renderWorkspace();
+  el.appendChild(ws);
+  return el;
 }
 
 // ---------------------------------------------------------------------------
@@ -420,6 +633,11 @@ function renderConfigureAgent(): HTMLElement {
   });
 
   el.querySelector('#btn-back-agents')!.addEventListener('click', () => {
+    if (uiMode === 'tabs') {
+      state.editingAgent = null;
+      render();
+      return;
+    }
     state.step = 'agentSelect';
     render();
   });
@@ -445,6 +663,11 @@ function renderConfigureAgent(): HTMLElement {
 
 function advanceAgentQueue(): void {
   state.pendingTestAgent = null;
+  if (uiMode === 'tabs') {
+    state.editingAgent = null;
+    render();
+    return;
+  }
   state.agentQueueIndex++;
   if (state.agentQueueIndex >= state.agentQueue.length) {
     state.step = 'workspace';
@@ -702,12 +925,17 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
         cliPath: string;
         mcpEnabled: boolean;
         mcpServers: McpServer[];
+        apiServers?: ApiServerEntry[];
+        agentEndpoints?: Record<string, string>;
       };
       state.specsDirectory = cfg.specsDirectory;
       state.defaultAgent = cfg.defaultAgent;
       state.cliPath = cfg.cliPath;
       state.mcpEnabled = cfg.mcpEnabled;
       state.mcpServers = cfg.mcpServers ?? [];
+      state.apiServers = cfg.apiServers ?? [];
+      state.agentEndpoints = cfg.agentEndpoints ?? {};
+      uiMode = 'tabs';
       render();
       break;
     }
@@ -990,6 +1218,88 @@ body {
 }
 .result--ok  { color: #4caf50; }
 .result--err { color: var(--vscode-errorForeground); }
+
+/* ── Config tabs ───────────────────────────────────── */
+.tabs-shell { display: flex; flex-direction: column; height: 100%; }
+.tabs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 8px;
+  border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
+}
+.tabs-title { font-size: 16px; font-weight: 600; margin: 0; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+.config-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
+  flex-shrink: 0;
+}
+.config-tab {
+  background: none;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: var(--vscode-font-family);
+}
+.config-tab:hover { background: var(--vscode-toolbar-hoverBackground); color: var(--vscode-foreground); }
+.config-tab--active {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  font-weight: 600;
+}
+.config-tab-panel { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.tab-content { max-width: 640px; }
+.tab-intro { font-size: 12px; color: var(--vscode-descriptionForeground); margin-bottom: 16px; line-height: 1.5; }
+.tab-h3 { font-size: 13px; font-weight: 600; margin: 16px 0 8px; }
+.agent-grid { display: flex; flex-direction: column; gap: 8px; }
+.agent-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--vscode-sideBarSectionHeader-border);
+  border-radius: 8px;
+  background: var(--vscode-editor-inactiveSelectionBackground);
+}
+.agent-card__body { flex: 1; min-width: 0; }
+.status--warn { background: var(--vscode-inputValidation-warningBackground); color: var(--vscode-editorWarning-foreground); }
+.api-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.api-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--vscode-editor-inactiveSelectionBackground);
+  font-size: 12px;
+}
+.api-row__name { font-weight: 600; min-width: 100px; }
+.api-row__url { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  flex-shrink: 0;
+}
+.btn-secondary {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  border-radius: 4px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-family: var(--vscode-font-family);
+  font-size: 12px;
+}
+.btn-secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
 
 /* ── MCP ─────────────────────────────────────────────── */
 .mcp-list { display: flex; flex-direction: column; gap: 4px; }

@@ -55,6 +55,14 @@ Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instea
 
 ---
 
+## Documentation
+
+| Audience | Start here |
+|----------|------------|
+| **AI assistants** | [AGENTS.md](AGENTS.md) → [docs/ai-reference.md](docs/ai-reference.md) → [docs/code-map.md](docs/code-map.md) |
+| **End users** | [docs/starter-kit.md](docs/starter-kit.md) · [docs/user-guide.md](docs/user-guide.md) |
+| **Developers** | [docs/README.md](docs/README.md) · [docs/architecture.md](docs/architecture.md) · [docs/ipc-protocol.md](docs/ipc-protocol.md) |
+
 ## Starter Kit (recommended)
 
 **[→ docs/starter-kit.md](docs/starter-kit.md)** — install the `.vsix`, open the extension, configure **GitHub Copilot**, send your first message, and follow the **update flow**.

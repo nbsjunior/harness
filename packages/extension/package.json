@@ -343,6 +343,23 @@
           "description": "Auto-install AI-DLC rules into .kiro/steering before Kiro chat.",
           "scope": "resource"
         },
+        "harness.apiServers": {
+          "type": "array",
+          "default": [],
+          "description": "Additional OpenAI-compatible API servers (custom providers).",
+          "scope": "resource",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "baseUrl": { "type": "string" },
+              "apiKey": { "type": "string" },
+              "model": { "type": "string" }
+            },
+            "required": ["id", "name", "baseUrl"]
+          }
+        },
         "harness.mcp.enabled": {
           "type": "boolean",
           "default": true,

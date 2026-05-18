@@ -1,3 +1,17 @@
+/**
+ * @module config
+ * Merges Harness configuration from YAML, environment variables, and the VS Code settings bridge.
+ *
+ * **Why:** Connectors need a single `AgentConnectorConfig` whether the CLI runs as a daemon
+ * (extension) or standalone (`harness chat`). Secrets come from env; endpoints often from
+ * `HARNESS_SETTINGS_JSON`.
+ *
+ * **Copilot token order:** YAML token → env vars → `getGhCliToken()` (live `gh auth token`).
+ * Extension-side precedence for env injection is defined in `configBridge.ts` (gh first).
+ *
+ * @see loadHarnessConfig — full merge including defaultAgent
+ * @see loadAgentConfig — connectors only (used by IPC router)
+ */
 import * as fs from 'fs';
 import * as path from 'path';
 import yaml from 'js-yaml';
@@ -118,10 +132,21 @@ function loadYamlConfig(specsDir?: string): HarnessConfigFile {
 }
 
 /**
- * Load merged configuration:
- *  1. `.harness/config.yaml`
- *  2. `HARNESS_SETTINGS_JSON` (VS Code extension — endpoints, paths)
- *  3. Environment variables (secrets / tokens)
+ * Load the fully-merged agent configuration.
+ *
+ * Merge order (highest precedence first):
+ *  1. `getGhCliToken()` — live `gh auth token` subprocess (Copilot only)
+ *  2. Environment variables (`GH_TOKEN`, `ANTHROPIC_API_KEY`, `KIRO_API_KEY`, …)
+ *  3. `HARNESS_SETTINGS_JSON` — VS Code settings bridged by `configBridge.ts`
+ *  4. `.harness/config.yaml` in the workspace
+ *  5. Built-in defaults
+ *
+ * The returned `LoadedHarnessConfig` is the single source of truth for all
+ * connector settings inside the CLI. Never read env vars or config files directly
+ * elsewhere — always call this function.
+ *
+ * @param specsDir - workspace-relative path to the specs directory, used to
+ *                   locate the config file. Defaults to `.harness`.
  */
 export function loadHarnessConfig(specsDir?: string): LoadedHarnessConfig {
   const fileConfig = loadYamlConfig(specsDir);

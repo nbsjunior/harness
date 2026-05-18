@@ -1,3 +1,16 @@
+/**
+ * @module configBridge
+ * Builds `process.env` for CLI subprocesses so extension and CLI share connector settings.
+ *
+ * **Why:** VS Code stores secrets in `SecretStorage` and settings in `workspace.getConfiguration`;
+ * the CLI only reads env vars and `HARNESS_SETTINGS_JSON`. This bridge is the single place
+ * that translates extension state into what the daemon expects.
+ *
+ * **Copilot:** Always prefers live `gh auth token` over cached VS Code secret to avoid stale tokens.
+ * Syncs secret when gh token changes.
+ *
+ * @see buildHarnessProcessEnv
+ */
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as os from 'os';

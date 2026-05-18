@@ -5,6 +5,7 @@ import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import type { IPCMessage, IpcAction } from '../types';
 import { buildHarnessProcessEnv } from '../configBridge';
+import { redactSecrets, traceLog } from '../trace';
 
 interface PendingRequest {
   resolve: (msg: IPCMessage) => void;
@@ -146,17 +147,34 @@ export class CliService extends EventEmitter {
    */
   async send<TReq, TRes = unknown>(
     message: IPCMessage<TReq>,
+    options?: { expectResponse?: IpcAction; timeoutMs?: number },
   ): Promise<IPCMessage<TRes>> {
     await this.ensureStarted();
+
+    const expectAction = options?.expectResponse ?? message.action;
+    const timeoutMs = options?.timeoutMs ?? REQUEST_TIMEOUT_MS;
 
     return new Promise<IPCMessage<TRes>>((resolve, reject) => {
       const timeoutHandle = setTimeout(() => {
         this.pendingRequests.delete(message.id);
-        reject(new Error(`IPC request "${message.action}" (id=${message.id}) timed out after ${REQUEST_TIMEOUT_MS}ms`));
-      }, REQUEST_TIMEOUT_MS);
+        reject(
+          new Error(
+            `IPC request "${message.action}" (id=${message.id}) timed out after ${timeoutMs}ms`,
+          ),
+        );
+      }, timeoutMs);
 
       this.pendingRequests.set(message.id, {
-        resolve: resolve as (m: IPCMessage) => void,
+        resolve: (response: IPCMessage) => {
+          if (response.action !== expectAction && !response.error) {
+            traceLog(
+              this.output,
+              'ipc',
+              `response action mismatch: expected ${expectAction}, got ${response.action}`,
+            );
+          }
+          resolve(response as IPCMessage<TRes>);
+        },
         reject,
         timeoutHandle,
       });
@@ -227,6 +245,10 @@ export class CliService extends EventEmitter {
     if (!this.subprocess?.stdin?.writable) {
       throw new Error('CLI stdin is not writable. Is the daemon running?');
     }
+    traceLog(this.output, 'ipc→cli', msg.action, {
+      id: msg.id,
+      payload: msg.payload,
+    });
     const frame = JSON.stringify(msg) + '\n';
     this.subprocess.stdin.write(frame, 'utf-8');
   }
@@ -254,13 +276,21 @@ export class CliService extends EventEmitter {
     try {
       msg = JSON.parse(raw) as IPCMessage;
     } catch {
-      this.output.warn(`[cli] Received non-JSON frame: ${raw.slice(0, 120)}`);
+      this.output.warn(`[cli] Received non-JSON frame: ${redactSecrets(raw.slice(0, 120))}`);
       return;
     }
 
     if (!msg.id || !msg.action) {
-      this.output.warn(`[cli] Malformed IPC frame (missing id/action): ${raw.slice(0, 120)}`);
+      this.output.warn(`[cli] Malformed IPC frame (missing id/action): ${redactSecrets(raw.slice(0, 120))}`);
       return;
+    }
+
+    if (msg.action !== 'chat:chunk' || (msg.payload as { done?: boolean })?.done) {
+      traceLog(this.output, 'cli→ipc', msg.action, {
+        id: msg.id,
+        error: msg.error,
+        payload: msg.payload,
+      });
     }
 
     const pending = this.pendingRequests.get(msg.id);

@@ -1,183 +1,227 @@
-# Harness — Architecture
+# Harness — Technical Architecture
 
-This document describes the high-level architecture of the Harness VSCode extension and CLI orchestrator.
+> **AI assistants:** read [ai-reference.md](ai-reference.md) first for design *rationale*;
+> use [code-map.md](code-map.md) to locate functions. This doc focuses on structure and diagrams.
 
----
+## Overview
 
-## System Overview
-
-Harness is structured as a **monorepo** containing two npm packages:
-
-| Package | Runtime | Purpose |
-|---|---|---|
-| `packages/extension` | VSCode Extension Host | UI, context management, IPC bridge |
-| `packages/cli` | Node.js process | File I/O, spec parsing, agent routing |
-
-The two processes communicate through **newline-delimited JSON frames** over `stdin`/`stdout` (see [ipc-protocol.md](ipc-protocol.md)).
+Harness routes natural-language prompts to AI coding agents through a **decoupled
+dual-mode architecture**: the user-facing layer (VS Code Extension or CLI commands)
+is completely separated from the agent-calling layer (CLI daemon).
 
 ---
 
-## Layer Diagram
+## Component Diagram
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│  VSCode UI Thread                                                │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │  Webview (Chat)            Webview (Spec Manager)          │ │
-│  │  • HTML / CSS / TS         • HTML / CSS / TS               │ │
-│  │  • @vscode/webview-        • Spec list + editor            │ │
-│  │    ui-toolkit              • YAML frontmatter form         │ │
-│  └──────────┬─────────────────────────┬────────────────────────┘ │
-│             │ postMessage             │ postMessage              │
-│  ┌──────────▼─────────────────────────▼────────────────────────┐ │
-│  │  Extension Host Process                                     │ │
-│  │                                                             │ │
-│  │  ChatViewProvider    ContextProvider    McpClientManager    │ │
-│  │  SpecManagerPanel    AgentService       ConfigurationPanel  │ │
-│  │                                                             │ │
-│  │  ┌──────────────────────────────────────────────────────┐  │ │
-│  │  │  CliService — IPC Bridge                             │  │ │
-│  │  │  • Spawns CLI daemon (child_process.spawn)           │  │ │
-│  │  │  • Writes JSON frames to stdin                       │  │ │
-│  │  │  • Reads JSON frames from stdout (line buffer)       │  │ │
-│  │  │  • Auto-reconnect with exponential backoff           │  │ │
-│  │  └────────────────────────────┬─────────────────────────┘  │ │
-│  └───────────────────────────────┼─────────────────────────────┘ │
-└──────────────────────────────────┼──────────────────────────────┘
-                                   │ stdin / stdout (JSON + \n)
-                                   │ stderr (debug logs only)
-┌──────────────────────────────────▼──────────────────────────────┐
-│  CLI Daemon (separate Node.js process)                          │
-│                                                                  │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │  IpcServer                                               │  │
-│  │  • Reads stdin line-by-line                              │  │
-│  │  • Parses JSON frames                                    │  │
-│  │  • Dispatches to handlers                                │  │
-│  │  • Writes response frames to stdout                      │  │
-│  └────────┬───────────────────────────────────┬─────────────┘  │
-│           │                                   │                  │
-│  ┌────────▼────────┐              ┌───────────▼──────────────┐  │
-│  │ Context Builder │              │     Agent Router          │  │
-│  │ • fs.readFile   │              │  • Copilot (SSE)          │  │
-│  │ • dir scan      │              │  • Devin (REST)           │  │
-│  │ • token count   │              │  • Cursor (OpenAI-compat) │  │
-│  └─────────────────┘              │  • Claude Code (CLI)      │  │
-│                                   │  • AWS KIRO (REST)        │  │
-│  ┌──────────────────┐             └──────────────────────────┘  │
-│  │   Spec Parser    │                                            │
-│  │ • .md frontmatter│                                            │
-│  │ • .yaml (legacy) │                                            │
-│  │ • Zod validation │                                            │
-│  └──────────────────┘                                            │
-└──────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        User Interface                           │
+│                                                                 │
+│  ┌─────────────────────────┐    ┌──────────────────────────┐   │
+│  │  VS Code Extension       │    │  Standalone CLI          │   │
+│  │  packages/extension/     │    │  harness chat/run/doctor │   │
+│  │                         │    │                          │   │
+│  │  ChatViewProvider        │    │  commander program       │   │
+│  │  SpecManagerPanel        │    │  (index.ts)              │   │
+│  │  ConfigurationPanel      │    └────────────┬─────────────┘   │
+│  └────────────┬────────────┘                 │ direct call     │
+│               │ IPC (stdin/stdout JSON)        │                 │
+└───────────────┼───────────────────────────────┼─────────────────┘
+                │                               │
+                ▼                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    CLI Core  (packages/cli/src/)                 │
+│                                                                 │
+│  ┌─────────────────┐    ┌─────────────────────────────────┐    │
+│  │  IpcServer.ts   │    │  AgentRouter.ts                 │    │
+│  │                 │───▶│                                 │    │
+│  │  Frame parser   │    │  routeCopilot()  ─── Ask mode   │    │
+│  │  Dispatcher     │    │                 ─── Agent mode  │    │
+│  │  stdin/stdout   │    │                 ─── Spec+Agent  │    │
+│  └─────────────────┘    │  routeDevin()                   │    │
+│                         │  routeClaude()                  │    │
+│  ┌─────────────────┐    │  routeCursor()                  │    │
+│  │  config.ts      │───▶│  routeKiro()                    │    │
+│  │                 │    └──────────┬──────────────────────┘    │
+│  │  loadHarness    │               │                           │
+│  │  Config()       │               ▼                           │
+│  │  5-layer merge  │    ┌─────────────────────────────────┐    │
+│  └─────────────────┘    │  Connectors                     │    │
+│                         │                                 │    │
+│                         │  copilotAuth.ts  (token exchange│    │
+│                         │  ghToken.ts      (gh CLI)       │    │
+│                         │  kiroCli.ts      (kiro headless)│    │
+│                         └─────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+                               │
+                               ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      External APIs                              │
+│                                                                 │
+│  api.githubcopilot.com   api.devin.ai   api.anthropic.com       │
+│  api.github.com (token exchange)        kiro-cli (subprocess)   │
+└─────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## IPC Protocol
+
+The extension runs the CLI as a child process and communicates via
+**newline-delimited JSON** over stdin/stdout (similar to Language Server Protocol).
+
+### Frame Shape
+
+```typescript
+interface IPCMessage<T = unknown> {
+  id: string;       // UUID — correlates request ↔ response
+  action: IpcAction; // discriminant
+  payload: T;
+  error?: string;   // present only in error responses
+}
+```
+
+### Streaming (chat)
+
+Chat responses are streamed as multiple `chat:chunk` push events:
+
+```
+Extension ──chat:send──▶ CLI
+CLI ──chat:chunk(done=false)──▶ Extension  × N
+CLI ──chat:chunk(done=true)──▶  Extension  (signals end)
+```
+
+---
+
+## Config Merge Pipeline
+
+```
+gh auth token (subprocess)
+       ↓
+VS Code Secrets API
+       ↓
+Environment variables
+       ↓
+HARNESS_SETTINGS_JSON  ← built by configBridge.ts from VS Code settings
+       ↓
+.harness/config.yaml
+       ↓
+Defaults
+```
+
+`loadHarnessConfig()` in `config.ts` merges these into a single `LoadedHarnessConfig`.
+
+---
+
+## Copilot Mode Execution Paths
+
+### Ask Mode
+```
+messages ──▶ buildOpenAiMessages(mode='ask')
+         ──▶ POST /chat/completions { stream: true }
+         ──▶ SSE stream → onChunk() × N → onDone()
+```
+
+### Agent Mode
+```
+messages + tools ──▶ POST /chat/completions { stream: false, tools, tool_choice: 'auto' }
+                 ──▶ if tool_calls:
+                       executeCopilotTool(name, args)  ← file system ops
+                       append tool results
+                       repeat (max 10 iterations)
+                 ──▶ if finish_reason='stop':
+                       onChunk(content) → onDone()
+```
+
+### Spec+Agent Mode
+```
+specPaths ──▶ readContextFiles(specPaths)
+          ──▶ prepend <spec> blocks as system message
+          ──▶ [same as Agent mode above]
+```
+
+---
+
+## Copilot Authentication Flow
+
+```
+1. Extension calls `gh auth token` subprocess
+        ↓
+2. GH_TOKEN set in CLI process env
+        ↓
+3. AgentRouter calls getCopilotApiToken(ghToken)
+        ↓
+4a. GET api.github.com/copilot_internal/v2/token   ← individual plan
+    → short-lived Copilot token (15 min TTL, cached in-process)
+    → use as Bearer in api.githubcopilot.com calls
+
+4b. 404 → token has `copilot` scope (Business/Enterprise)
+    → use OAuth token directly as Bearer
+```
+
+---
+
+## Kiro + AI-DLC Integration
+
+```
+harness chat --agent kiro "implement feature X"
+        ↓
+AgentRouter.routeKiro()
+        ↓
+ensureKiroCli()   ← downloads binary if missing (~/.harness/tools/kiro-cli/)
+        ↓
+ensureAidlcInstalled()  ← copies steering rules to .kiro/steering/
+        ↓
+buildKiroPrompt()  ← prepends AI-DLC activation prefix
+        ↓
+runKiroCli({ bin, args: ['chat', '--no-interactive', prompt] })
+        ↓
+stdout chunks → onChunk() → IPC → Extension → Webview
+```
+
+AI-DLC rules are bundled in `packages/cli/vendor/aidlc-rules/` and copied into the
+extension `.vsix` at build time by `scripts/bundle-cli.mjs`.
+
+---
+
+## Build & Bundle Pipeline
+
+```
+npm run build
+    ├── packages/extension/  → esbuild → dist/extension.js + dist/webview/**
+    └── packages/cli/        → tsup (ESM, noExternal) → dist/index.js
+
+node scripts/bundle-cli.mjs
+    └── copies cli/dist/index.js + vendor/ → extension/cli/
+
+npx @vscode/vsce package
+    └── harness-vscode-0.1.0.vsix
+```
+
+### CLI Bundle Special Requirements
+
+- **Format**: ESM (`"type": "module"`)
+- **`noExternal: [/.*/]`** — all npm deps bundled inline (no `node_modules` at runtime)
+- **`createRequire` banner** — CJS packages (commander) can call `require()` inside ESM bundle
+- **Node built-ins** explicitly in `external[]` — resolved by the Node.js runtime
 
 ---
 
 ## Key Design Decisions
 
-### 1. Separation of concerns: Extension Host vs CLI
+### Why CLI as subprocess?
+Keeps the extension host process lean. File reads, API calls and long-running processes
+don't block the VS Code UI thread. The daemon can be restarted independently.
 
-The Extension Host is responsible for:
-- VSCode UI lifecycle (views, commands, menus)
-- User interactions (context selection, agent switching)
-- Routing webview ↔ CLI messages
-- MCP connections from configuration
+### Why newline-delimited JSON over HTTP?
+No port allocation, no auth between local processes, works through VS Code's process
+sandbox. Simpler than WebSockets for this use case.
 
-The CLI daemon is responsible for:
-- All **file system I/O** (reading context files, scanning directories)
-- Spec parsing and validation
-- Agent connector calls (HTTP, subprocess, SSE streaming)
-- Configuration loading from `.harness/config.yaml`
+### Why `gh auth token` instead of stored secrets?
+Tokens obtained via `gh auth login` have the `copilot` scope and are automatically
+refreshed. Stored secrets go stale. Using the live subprocess result avoids "Bad credentials"
+errors from outdated tokens.
 
-This separation keeps the Extension Host lean and avoids blocking the VSCode UI thread with heavy file operations.
-
-### 2. Absolute paths as the context contract
-
-When a user right-clicks a file or folder in the Explorer and selects *Add to Harness Context*, the `ContextProvider` resolves it to an **absolute file-system path** using `uri.fsPath`. This absolute path is sent to the CLI via `ChatSendPayload.contextPaths`.
-
-The CLI then reads the actual file contents inside `IpcServer.readContextFiles()` and injects them as a `<system>` message before dispatching to the agent.
-
-**Why?** The Extension Host does not need to know about file contents. URIs are VSCode abstractions; absolute paths are universal.
-
-### 3. Newline-delimited JSON over stdio
-
-Instead of Node.js native IPC (`execaNode`), Harness uses `stdin`/`stdout` with `\n` as a frame delimiter. This has several advantages:
-- Works with any Node.js process (not just `execaNode` workers)
-- Easy to debug (plain text in terminal)
-- Enables future non-Node daemon implementations
-- Keeps stdout a data channel; stderr stays a log channel
-
-### 4. Streaming via server-push events
-
-When the CLI sends a `chat:chunk` frame, it does **not** match the request `id` in the pending-request map — it's a server-push event. `CliService` emits these via `EventEmitter`, and `AgentService` subscribes before sending the `chat:send` request to avoid race conditions.
-
-### 5. Auto-reconnect with exponential backoff
-
-`CliService` monitors the daemon process and schedules restarts with delays of `1s`, `2s`, `4s`, `8s`, `16s` (capped at 30s). All pending requests are rejected immediately on daemon exit so the UI doesn't freeze.
-
-### 6. Markdown-first SDD specs
-
-Spec files use Markdown with YAML frontmatter (`.md`) as the primary authoring format. This allows:
-- Machine-readable spec data (frontmatter parsed by the CLI)
-- Human-readable documentation (Markdown body)
-- Version-controllable alongside source code
-- Rendered nicely in GitHub/GitLab
-
----
-
-## Data Flow: Chat Message (end-to-end)
-
-```
-User types message in Chat webview
-         │
-         ▼ postMessage({ command: 'sendMessage', payload: { text, agent } })
-ChatViewProvider.handleWebviewMessage()
-         │
-         ▼ await agentService.chat({ sessionId, messages, contextPaths, agent })
-AgentService registers onCliMessage('chat:chunk') listener
-         │
-         ▼ cliService.send({ id, action: 'chat:send', payload: { ... } })
-CliService writes JSON frame to CLI stdin
-         │
-         ▼ [CLI daemon receives frame]
-IpcServer.dispatchMessage() → handleChatSend()
-         │
-         ├─ readContextFiles(contextPaths)  ← reads actual file contents from disk
-         │
-         ▼ AgentRouter.route({ agent, messages+context, config, onChunk, onDone })
-[agent connector streams response]
-         │
-         ▼ onChunk(chunk) called for each token
-IpcServer writes { id, action: 'chat:chunk', payload: { chunk, done:false } }\n to stdout
-         │
-         ▼ [Extension Host receives frame]
-CliService.parseFrame() → emit('chat:chunk', msg)
-         │
-         ▼ AgentService onCliMessage handler
-ChatViewProvider.post({ command: 'appendChunk', payload: { messageId, chunk } })
-         │
-         ▼ postMessage to webview
-Webview appends chunk to message bubble
-         │
-[when done=true]
-         ▼ AgentService calls onComplete()
-ChatViewProvider.post({ command: 'messageComplete' })
-         │
-         ▼ Webview removes blinking cursor, marks message as complete
-```
-
----
-
-## MCP Integration
-
-`McpClientManager` (Extension Host) handles connections to external MCP servers defined in `harness.mcp.servers`. It supports:
-
-- **stdio transport** — spawns a local MCP server process
-- **HTTP transport** — connects to a remote `StreamableHTTP` MCP endpoint
-
-The manager pre-fetches all available `tools` and `resources` on connect (with pagination), and exposes `listAllTools()`, `callTool()`, and `readResource()` methods to other services.
-
-The CLI's `McpConnection` class provides the same interface for use in autonomous agent workflows invoked from the command line.
+### Why bundle CLI into the extension?
+The extension must work out-of-the-box with no separate `npm install`. Bundling the
+876 KB CLI dist ensures one-click install with no external dependencies.

@@ -1,3 +1,19 @@
+/**
+ * @module router/AgentRouter
+ * Routes chat requests to external AI agents (Copilot, Devin, Cursor, Claude, Kiro).
+ *
+ * **Why:** One orchestration API (`route(AgentRequest)`) hides per-vendor protocols:
+ * SSE streaming, REST sessions, CLI subprocesses, and Copilot tool-calling loops.
+ *
+ * **Copilot modes:**
+ * - `ask` — SSE `chat/completions` with streaming
+ * - `agent` / `spec+agent` — non-streaming tool loop (`read_file`, `write_file`, …), max 10 turns
+ *
+ * **Errors:** Always delivered via `onError` callback; never throw to IPC layer uncaught.
+ *
+ * @see docs/code-map.md — full method list
+ * @see connectors/copilotAuth.ts — token exchange and headers
+ */
 import https from 'https';
 import http from 'http';
 import { URL } from 'url';
@@ -10,6 +26,8 @@ import { ensureAidlcInstalled } from '../aidlc/install.js';
 import { ensureKiroCli } from '../kiro/bootstrap.js';
 import { buildKiroPrompt } from '../aidlc/prompt.js';
 import { checkAgentReadiness } from './agentReadiness.js';
+import { isChatSessionCancelled } from '../session/cancel.js';
+import { harnessLog } from '../log.js';
 
 export interface AgentRequest {
   sessionId: string;
@@ -123,14 +141,25 @@ export class AgentRouter {
   private async routeCopilotAgent(
     url: URL,
     copilotToken: string,
-    messages: Array<{ role: string; content: string }>,
+    messages: Array<Record<string, unknown>>,
     req: AgentRequest,
   ): Promise<void> {
     const tools = buildCopilotTools();
     const maxIterations = 10;
 
+    req.onChunk('**[Agent]** Starting autonomous run…\n\n');
+    harnessLog(`[copilot-agent] session=${req.sessionId} start`);
+
     for (let iteration = 0; iteration < maxIterations; iteration++) {
-      // Non-streaming call so we can inspect tool_calls
+      if (isChatSessionCancelled(req.sessionId)) {
+        req.onChunk('\n**[Agent]** Stopped by user.\n');
+        req.onDone();
+        return;
+      }
+
+      req.onChunk(`**[Agent]** Step ${iteration + 1}/${maxIterations}…\n`);
+      harnessLog(`[copilot-agent] session=${req.sessionId} iteration=${iteration + 1}`);
+
       const bodyObj: Record<string, unknown> = {
         model: 'gpt-4o',
         stream: false,
@@ -167,31 +196,44 @@ export class AgentRouter {
 
       const assistantMsg = choice.message;
 
-      // No tool calls — final answer
       if (!assistantMsg.tool_calls || assistantMsg.tool_calls.length === 0) {
-        req.onChunk(assistantMsg.content ?? '');
+        const text = assistantMsg.content?.trim();
+        if (text) {
+          req.onChunk(text + (text.endsWith('\n') ? '' : '\n'));
+        } else {
+          req.onChunk('_Agent finished without a text response._\n');
+        }
         req.onDone();
         return;
       }
 
-      // Stream tool-call summary to keep the user informed
-      req.onChunk(`\`[Agent] Calling tools: ${assistantMsg.tool_calls.map(t => t.function.name).join(', ')}\`\n\n`);
+      const toolNames = assistantMsg.tool_calls.map((t) => t.function.name).join(', ');
+      req.onChunk(`**[Agent]** Tools: ${toolNames}\n\n`);
+      harnessLog(`[copilot-agent] tools: ${toolNames}`);
 
-      // Execute each tool and collect results
-      messages.push({ role: 'assistant', content: assistantMsg.content ?? '' });
+      messages.push({
+        role: 'assistant',
+        content: assistantMsg.content ?? null,
+        tool_calls: assistantMsg.tool_calls,
+      });
 
       for (const toolCall of assistantMsg.tool_calls) {
+        if (isChatSessionCancelled(req.sessionId)) {
+          req.onChunk('\n**[Agent]** Stopped by user.\n');
+          req.onDone();
+          return;
+        }
         const result = await executeCopilotTool(
           toolCall.function.name,
           toolCall.function.arguments,
           req.context,
         );
-        // OpenAI tool result message shape
-        (messages as Array<Record<string, string>>).push({
+        messages.push({
           role: 'tool',
           tool_call_id: toolCall.id,
           content: result,
         });
+        req.onChunk(`- \`${toolCall.function.name}\`: ${result.split('\n')[0]?.slice(0, 120) ?? 'ok'}\n`);
       }
     }
 
@@ -400,7 +442,7 @@ export class AgentRouter {
   private buildOpenAiMessages(
     messages: ChatMessage[],
     mode: CopilotMode = 'ask',
-  ): Array<{ role: string; content: string }> {
+  ): Array<Record<string, unknown>> {
     const mapped = messages
       .filter((m) => m.role !== 'system' || m.content.trim().length > 0)
       .map((m) => ({ role: m.role, content: m.content }));

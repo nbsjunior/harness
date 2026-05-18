@@ -1,3 +1,13 @@
+/**
+ * @module webview/chat/main
+ * Browser-side Harness chat UI (runs inside VS Code webview).
+ *
+ * **Why:** Extension host cannot render React/DOM directly; this bundle handles UX:
+ * agent dropdown, mode bar (Ask / Agent / Spec+Agent), context chips, markdown streaming.
+ *
+ * **Protocol:** `vscode.postMessage` ↔ `ChatViewProvider` using `WebviewCommand` / `ExtensionCommand`.
+ * Does not call agents directly — all sends go through `sendMessage` command.
+ */
 import { marked } from 'marked';
 import type {
   AgentDescriptor,

@@ -10,6 +10,14 @@ import type { CliService } from '../services/CliService';
  * Secret storage keys — API credentials are stored in VSCode's encrypted
  * SecretStorage, never in settings.json or on disk in plain text.
  */
+export interface ApiServerEntry {
+  id: string;
+  name: string;
+  baseUrl: string;
+  apiKey?: string;
+  model?: string;
+}
+
 const SECRET_KEYS: Record<AgentId, string> = {
   copilot: 'harness.connectors.copilot.token',
   claude:  'harness.connectors.claude.apiKey',
@@ -238,6 +246,13 @@ export class ConfigurationPanel {
       cliPath: config.get<string>('cliPath', ''),
       mcpEnabled: config.get<boolean>('mcp.enabled', true),
       mcpServers: config.get<unknown[]>('mcp.servers', []),
+      apiServers: config.get<ApiServerEntry[]>('apiServers', []),
+      agentEndpoints: {
+        copilot: config.get<string>('connectors.copilot.endpoint', 'https://api.githubcopilot.com'),
+        devin: config.get<string>('connectors.devin.endpoint', 'https://api.devin.ai/v1'),
+        cursor: config.get<string>('connectors.cursor.endpoint', ''),
+        kiro: config.get<string>('connectors.kiro.endpoint', ''),
+      },
     };
     await this.panel.webview.postMessage({ command: 'configLoaded', payload: cfg });
   }

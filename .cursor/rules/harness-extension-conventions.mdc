@@ -1,0 +1,62 @@
+---
+description: Extension conventions — IPC client, webview protocol, secrets
+globs: packages/extension/src/**/*.ts
+alwaysApply: false
+---
+
+# Extension Coding Conventions
+
+## No File I/O in Extension Host
+
+The extension host must NEVER read file contents directly:
+
+```typescript
+// ❌ BAD — blocks UI thread, duplicates CLI logic
+const content = fs.readFileSync(filePath, 'utf-8');
+
+// ✅ GOOD — send absolute paths to CLI, it handles I/O
+const contextPaths = contextProvider.getAbsolutePaths();
+await agentService.chat({ contextPaths, ... });
+```
+
+## IPC via CliService
+
+```typescript
+// Send a request and await response
+const result = await cliService.send({ id: uuid, action: 'ping', payload: {} });
+
+// Subscribe to push events (streaming)
+const dispose = cliService.onCliMessage('chat:chunk', (msg) => { ... });
+// Remember to dispose when done
+```
+
+## Webview ↔ Extension Protocol
+
+Extension → Webview: `ExtensionCommand` (appendChunk, initialize, modeChanged, …)
+Webview → Extension: `WebviewCommand` (sendMessage, selectAgent, selectMode, …)
+
+```typescript
+// Extension side
+this.post({ command: 'modeChanged', payload: { mode: 'agent' } });
+
+// Webview side (main.ts)
+postMessage({ command: 'selectMode', payload: { mode: 'agent' } });
+```
+
+## Secrets Storage
+
+```typescript
+// ✅ Store
+await context.secrets.store('harness.connectors.copilot.token', token);
+
+// ✅ Read
+const token = await context.secrets.get('harness.connectors.copilot.token');
+```
+
+Never store secrets in VS Code settings (they appear in settings.json in plain text).
+
+## Adding a VS Code Command
+
+1. Register in `extension.ts`: `vscode.commands.registerCommand('harness.myCmd', ...)`
+2. Declare in `package.json` → `contributes.commands`
+3. Add to palette via `contributes.menus` if needed
