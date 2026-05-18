@@ -1,0 +1,27 @@
+{
+  "name": "harness",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Meta-Agent Orchestrator for VSCode — abstracts GitHub Copilot, Devin, Cursor, Claude Code and AWS KIRO",
+  "workspaces": [
+    "packages/extension",
+    "packages/cli"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "build:cli": "npm run build -w packages/cli",
+    "build:extension": "npm run build -w packages/extension",
+    "watch": "npm run watch --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present && rimraf node_modules"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

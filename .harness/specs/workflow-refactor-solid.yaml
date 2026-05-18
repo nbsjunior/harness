@@ -1,0 +1,27 @@
+kind: Workflow
+name: refactor-to-solid
+description: "Refactors a module to comply with SOLID design principles: SRP, OCP, LSP, ISP, DIP"
+tools:
+  - name: read_file
+    description: "Reads the target module file"
+    parameters:
+      path:
+        type: string
+        description: "Relative path to the file"
+  - name: apply_patch
+    description: "Applies a refactoring patch to a file"
+    parameters:
+      path:
+        type: string
+      patch:
+        type: string
+        description: "Unified diff patch content"
+  - name: run_tests
+    description: "Runs the test suite to verify the refactoring"
+    parameters:
+      command:
+        type: string
+        default: "npm test"
+agents:
+  preferred: cursor
+  fallback: claude

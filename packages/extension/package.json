@@ -1,0 +1,353 @@
+{
+  "name": "harness-vscode",
+  "displayName": "Harness — Meta-Agent Orchestrator",
+  "description": "Unified AI coding agent interface: GitHub Copilot, Devin, Cursor, Claude Code and AWS KIRO in one place.",
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "harness-ai",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/harness-ai/harness-vscode"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "agent",
+    "copilot",
+    "cursor",
+    "claude",
+    "mcp",
+    "orchestrator",
+    "spec-driven"
+  ],
+  "activationEvents": [
+    "onView:harness.chatView",
+    "onView:harness.specView",
+    "onCommand:harness.runAgent",
+    "onCommand:harness.initWorkspace",
+    "onCommand:harness.openConfig"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "harness-sidebar",
+          "title": "Harness",
+          "icon": "resources/harness.svg"
+        }
+      ]
+    },
+    "views": {
+      "harness-sidebar": [
+        {
+          "type": "webview",
+          "id": "harness.chatView",
+          "name": "Chat",
+          "contextualTitle": "Harness Chat"
+        },
+        {
+          "type": "webview",
+          "id": "harness.specView",
+          "name": "Spec Manager",
+          "contextualTitle": "Harness Spec Manager"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "harness.addToContext",
+        "title": "Add to Harness Context",
+        "category": "Harness",
+        "icon": "$(add)"
+      },
+      {
+        "command": "harness.removeFromContext",
+        "title": "Remove from Harness Context",
+        "category": "Harness",
+        "icon": "$(remove)"
+      },
+      {
+        "command": "harness.runAgent",
+        "title": "Run Agent",
+        "category": "Harness",
+        "icon": "$(play)"
+      },
+      {
+        "command": "harness.openConfig",
+        "title": "Open Configuration",
+        "category": "Harness",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "harness.initWorkspace",
+        "title": "Initialize Workspace",
+        "category": "Harness",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "harness.newSpec",
+        "title": "New Spec / Skill",
+        "category": "Harness",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "harness.clearContext",
+        "title": "Clear Context",
+        "category": "Harness",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "harness.showContext",
+        "title": "Show Current Context",
+        "category": "Harness"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "harness.addToContext",
+          "when": "explorerResourceIsFolder || resourceLangId",
+          "group": "2_workspace@99"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "harness.addToContext",
+          "group": "harness@1"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "harness.addToContext",
+          "group": "navigation",
+          "when": "resourceLangId"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "harness.openConfig",
+          "when": "view == harness.chatView",
+          "group": "navigation"
+        },
+        {
+          "command": "harness.clearContext",
+          "when": "view == harness.chatView",
+          "group": "navigation"
+        },
+        {
+          "command": "harness.newSpec",
+          "when": "view == harness.specView",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "harness.addToContext",
+          "when": "explorerResourceIsFolder || resourceLangId"
+        },
+        {
+          "command": "harness.removeFromContext"
+        },
+        {
+          "command": "harness.runAgent"
+        },
+        {
+          "command": "harness.openConfig"
+        },
+        {
+          "command": "harness.initWorkspace"
+        },
+        {
+          "command": "harness.newSpec"
+        },
+        {
+          "command": "harness.clearContext"
+        },
+        {
+          "command": "harness.showContext"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Harness",
+      "properties": {
+        "harness.specsDirectory": {
+          "type": "string",
+          "default": ".harness/specs",
+          "description": "Directory (relative to workspace root) where Spec-Driven Development YAML/Markdown files are stored.",
+          "scope": "resource"
+        },
+        "harness.contextDirectories": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Directories to include in agent context by default.",
+          "scope": "resource"
+        },
+        "harness.defaultAgent": {
+          "type": "string",
+          "enum": ["copilot", "devin", "cursor", "claude", "kiro"],
+          "default": "copilot",
+          "description": "Default agent to use when no agent is specified in a Spec.",
+          "scope": "resource"
+        },
+        "harness.cliPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to the Harness CLI binary. Leave empty to use the bundled CLI.",
+          "scope": "machine"
+        },
+        "harness.connectors.copilot.token": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub personal access token for Copilot API access.",
+          "scope": "machine"
+        },
+        "harness.connectors.copilot.endpoint": {
+          "type": "string",
+          "default": "https://api.githubcopilot.com",
+          "description": "GitHub Copilot API endpoint.",
+          "scope": "machine"
+        },
+        "harness.connectors.devin.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Devin API key.",
+          "scope": "machine"
+        },
+        "harness.connectors.devin.endpoint": {
+          "type": "string",
+          "default": "https://api.devin.ai/v1",
+          "description": "Devin API endpoint.",
+          "scope": "machine"
+        },
+        "harness.connectors.cursor.endpoint": {
+          "type": "string",
+          "default": "",
+          "description": "Cursor AI MCP/HTTP endpoint for agent calls.",
+          "scope": "machine"
+        },
+        "harness.connectors.cursor.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Cursor AI API key.",
+          "scope": "machine"
+        },
+        "harness.connectors.claude.path": {
+          "type": "string",
+          "default": "claude",
+          "description": "Path to the Claude Code CLI binary (e.g. 'claude' if on PATH).",
+          "scope": "machine"
+        },
+        "harness.connectors.claude.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic API key for Claude (used when not relying on Claude Code CLI auth).",
+          "scope": "machine"
+        },
+        "harness.connectors.kiro.endpoint": {
+          "type": "string",
+          "default": "",
+          "description": "AWS KIRO API endpoint.",
+          "scope": "machine"
+        },
+        "harness.connectors.kiro.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "AWS KIRO API key.",
+          "scope": "machine"
+        },
+        "harness.mcp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable MCP (Model Context Protocol) client for connecting to external MCP servers.",
+          "scope": "resource"
+        },
+        "harness.mcp.servers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "transport": { "type": "string", "enum": ["stdio", "http"] },
+              "command": { "type": "string" },
+              "args": { "type": "array", "items": { "type": "string" } },
+              "url": { "type": "string" }
+            },
+            "required": ["name", "transport"]
+          },
+          "default": [],
+          "description": "List of MCP servers to connect to.",
+          "scope": "resource"
+        },
+        "harness.telemetry.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable anonymous usage telemetry to help improve Harness.",
+          "scope": "machine"
+        }
+      }
+    },
+    "walkthroughs": [
+      {
+        "id": "harness.gettingStarted",
+        "title": "Getting Started with Harness",
+        "description": "Set up your AI agent orchestrator in minutes.",
+        "steps": [
+          {
+            "id": "harness.gettingStarted.init",
+            "title": "Initialize your workspace",
+            "description": "Run **Harness: Initialize Workspace** to create the `.harness/` directory with example specs.\n[Initialize Workspace](command:harness.initWorkspace)",
+            "completionEvents": ["onCommand:harness.initWorkspace"]
+          },
+          {
+            "id": "harness.gettingStarted.configure",
+            "title": "Configure agent connectors",
+            "description": "Add your API keys in Harness settings.\n[Open Configuration](command:harness.openConfig)",
+            "completionEvents": ["onCommand:harness.openConfig"]
+          },
+          {
+            "id": "harness.gettingStarted.chat",
+            "title": "Start chatting with your agent",
+            "description": "Click the Harness icon in the Activity Bar and start a conversation.",
+            "completionEvents": ["onView:harness.chatView"]
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "build:prod": "node esbuild.mjs --production",
+    "clean": "rimraf dist",
+    "vscode:prepublish": "npm run build:prod",
+    "package": "vsce package --no-dependencies",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.2",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
+    "execa": "^9.5.2",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.24.4"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.15.17",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.3.2",
+    "esbuild": "^0.25.4",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.8.3"
+  }
+}

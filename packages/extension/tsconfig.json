@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node", "vscode"],
+    "paths": {
+      "@harness/cli": ["../cli/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/webview/**/*.ts"
+  ],
+  "references": [
+    { "path": "../cli" }
+  ]
+}

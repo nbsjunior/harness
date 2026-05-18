@@ -1,0 +1,45 @@
+{
+  "name": "@harness/cli",
+  "version": "0.1.0",
+  "description": "Harness CLI — local orchestrator for AI agent calls and SDD spec management",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "bin": {
+    "harness": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "watch": "tsup --watch",
+    "build:prod": "tsup --minify",
+    "clean": "rimraf dist",
+    "lint": "eslint src --ext .ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.2",
+    "commander": "^13.1.0",
+    "js-yaml": "^4.1.0",
+    "remark": "^15.0.1",
+    "remark-frontmatter": "^5.0.0",
+    "unified": "^11.0.5",
+    "zod": "^3.24.4",
+    "execa": "^9.5.2"
+  },
+  "devDependencies": {
+    "@commander-js/extra-typings": "^13.1.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.15.17",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

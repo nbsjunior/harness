@@ -1,0 +1,13 @@
+kind: Skill
+name: code-review
+description: "Performs a thorough code review focused on correctness, security and SOLID principles"
+tools:
+  - name: read_file
+    description: "Reads a source file from the workspace"
+  - name: suggest_fix
+    description: "Suggests a code fix for a flagged issue"
+  - name: add_comment
+    description: "Adds an inline review comment"
+agents:
+  preferred: copilot
+  fallback: claude
