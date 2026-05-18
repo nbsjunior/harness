@@ -4,6 +4,7 @@ import { URL } from 'url';
 import { execa } from 'execa';
 import type { ChatMessage, ContextItem, AgentId } from '../types.js';
 import type { AgentConnectorConfig } from '../config.js';
+import { buildCopilotAuthHeaders, validateCopilotToken } from '../connectors/copilotAuth.js';
 
 export interface AgentRequest {
   sessionId: string;
@@ -58,7 +59,16 @@ export class AgentRouter {
   private async routeCopilot(req: AgentRequest): Promise<void> {
     const cfg = req.config.copilot;
     if (!cfg.token) {
-      req.onError('GitHub Copilot token not configured. Set GITHUB_TOKEN or harness.connectors.copilot.token.');
+      req.onError(
+        'GitHub Copilot token not configured. Run `gh auth login`, set GH_TOKEN, ' +
+          'or save a fine-grained PAT (github_pat_…) via Harness configuration.',
+      );
+      return;
+    }
+
+    const tokenError = validateCopilotToken(cfg.token);
+    if (tokenError) {
+      req.onError(tokenError);
       return;
     }
 
@@ -71,7 +81,7 @@ export class AgentRouter {
 
     await this.streamSseRequest(
       url,
-      { Authorization: `Bearer ${cfg.token}`, 'Content-Type': 'application/json' },
+      { ...buildCopilotAuthHeaders(cfg.token), 'Content-Type': 'application/json' },
       body,
       req.onChunk,
       req.onDone,

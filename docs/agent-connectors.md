@@ -45,7 +45,7 @@ Open `Ctrl+Shift+P → Harness: Open Configuration` or edit `settings.json`:
 
 | Agent | Variable |
 |---|---|
-| GitHub Copilot | `GITHUB_TOKEN` or `COPILOT_TOKEN` |
+| GitHub Copilot | `GH_TOKEN`, `COPILOT_GITHUB_TOKEN`, or `GITHUB_TOKEN` |
 | Devin | `DEVIN_API_KEY` |
 | Cursor AI | `CURSOR_API_KEY` |
 | Claude Code | `ANTHROPIC_API_KEY`, `CLAUDE_PATH` |
@@ -72,10 +72,25 @@ connectors:
     # token: set via GITHUB_TOKEN env var or VSCode settings
 ```
 
-#### Required permissions
+#### Authentication (important)
 
-The GitHub token needs the `copilot` scope. Generate at:  
-`github.com → Settings → Developer settings → Personal access tokens`
+The Copilot API (`api.githubcopilot.com`) **does not accept classic PATs** (`ghp_…`).  
+If you see:
+
+```text
+HTTP 400: Personal Access Tokens are not supported for this endpoint
+```
+
+use one of these instead:
+
+| Method | How |
+|---|---|
+| **GitHub CLI (recommended)** | `gh auth login` → copy output of `gh auth token` (`gho_…`) |
+| **Fine-grained PAT** | [github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens) with **Copilot** permissions (`github_pat_…`) |
+
+Harness sends the header `Copilot-Integration-Id: copilot-developer-cli` on every Copilot API request.
+
+You need an **active GitHub Copilot subscription** on the account.
 
 ---
 

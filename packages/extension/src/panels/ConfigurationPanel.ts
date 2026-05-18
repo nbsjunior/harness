@@ -3,6 +3,8 @@ import * as https from 'https';
 import * as http from 'http';
 import { URL } from 'url';
 import type { AgentId, ConnectionResultPayload, SecretStatusPayload } from '../types';
+import { buildCopilotAuthHeaders, validateCopilotToken } from '../copilotAuth';
+import type { CliService } from '../services/CliService';
 
 /**
  * Secret storage keys — API credentials are stored in VSCode's encrypted
@@ -25,6 +27,7 @@ export class ConfigurationPanel {
   private constructor(
     private readonly extensionUri: vscode.Uri,
     private readonly context: vscode.ExtensionContext,
+    private readonly cliService?: CliService,
   ) {
     this.panel = vscode.window.createWebviewPanel(
       ConfigurationPanel.VIEW_TYPE,
@@ -49,12 +52,16 @@ export class ConfigurationPanel {
     });
   }
 
-  static createOrShow(extensionUri: vscode.Uri, context: vscode.ExtensionContext): void {
+  static createOrShow(
+    extensionUri: vscode.Uri,
+    context: vscode.ExtensionContext,
+    cliService?: CliService,
+  ): void {
     if (ConfigurationPanel.instance) {
       ConfigurationPanel.instance.panel.reveal(vscode.ViewColumn.One);
       return;
     }
-    ConfigurationPanel.instance = new ConfigurationPanel(extensionUri, context);
+    ConfigurationPanel.instance = new ConfigurationPanel(extensionUri, context, cliService);
   }
 
   // ---------------------------------------------------------------------------
@@ -75,6 +82,13 @@ export class ConfigurationPanel {
         await this.context.secrets.store(key, value);
         this.context.globalState.update(`${key}__set`, true);
         await this.sendSecretStatus();
+        if (this.cliService) {
+          await this.cliService.restart().catch((err: Error) => {
+            void vscode.window.showWarningMessage(
+              `Token saved, but CLI restart failed: ${err.message}`,
+            );
+          });
+        }
         break;
       }
 
@@ -141,8 +155,15 @@ export class ConfigurationPanel {
     try {
       switch (agent) {
         case 'copilot': {
+          const tokenError = validateCopilotToken(token);
+          if (tokenError) {
+            return { agent, ok: false, error: tokenError };
+          }
           const ep = endpoint || 'https://api.githubcopilot.com';
-          const result = await this.httpGet(new URL('/models', ep), { Authorization: `Bearer ${token}` });
+          const result = await this.httpGet(
+            new URL('/models', ep),
+            buildCopilotAuthHeaders(token),
+          );
           const data = JSON.parse(result) as { data?: Array<{ id: string }> };
           const model = data.data?.[0]?.id ?? 'gpt-4o';
           return { agent, ok: true, model };

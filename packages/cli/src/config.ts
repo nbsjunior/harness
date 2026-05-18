@@ -58,7 +58,13 @@ export function loadAgentConfig(specsDir?: string): AgentConnectorConfig {
 
   return {
     copilot: {
-      token: c.copilot?.token ?? process.env['GITHUB_TOKEN'] ?? process.env['COPILOT_TOKEN'] ?? '',
+      token:
+        c.copilot?.token ??
+        process.env['COPILOT_GITHUB_TOKEN'] ??
+        process.env['GH_TOKEN'] ??
+        process.env['GITHUB_TOKEN'] ??
+        process.env['COPILOT_TOKEN'] ??
+        '',
       endpoint: c.copilot?.endpoint ?? 'https://api.githubcopilot.com',
     },
     devin: {

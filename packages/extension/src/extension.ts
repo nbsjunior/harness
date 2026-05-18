@@ -143,7 +143,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Open configuration panel
     vscode.commands.registerCommand('harness.openConfig', () => {
-      ConfigurationPanel.createOrShow(context.extensionUri, context);
+      ConfigurationPanel.createOrShow(context.extensionUri, context, cliService);
     }),
 
     // Initialize workspace .harness/ directory
