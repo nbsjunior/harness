@@ -257,6 +257,7 @@ export type WebviewCommand =
   | 'saveSpec'
   | 'deleteSpec'
   | 'openConfig'
+  | 'openFile'
   | 'ready'
   // Chat streaming control
   | 'stopStream'

@@ -233,7 +233,8 @@ export class AgentRouter {
           tool_call_id: toolCall.id,
           content: result,
         });
-        req.onChunk(`- \`${toolCall.function.name}\`: ${result.split('\n')[0]?.slice(0, 120) ?? 'ok'}\n`);
+        const toolArgs = JSON.parse(toolCall.function.arguments) as Record<string, string>;
+        req.onChunk(formatToolResultChunk(toolCall.function.name, toolArgs, result) + '\n');
       }
     }
 
@@ -686,6 +687,52 @@ function buildCopilotTools(): unknown[] {
       },
     },
   ];
+}
+
+/** Format tool output for chat UI — uses `path:line` so the webview can linkify file refs. */
+function formatToolResultChunk(
+  toolName: string,
+  args: Record<string, string>,
+  result: string,
+): string {
+  const workspace = process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  const firstLine = result.split('\n')[0]?.trim() ?? '';
+
+  if (toolName === 'read_file' || toolName === 'write_file') {
+    const p = args['path'];
+    if (p) {
+      const display = p.replace(/\\/g, '/');
+      const verb = toolName === 'write_file' ? 'Wrote' : 'Read';
+      return `- ${verb} \`${display}\``;
+    }
+    const absMatch = result.match(/(?:Written |Error: file not found: )?([^\s(]+)/);
+    if (absMatch?.[1]) {
+      const rel = toWorkspaceRelPath(absMatch[1], workspace);
+      const verb = toolName === 'write_file' ? 'Wrote' : 'Read';
+      return `- ${verb} \`${rel}\``;
+    }
+  }
+
+  if (toolName === 'search_in_files' && firstLine.includes(':')) {
+    const m = firstLine.match(/^(.+?):(\d+):/);
+    if (m?.[1] && m[2]) {
+      const rel = toWorkspaceRelPath(m[1], workspace);
+      return `- Match \`${rel}:${m[2]}\``;
+    }
+  }
+
+  const preview = firstLine.slice(0, 100);
+  return `- \`${toolName}\`: ${preview || 'ok'}`;
+}
+
+function toWorkspaceRelPath(abs: string, workspace: string): string {
+  try {
+    const rel = fsPath.relative(workspace, abs);
+    if (rel && !rel.startsWith('..') && !fsPath.isAbsolute(rel)) {
+      return rel.replace(/\\/g, '/');
+    }
+  } catch { /* keep absolute */ }
+  return abs.replace(/\\/g, '/');
 }
 
 async function executeCopilotTool(
