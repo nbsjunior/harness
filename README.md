@@ -55,9 +55,25 @@ Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instea
 
 ---
 
-## Quick Start
+## Installation
 
-### Prerequisites
+### Option A — Install from VSIX (end users)
+
+1. Download `harness-vscode-0.1.0.vsix` from the [**Releases**](https://github.com/nbsjunior/harness/releases) page.
+2. Open VSCode → `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
+3. Select the downloaded file and click **Reload**.
+
+Or from the terminal:
+
+```bash
+code --install-extension harness-vscode-0.1.0.vsix
+```
+
+> **[→ Full user guide: docs/user-guide.md](docs/user-guide.md)** — covers agent setup, chat, context, Spec Manager, CLI, and troubleshooting.
+
+### Option B — Build from source (contributors / developers)
+
+**Prerequisites**
 
 | Requirement | Version |
 |---|---|
@@ -65,38 +81,58 @@ Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instea
 | npm | ≥ 10 |
 | VSCode | ≥ 1.85 |
 
-### 1. Clone and install
-
 ```bash
 git clone https://github.com/nbsjunior/harness.git
 cd harness
 npm install
+npm run build:cli          # build the CLI daemon first
 ```
 
-### 2. Build the CLI (required before running the extension)
+**Run in development mode (F5 hot-reload)**
 
 ```bash
-npm run build:cli
+npm run watch              # watch both packages
+code packages/extension    # open only the extension folder
+# Press F5 → Extension Development Host opens
 ```
 
-### 3. Run in development mode (F5)
+**Package as .vsix**
 
 ```bash
-# Watch mode for both packages
-npm run watch
+cd packages/extension
+npm run package            # → harness-vscode-*.vsix
 ```
 
-Open `packages/extension` in VSCode, then press **F5**. A new *Extension Development Host* window opens with the Harness icon in the Activity Bar.
+> For the full developer workflow see [docs/getting-started.md](docs/getting-started.md).
 
-### 4. Initialize your workspace
+## Quick Setup (after install)
 
-In the Extension Development Host window, open a project folder and run:
+### 1. Initialize your workspace
+
+Open the project you want to use with Harness, then:
 
 ```
 Ctrl+Shift+P → Harness: Initialize Workspace
 ```
 
 This creates `.harness/` with example specs and a configuration template.
+
+### 2. Configure an agent
+
+```
+Ctrl+Shift+P → Harness: Open Configuration
+```
+
+Set an API key for at least one agent. The easiest to start is **GitHub Copilot**:
+
+```jsonc
+// settings.json
+{ "harness.connectors.copilot.token": "ghp_xxxxxxxxxxxxxxxxxxxx" }
+```
+
+### 3. Chat
+
+Click the **Harness icon** in the Activity Bar, type a message, press **Enter**.
 
 ---
 
@@ -314,6 +350,20 @@ npm run clean
 | Markdown parsing | remark + remark-frontmatter |
 | MCP client | @modelcontextprotocol/sdk |
 | CLI framework | commander + @commander-js/extra-typings |
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| **[docs/user-guide.md](docs/user-guide.md)** | **Install, configure, and use Harness** — start here |
+| [docs/getting-started.md](docs/getting-started.md) | Developer setup: clone, build, F5 hot-reload |
+| [docs/architecture.md](docs/architecture.md) | System design: extension ↔ CLI ↔ agents |
+| [docs/ipc-protocol.md](docs/ipc-protocol.md) | stdin/stdout newline-JSON protocol reference |
+| [docs/sdd-specs.md](docs/sdd-specs.md) | Spec-Driven Development: Skills, Tools, Workflows |
+| [docs/agent-connectors.md](docs/agent-connectors.md) | Per-agent configuration and protocol details |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to add connectors, commit conventions, PR checklist |
 
 ---
 

@@ -1,6 +1,8 @@
-# Getting Started with Harness
+# Getting Started with Harness (Developer Setup)
 
-This guide walks you through installing, configuring, and using Harness for the first time.
+> **Looking to install Harness as a user?** See [user-guide.md](user-guide.md) for installing from the `.vsix` file and using the extension.
+
+This guide is for **contributors and developers** who want to clone the repository, run the extension in development mode, and contribute to the codebase.
 
 ---
 
@@ -15,7 +17,7 @@ This guide walks you through installing, configuring, and using Harness for the 
 
 ---
 
-## Step 1 — Install
+## Step 1 — Clone and install
 
 ```bash
 git clone https://github.com/nbsjunior/harness.git
@@ -137,11 +139,7 @@ Refactor this code to comply with SOLID principles
 3. Click **+ New Spec** to create a custom skill or workflow
 4. Fill in the form and click **Save Spec**
 
-The spec is saved as a `.yaml` file. Convert it to Markdown format for richer documentation:
-
-```bash
-harness spec:parse .harness/specs/ --output yaml
-```
+The spec is saved as a `.md` file with YAML frontmatter. See [sdd-specs.md](sdd-specs.md) for the full spec format reference.
 
 ---
 
@@ -202,6 +200,11 @@ Open the **Harness** output channel (`View → Output → Harness`) and look for
 
 ## Next Steps
 
-- Read [docs/sdd-specs.md](sdd-specs.md) to write effective specs for your project
-- Read [docs/agent-connectors.md](agent-connectors.md) to configure Devin, Cursor, Claude, and KIRO
-- Read [CONTRIBUTING.md](../CONTRIBUTING.md) to add a custom agent connector
+| What | Where |
+|---|---|
+| Use Harness as an end user (VSIX install) | [user-guide.md](user-guide.md) |
+| Write effective SDD specs | [sdd-specs.md](sdd-specs.md) |
+| Configure Devin, Cursor, Claude, and KIRO | [agent-connectors.md](agent-connectors.md) |
+| Add a custom agent connector | [CONTRIBUTING.md](../CONTRIBUTING.md) |
+| Understand the IPC protocol | [ipc-protocol.md](ipc-protocol.md) |
+| Architecture overview | [architecture.md](architecture.md) |
