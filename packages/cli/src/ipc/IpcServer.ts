@@ -3,6 +3,9 @@ import { AgentRouter } from '../router/AgentRouter.js';
 import { parseSpecDirectory } from '../parsers/specParser.js';
 import { contextBuildCommand } from '../commands/contextBuild.js';
 import { loadAgentConfig } from '../config.js';
+import { installAidlcRules } from '../aidlc/install.js';
+import { getAidlcStatus } from '../aidlc/status.js';
+import { installAidlcRules } from '../aidlc/install.js';
 import type {
   IPCMessage,
   ChatSendPayload,
@@ -70,8 +73,9 @@ export async function startIpcServer(): Promise<void> {
   });
 
   process.stdin.on('end', () => {
-    process.stderr.write('[harness-cli] stdin closed — shutting down\n');
-    process.exit(0);
+    // Do not process.exit() — on Windows, stdin EOF can be spurious while the
+    // extension host is still running, which caused "CLI daemon exited unexpectedly".
+    process.stderr.write('[harness-cli] stdin end (daemon remains active until host disposes)\n');
   });
 
   process.stdin.on('error', (err: Error) => {
@@ -131,6 +135,18 @@ async function dispatchMessage(msg: IPCMessage, router: AgentRouter): Promise<vo
         action: 'agent:list:result',
         payload: { agents: ['copilot', 'devin', 'cursor', 'claude', 'kiro'] },
       });
+      break;
+
+    case 'aidlc:install':
+      await handleAidlcInstall(msg);
+      break;
+
+    case 'aidlc:status':
+      handleAidlcStatus(msg);
+      break;
+
+    case 'setup:bootstrap':
+      await handleSetupBootstrap(msg);
       break;
 
     default:
@@ -215,6 +231,47 @@ async function handleContextBuild(msg: IPCMessage<ContextBuildPayload>): Promise
   } finally {
     process.chdir(savedCwd);
   }
+}
+
+async function handleAidlcInstall(msg: IPCMessage<{ workspaceRoot?: string; force?: boolean }>): Promise<void> {
+  const workspace = msg.payload?.workspaceRoot ?? process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  try {
+    const result = await installAidlcRules(workspace, { force: msg.payload?.force });
+    writeFrame({
+      id: msg.id,
+      action: 'aidlc:install:result',
+      payload: result,
+    });
+  } catch (err) {
+    writeError(msg.id, 'aidlc:install:result', err instanceof Error ? err.message : String(err));
+  }
+}
+
+async function handleSetupBootstrap(
+  msg: IPCMessage<{ workspaceRoot?: string; quiet?: boolean }>,
+): Promise<void> {
+  const workspace = msg.payload?.workspaceRoot ?? process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  try {
+    // Lightweight only — full setup (incl. Kiro download) must use `harness setup` subprocess.
+    await installAidlcRules(workspace);
+    writeFrame({
+      id: msg.id,
+      action: 'setup:bootstrap:result',
+      payload: { ok: true, workspace },
+    });
+  } catch (err) {
+    writeError(msg.id, 'setup:bootstrap:result', err instanceof Error ? err.message : String(err));
+  }
+}
+
+function handleAidlcStatus(msg: IPCMessage<{ workspaceRoot?: string }>): void {
+  const workspace = msg.payload?.workspaceRoot ?? process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  const status = getAidlcStatus(workspace);
+  writeFrame({
+    id: msg.id,
+    action: 'aidlc:status:result',
+    payload: status,
+  });
 }
 
 async function handleSpecParse(msg: IPCMessage<SpecParsePayload>): Promise<void> {

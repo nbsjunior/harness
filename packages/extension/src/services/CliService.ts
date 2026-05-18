@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import type { IPCMessage, IpcAction } from '../types';
+import { buildHarnessProcessEnv } from '../configBridge';
 
 interface PendingRequest {
   resolve: (msg: IPCMessage) => void;
@@ -20,16 +21,6 @@ interface RunCommandResult {
 
 const REQUEST_TIMEOUT_MS = 30_000;
 const PING_TIMEOUT_MS = 5_000;
-
-/** SecretStorage keys → environment variables for the CLI subprocess. */
-const SECRET_ENV_MAP: Array<{ secretKey: string; envVar: string }> = [
-  { secretKey: 'harness.connectors.copilot.token', envVar: 'GH_TOKEN' },
-  { secretKey: 'harness.connectors.copilot.token', envVar: 'COPILOT_GITHUB_TOKEN' },
-  { secretKey: 'harness.connectors.claude.apiKey', envVar: 'ANTHROPIC_API_KEY' },
-  { secretKey: 'harness.connectors.devin.apiKey', envVar: 'DEVIN_API_KEY' },
-  { secretKey: 'harness.connectors.cursor.apiKey', envVar: 'CURSOR_API_KEY' },
-  { secretKey: 'harness.connectors.kiro.apiKey', envVar: 'KIRO_API_KEY' },
-];
 
 /**
  * Manages the lifecycle of the Harness CLI daemon subprocess and all
@@ -71,10 +62,15 @@ export class CliService extends EventEmitter {
       this.output.info(`Starting Harness CLI daemon: ${cliPath}`);
 
       const env = await this.buildCliEnv();
+      const cwd =
+        env['HARNESS_WORKSPACE'] && fs.existsSync(env['HARNESS_WORKSPACE'])
+          ? env['HARNESS_WORKSPACE']
+          : undefined;
 
       this.subprocess = child_process.spawn('node', [cliPath, '--ipc'], {
         stdio: ['pipe', 'pipe', 'pipe'],
         env,
+        ...(cwd ? { cwd } : {}),
       });
 
       // stdout → parse newline-delimited JSON frames
@@ -83,9 +79,12 @@ export class CliService extends EventEmitter {
         this.flushLineBuffer();
       });
 
-      // stderr → route to output channel (debug only, never parsed)
+      // stderr → CLI logs (never parse as JSON)
       this.subprocess.stderr!.on('data', (chunk: Buffer) => {
-        this.output.debug(`[cli] ${chunk.toString('utf-8').trimEnd()}`);
+        const text = chunk.toString('utf-8').trimEnd();
+        if (text) {
+          this.output.info(`[cli] ${text}`);
+        }
       });
 
       this.subprocess.on('error', (err: Error) => {
@@ -172,10 +171,19 @@ export class CliService extends EventEmitter {
    */
   async runCommand(command: string, args: string[] = []): Promise<RunCommandResult> {
     const cliPath = this.resolveCliPath();
+    const env = await this.buildCliEnv();
+    delete env['HARNESS_IPC'];
+
+    const cwd =
+      env['HARNESS_WORKSPACE'] && fs.existsSync(env['HARNESS_WORKSPACE'])
+        ? env['HARNESS_WORKSPACE']
+        : undefined;
 
     return new Promise<RunCommandResult>((resolve) => {
       const proc = child_process.spawn('node', [cliPath, command, ...args], {
         stdio: ['ignore', 'pipe', 'pipe'],
+        env,
+        ...(cwd ? { cwd } : {}),
       });
 
       const stdoutChunks: Buffer[] = [];
@@ -338,23 +346,10 @@ export class CliService extends EventEmitter {
   }
 
   private async buildCliEnv(): Promise<NodeJS.ProcessEnv> {
-    const env: NodeJS.ProcessEnv = {
+    return buildHarnessProcessEnv(this.context, {
       ...process.env,
       HARNESS_IPC: '1',
-      HARNESS_WORKSPACE: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '',
-    };
-
-    for (const { secretKey, envVar } of SECRET_ENV_MAP) {
-      if (env[envVar]) {
-        continue;
-      }
-      const value = await this.context.secrets.get(secretKey);
-      if (value) {
-        env[envVar] = value;
-      }
-    }
-
-    return env;
+    });
   }
 
   private resolveCliPath(): string {

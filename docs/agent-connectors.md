@@ -184,27 +184,43 @@ claude --version
 
 ---
 
-### AWS KIRO
+### Kiro (AI-DLC)
 
-**Protocol:** REST API (single response)  
-**Streaming:** No  
-**Default endpoint:** _(must be configured)_
+**Protocol:** [Kiro CLI](https://kiro.dev/docs/cli/) headless (`kiro-cli chat --no-interactive`)  
+**Workflow:** [AWS AI-DLC](https://github.com/awslabs/aidlc-workflows) steering rules in `.kiro/steering/`  
+**Streaming:** Line-by-line stdout (non-interactive session)  
+**Artifacts:** `aidlc-docs/`
 
 #### How it works
 
-Sends a `POST /invoke` request with the user's prompt and context metadata. Returns a `response` or `output` field from the JSON response body.
+1. Harness installs (or verifies) AI-DLC rules under `.kiro/steering/aws-aidlc-rules/` and `.kiro/aws-aidlc-rule-details/`.
+2. Chat messages to agent `kiro` run `kiro-cli` with your prompt (prefixed with `Using AI-DLC,` when needed).
+3. Kiro loads steering files and executes the adaptive Inception → Construction → Operations workflow.
+4. Generated documentation lands in `aidlc-docs/`.
 
 ```yaml
 connectors:
   kiro:
-    endpoint: https://your-kiro-endpoint.example.com
-    # apiKey: set via KIRO_API_KEY env var
+    cliPath: kiro-cli
+    trustTools: read,grep,write
+    mode: cli
+
+aidlc:
+  autoInstall: true
+```
+
+```bash
+export KIRO_API_KEY=...   # Kiro Pro API key — see kiro.dev/docs/cli/authentication
+harness aidlc install
+harness agent:run -a kiro -p "Using AI-DLC, add user authentication"
 ```
 
 #### Notes
 
-- AWS KIRO's public API is in preview — check the AWS documentation for the latest endpoint format
-- Context items are sent as metadata (`{ path, kind, label }`) not file contents
+- Install rules: `harness aidlc install` or **Harness: Install AI-DLC Workflow (Kiro)**
+- Verify in Kiro CLI: `/context show` → `.kiro/steering/aws-aidlc-rules`
+- Full guide: [aidlc-kiro.md](aidlc-kiro.md)
+- Legacy `mode: rest` + `endpoint` still supported for custom REST gateways
 
 ---
 

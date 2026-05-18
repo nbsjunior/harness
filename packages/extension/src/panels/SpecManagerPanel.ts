@@ -126,10 +126,10 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
     const results: SpecDefinition[] = [];
 
     try {
-      const result = await this.cliService.send<{ filePath: string }, { specs: SpecDefinition[] }>({
+      const result = await this.cliService.send<{ path: string }, { specs: SpecDefinition[] }>({
         id: crypto.randomUUID(),
-        type: 'spec:parse',
-        payload: { filePath: specsDirPath },
+        action: 'spec:parse',
+        payload: { path: specsDirPath },
       });
       results.push(...(result.payload.specs ?? []));
     } catch {

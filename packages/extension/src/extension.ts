@@ -20,10 +20,29 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const mcpManager = new McpClientManager(context, outputChannel);
   const contextProvider = new ContextProvider(context);
 
-  // Start CLI subprocess immediately (non-blocking — it will re-try on first use if it fails)
-  cliService.start().catch((err: Error) => {
+  // Start IPC daemon first, then lightweight bootstrap in a separate process
+  // (never run Kiro download / setup inside the daemon — it breaks stdout IPC).
+  void cliService.start().catch((err: Error) => {
     outputChannel.error(`CLI failed to start: ${err.message}`);
   });
+
+  void (async () => {
+    try {
+      await cliService.start();
+      const workspace = vscode.workspace.workspaceFolders?.[0];
+      const args = ['-q', '--skip-kiro'];
+      if (workspace) {
+        args.push(workspace.uri.fsPath);
+      }
+      const result = await cliService.runCommand('setup', args);
+      if (result.stderr) {
+        outputChannel.info(result.stderr.trim());
+      }
+      outputChannel.info('Harness bootstrap complete (workspace + AI-DLC).');
+    } catch (err) {
+      outputChannel.warn(`Harness bootstrap: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  })();
 
   // Connect MCP servers from workspace configuration
   mcpManager.connectFromConfig().catch((err: Error) => {
@@ -146,27 +165,77 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       ConfigurationPanel.createOrShow(context.extensionUri, context, cliService);
     }),
 
+    // Diagnose setup (runs CLI doctor with extension secrets/env)
+    vscode.commands.registerCommand('harness.setup', async () => {
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+      try {
+        await cliService.start();
+        const result = await cliService.runCommand('setup', workspaceFolder ? [workspaceFolder.uri.fsPath] : []);
+        const channel = vscode.window.createOutputChannel('Harness Setup');
+        channel.clear();
+        channel.appendLine(result.stdout || result.stderr || 'Setup finished.');
+        channel.show();
+        if (result.success) {
+          void vscode.window.showInformationMessage('Harness setup complete (Kiro CLI + AI-DLC).');
+        } else {
+          void vscode.window.showWarningMessage('Harness setup finished with warnings. See Output → Harness Setup.');
+        }
+      } catch (err) {
+        void vscode.window.showErrorMessage(
+          `Setup failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }),
+
+    vscode.commands.registerCommand('harness.aidlcInstall', async () => {
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+      if (!workspaceFolder) {
+        void vscode.window.showErrorMessage('Open a workspace folder first.');
+        return;
+      }
+      try {
+        await cliService.start();
+        const msg = await cliService.send({
+          id: crypto.randomUUID(),
+          action: 'aidlc:install',
+          payload: { workspaceRoot: workspaceFolder.uri.fsPath },
+        });
+        if (msg.error) {
+          void vscode.window.showErrorMessage(`AI-DLC install failed: ${msg.error}`);
+          return;
+        }
+        const result = msg.payload as { created?: string[]; version?: string };
+        void vscode.window.showInformationMessage(
+          `AI-DLC v${result.version ?? '?'} installed. Use: "Using AI-DLC, …" in chat with Kiro.`,
+        );
+      } catch (err) {
+        void vscode.window.showErrorMessage(
+          `AI-DLC install failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }),
+
+    vscode.commands.registerCommand('harness.doctor', async () => {
+      const result = await cliService.runCommand('doctor', []);
+      const channel = vscode.window.createOutputChannel('Harness Doctor');
+      channel.clear();
+      channel.appendLine(result.stderr || result.stdout || 'Doctor completed.');
+      channel.show();
+      if (!result.success) {
+        void vscode.window.showWarningMessage(
+          'Harness doctor: no agents ready. See Output → Harness Doctor.',
+        );
+      } else {
+        void vscode.window.showInformationMessage('Harness doctor: at least one agent is ready.');
+      }
+    }),
+
     // Initialize workspace .harness/ directory
     vscode.commands.registerCommand('harness.initWorkspace', async () => {
       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
       if (!workspaceFolder) {
         void vscode.window.showErrorMessage('No workspace folder open.');
         return;
-      }
-
-      try {
-        await cliService.send({
-          id: crypto.randomUUID(),
-          type: 'chat:send',
-          payload: {
-            sessionId: 'init',
-            messages: [],
-            context: [],
-            agent: 'copilot',
-          },
-        });
-      } catch {
-        // Falls through to CLI direct call below
       }
 
       const result = await vscode.window.withProgress(

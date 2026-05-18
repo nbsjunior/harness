@@ -31,7 +31,7 @@ const AGENT_META: Record<AgentId, { initials: string; color: string; label: stri
   devin:   { initials: 'DV', color: '#7c3aed', label: 'Devin' },
   cursor:  { initials: 'CA', color: '#0ea5e9', label: 'Cursor AI' },
   claude:  { initials: 'CC', color: '#d97706', label: 'Claude Code' },
-  kiro:    { initials: 'KR', color: '#dc2626', label: 'AWS KIRO' },
+  kiro:    { initials: 'KR', color: '#dc2626', label: 'Kiro (AI-DLC)' },
 };
 
 const SLASH_COMMANDS = [

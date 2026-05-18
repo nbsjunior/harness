@@ -21,7 +21,13 @@ export type IpcAction =
   | 'mcp:call'
   | 'mcp:result'
   | 'ping'
-  | 'pong';
+  | 'pong'
+  | 'aidlc:install'
+  | 'aidlc:install:result'
+  | 'aidlc:status'
+  | 'aidlc:status:result'
+  | 'setup:bootstrap'
+  | 'setup:bootstrap:result';
 
 /**
  * Base IPC message envelope used for all stdin/stdout newline-delimited JSON

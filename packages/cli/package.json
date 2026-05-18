@@ -19,7 +19,8 @@
     "watch": "tsup --watch",
     "build:prod": "tsup --minify",
     "clean": "rimraf dist",
-    "lint": "eslint src --ext .ts"
+    "lint": "eslint src --ext .ts",
+    "postinstall": "node ./scripts/postinstall.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.2",

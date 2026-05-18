@@ -57,7 +57,13 @@ Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instea
 
 ## Starter Kit (recommended)
 
-**[→ docs/starter-kit.md](docs/starter-kit.md)** — install the `.vsix`, open the extension, configure **GitHub Copilot**, send your first message, and follow the **update flow**. The release `.vsix` includes the **compiled Harness CLI** (`cli/dist/index.js`) — no separate CLI install required.
+**[→ docs/starter-kit.md](docs/starter-kit.md)** — install the `.vsix`, open the extension, configure **GitHub Copilot**, send your first message, and follow the **update flow**.
+
+**[→ docs/dual-mode.md](docs/dual-mode.md)** — choose **VS Code Extension** or **CLI** (same router, same config).
+
+**[→ docs/aidlc-kiro.md](docs/aidlc-kiro.md)** — **Kiro + AWS AI-DLC** (Kiro CLI auto-installed, steering rules, `aidlc-docs/`).
+
+The release `.vsix` includes the **compiled Harness CLI** (`cli/dist/index.js`) — no separate CLI install required.
 
 ---
 
@@ -70,7 +76,7 @@ Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instea
 3. Select the downloaded file and click **Reload**.
 4. Click the **Harness** icon in the Activity Bar → follow [starter-kit.md](docs/starter-kit.md).
 
-Or from the terminal:
+Or from the terminal:.
 
 ```bash
 code --install-extension harness-vscode-0.1.0.vsix
