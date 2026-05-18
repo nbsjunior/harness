@@ -369,8 +369,9 @@
     "watch": "node esbuild.mjs --watch",
     "build:prod": "node esbuild.mjs --production",
     "clean": "rimraf dist",
-    "vscode:prepublish": "npm run build:prod",
-    "package": "vsce package --no-dependencies",
+    "bundle:cli": "node ../../scripts/bundle-cli.mjs",
+    "vscode:prepublish": "npm run build:prod && npm run bundle:cli",
+    "package": "npm run bundle:cli && vsce package --no-dependencies",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {

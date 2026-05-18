@@ -323,8 +323,9 @@ export class CliService extends EventEmitter {
       return configPath;
     }
 
-    // Bundled CLI (sibling package in the same monorepo install)
+    // Bundled CLI shipped inside the .vsix (packages/extension/cli/dist/)
     const candidates = [
+      path.join(this.context.extensionPath, 'cli', 'dist', 'index.js'),
       path.join(this.context.extensionPath, '..', 'cli', 'dist', 'index.js'),
       path.join(this.context.extensionPath, '..', '..', 'cli', 'dist', 'index.js'),
     ];

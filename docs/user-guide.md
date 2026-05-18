@@ -9,6 +9,7 @@
 1. [What is Harness?](#1-what-is-harness)
 2. [Requirements](#2-requirements)
 3. [Installation](#3-installation)
+3b. [Starter Kit (quick path)](#starter-kit-quick-path)
 4. [First-time setup](#4-first-time-setup)
 5. [Configuring agents](#5-configuring-agents)
 6. [Using the Chat](#6-using-the-chat)
@@ -54,7 +55,13 @@ The heavy lifting (reading files, parsing specs, calling APIs) happens inside th
 | Node.js | 20 | `node --version` |
 | npm | 10 | `npm --version` |
 
-> **Why Node.js?** Harness ships the extension UI but runs the CLI daemon (the part that calls AI APIs) as a separate Node.js process. Node.js must be available on your `PATH`.
+> **Why Node.js?** The extension UI loads in VSCode, but agent calls run in a **bundled CLI** process (`cli/dist/index.js` inside the extension folder). Node.js 20+ must be on your `PATH`.
+
+---
+
+## Starter Kit (quick path)
+
+For a guided flow (install `.vsix`, open extension, configure **GitHub Copilot**, first chat, and how to **update**), see **[starter-kit.md](starter-kit.md)**.
 
 ---
 
@@ -94,22 +101,32 @@ code --install-extension harness-vscode-*.vsix
 
 After installing, you'll see the **Harness icon** (hexagon) in the VSCode Activity Bar on the left.
 
-### 4.1 Install the CLI daemon
+### 4.1 CLI daemon (bundled in the extension)
 
-Harness uses a background Node.js process (the CLI). Install it globally so that any workspace can use it:
+When you install from the official `.vsix`, the **Harness CLI is already compiled** inside the extension:
 
-```bash
-# From inside the cloned repo
-cd packages/cli
-npm link
+```
+extensions/harness-ai.harness-vscode-0.1.0/cli/dist/index.js
 ```
 
-Or point the extension to the local build via settings:
+No `npm link` or manual build is required. The extension starts it automatically with:
+
+```text
+node <extension>/cli/dist/index.js --ipc
+```
+
+**Developers only** (monorepo checkout):
+
+```bash
+npm run build:cli
+npm run bundle:cli    # copies CLI into packages/extension/cli/dist/
+```
+
+Override path only if needed:
 
 ```json
-// .vscode/settings.json  or  user settings
 {
-  "harness.cliPath": "/absolute/path/to/harness/packages/cli/dist/index.js"
+  "harness.cliPath": "C:/path/to/harness/packages/cli/dist/index.js"
 }
 ```
 
