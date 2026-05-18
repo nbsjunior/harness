@@ -3,6 +3,7 @@ import * as path from 'path';
 import yaml from 'js-yaml';
 import type { AgentId } from './types.js';
 import { resolveKiroCliPathSync } from './kiro/bootstrap.js';
+import { getGhCliToken } from './connectors/ghToken.js';
 
 export interface AgentConnectorConfig {
   copilot: { token: string; endpoint: string };
@@ -137,6 +138,7 @@ export function loadHarnessConfig(specsDir?: string): LoadedHarnessConfig {
         process.env['GH_TOKEN'] ??
         process.env['GITHUB_TOKEN'] ??
         process.env['COPILOT_TOKEN'] ??
+        getGhCliToken() ??   // auto-detect from `gh auth token` when no env var is set
         '',
       endpoint:
         bridgeC.copilot?.endpoint ??

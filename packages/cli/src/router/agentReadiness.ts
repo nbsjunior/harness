@@ -1,6 +1,7 @@
 import type { AgentConnectorConfig } from '../config.js';
 import type { AgentId } from '../types.js';
 import { validateCopilotToken } from '../connectors/copilotAuth.js';
+import { isGhCliAvailable } from '../connectors/ghToken.js';
 
 export interface AgentReadiness {
   agent: AgentId;
@@ -24,11 +25,14 @@ export function checkAgentReadiness(
   switch (agent) {
     case 'copilot': {
       if (!config.copilot.token) {
+        const ghAvailable = isGhCliAvailable();
         return {
           agent,
           label: LABELS.copilot,
           ready: false,
-          hint: 'Set GH_TOKEN (`gh auth token`) or save token in Harness configuration.',
+          hint: ghAvailable
+            ? '`gh` found but not authenticated. Run: gh auth login'
+            : 'No token. Run `gh auth login` or save token in Harness → Configuration.',
         };
       }
       const tokenErr = validateCopilotToken(config.copilot.token);

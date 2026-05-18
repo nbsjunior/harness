@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { execFile } from 'child_process';
 import type { AgentId } from './types';
 
 function readCachedKiroCliPath(): string | undefined {
@@ -11,6 +12,23 @@ function readCachedKiroCliPath(): string | undefined {
   }
   const p = fs.readFileSync(marker, 'utf-8').trim();
   return p && fs.existsSync(p) ? p : undefined;
+}
+
+/**
+ * Try `gh auth token`. Returns the token or null.
+ * Classic PATs (ghp_) are rejected by the Copilot API, so we skip them.
+ */
+function getGhCliToken(): Promise<string | null> {
+  return new Promise((resolve) => {
+    execFile('gh', ['auth', 'token'], { timeout: 5000 }, (err, stdout) => {
+      if (err || !stdout) {
+        resolve(null);
+        return;
+      }
+      const t = stdout.trim();
+      resolve(t && !t.startsWith('ghp_') ? t : null);
+    });
+  });
 }
 
 /**
@@ -78,6 +96,17 @@ export async function buildHarnessProcessEnv(
       if (!env[envVar]) {
         env[envVar] = value;
       }
+    }
+  }
+
+  // Auto-detect GitHub token from `gh` CLI when none is saved in secrets or env.
+  // This means users only need to run `gh auth login` once — no manual copy/paste.
+  if (!env['GH_TOKEN'] && !env['COPILOT_GITHUB_TOKEN']) {
+    const ghToken = await getGhCliToken();
+    if (ghToken) {
+      env['GH_TOKEN'] = ghToken;
+      // Persist to VS Code secrets so it survives without gh CLI in PATH
+      void context.secrets.store('harness.connectors.copilot.token', ghToken);
     }
   }
 
