@@ -20,12 +20,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const mcpManager = new McpClientManager(context, outputChannel);
   const contextProvider = new ContextProvider(context);
 
-  // Start IPC daemon first, then lightweight bootstrap in a separate process
-  // (never run Kiro download / setup inside the daemon — it breaks stdout IPC).
-  void cliService.start().catch((err: Error) => {
-    outputChannel.error(`CLI failed to start: ${err.message}`);
-  });
-
+  // Start IPC daemon, then run lightweight workspace bootstrap in a separate process.
+  // (never run Kiro download / setup inside the daemon — it would block stdout IPC).
   void (async () => {
     try {
       await cliService.start();
@@ -40,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
       outputChannel.info('Harness bootstrap complete (workspace + AI-DLC).');
     } catch (err) {
-      outputChannel.warn(`Harness bootstrap: ${err instanceof Error ? err.message : String(err)}`);
+      outputChannel.error(`CLI failed to start or bootstrap: ${err instanceof Error ? err.message : String(err)}`);
     }
   })();
 
