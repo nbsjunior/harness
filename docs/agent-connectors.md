@@ -17,7 +17,7 @@ connectors:
   devin:
     endpoint: https://api.devin.ai/v1
   cursor:
-    endpoint: https://api.cursor.sh
+    endpoint: https://api.cursor.com
   claude:
     path: claude      # path to Claude Code CLI binary
   kiro:
@@ -121,25 +121,24 @@ connectors:
 
 ### Cursor AI
 
-**Protocol:** OpenAI-compatible HTTP (MCP optional)  
-**Streaming:** Yes  
-**Default endpoint:** _(must be configured)_
+**Protocol:** [Cursor Cloud Agents API v1](https://cursor.com/docs/cloud-agent/api/endpoints)  
+**Streaming:** Yes (SSE on run stream)  
+**Default endpoint:** `https://api.cursor.com`
 
 #### How it works
 
-Sends an OpenAI-compatible `POST /chat/completions` with `"stream": true` to the configured Cursor endpoint. Parses SSE chunks identically to the Copilot connector.
+Harness calls `POST /v1/agents`, then streams from `GET /v1/agents/{id}/runs/{runId}/stream`. Follow-ups use `POST /v1/agents/{id}/runs`.
+
+**Do not use `api2.cursor.sh`** — IDE internal API (gRPC), not REST → HTTP 404.
 
 ```yaml
 connectors:
   cursor:
-    endpoint: https://your-cursor-endpoint.example.com
+    endpoint: https://api.cursor.com
     # apiKey: set via CURSOR_API_KEY env var
 ```
 
-#### Notes
-
-- The endpoint is not publicly documented by Cursor — use the endpoint provided in your Cursor subscription
-- Supports the same model as your Cursor IDE subscription
+API key: [cursor.com/dashboard/integrations](https://cursor.com/dashboard/integrations). Auth: Basic `CURSOR_API_KEY:`.
 
 ---
 
