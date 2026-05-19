@@ -5,6 +5,7 @@ import type {
   ChatMessage,
   ChatSendPayload,
   ChatChunkPayload,
+  ChatUsagePayload,
   CopilotMode,
   IPCMessage,
 } from '../types';
@@ -39,6 +40,7 @@ export class AgentService {
     onComplete: (messageId: string) => void;
     onError: (error: string, messageId: string) => void;
     onAutoRouted?: (route: ChatAutoRoutedPayload) => void;
+    onUsage?: (usage: ChatUsagePayload) => void;
     onStopped?: () => void;
   }): Promise<void> {
     const {
@@ -52,6 +54,7 @@ export class AgentService {
       onComplete,
       onError,
       onAutoRouted,
+      onUsage,
       onStopped,
     } = options;
 
@@ -101,6 +104,20 @@ export class AgentService {
       onAutoRouted?.(p);
     });
 
+    const usageDisposable = this.cliService.onCliMessage('chat:usage', (msg: IPCMessage) => {
+      const p = msg.payload as ChatUsagePayload;
+      if (p.sessionId !== sessionId) {
+        return;
+      }
+      traceLog(this.output, 'chat', 'usage', {
+        sessionId,
+        agent: p.agent,
+        tokens: p.tokensTotal,
+        durationMs: p.durationMs,
+      });
+      onUsage?.(p);
+    });
+
     const errorDisposable = this.cliService.onCliMessage('chat:error', (msg: IPCMessage) => {
       const payload = msg.payload as { sessionId?: string; error?: string };
       if (payload.sessionId !== sessionId && msg.id !== requestId) {
@@ -114,7 +131,7 @@ export class AgentService {
 
     this.activeChats.set(sessionId, {
       sessionId,
-      disposables: [chunkDisposable, autoDisposable, errorDisposable],
+      disposables: [chunkDisposable, autoDisposable, usageDisposable, errorDisposable],
     });
 
     try {

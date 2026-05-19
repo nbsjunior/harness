@@ -4,6 +4,7 @@ import type {
   ConnectionResultPayload,
   ExtensionMessage,
   SecretStatusPayload,
+  UsageStatsPayload,
   WebviewMessage,
 } from '../../types';
 
@@ -155,7 +156,7 @@ const AGENTS: AgentInfo[] = [
 // ---------------------------------------------------------------------------
 
 type Step = 'welcome' | 'agentSelect' | 'configureAgent' | 'workspace' | 'mcp' | 'done';
-type ConfigTab = 'agents' | 'api' | 'mcp' | 'workspace';
+type ConfigTab = 'agents' | 'api' | 'mcp' | 'workspace' | 'spending';
 
 interface McpServer {
   name: string;
@@ -182,6 +183,12 @@ interface WizardState {
   pendingTestAgent: AgentId | null;
   specsDirectory: string;
   defaultAgent: AgentSelectionId;
+  defaultWorkspace: string;
+  resolvedWorkspace: string;
+  promptOptimizationEnabled: boolean;
+  maxContextCharsPerFile: number;
+  maxHistoryMessages: number;
+  usageStats: UsageStatsPayload | null;
   cliPath: string;
   mcpEnabled: boolean;
   mcpServers: McpServer[];
@@ -205,6 +212,12 @@ const state: WizardState = {
   pendingTestAgent: null,
   specsDirectory: '.harness/specs',
   defaultAgent: 'auto',
+  defaultWorkspace: '',
+  resolvedWorkspace: '',
+  promptOptimizationEnabled: true,
+  maxContextCharsPerFile: 12_000,
+  maxHistoryMessages: 24,
+  usageStats: null,
   cliPath: '',
   mcpEnabled: true,
   mcpServers: [],
@@ -253,6 +266,7 @@ function renderTabsShell(): HTMLElement {
       <button type="button" class="config-tab ${activeTab === 'api' ? 'config-tab--active' : ''}" data-tab="api">API Servers</button>
       <button type="button" class="config-tab ${activeTab === 'mcp' ? 'config-tab--active' : ''}" data-tab="mcp">MCP</button>
       <button type="button" class="config-tab ${activeTab === 'workspace' ? 'config-tab--active' : ''}" data-tab="workspace">Workspace</button>
+      <button type="button" class="config-tab ${activeTab === 'spending' ? 'config-tab--active' : ''}" data-tab="spending">Spending</button>
     </nav>
     <div class="config-tab-panel"></div>`;
 
@@ -273,6 +287,9 @@ function renderTabsShell(): HTMLElement {
       case 'workspace':
         panel.appendChild(renderWorkspaceTabPanel());
         break;
+      case 'spending':
+        panel.appendChild(renderSpendingTabPanel());
+        break;
     }
   }
 
@@ -280,6 +297,9 @@ function renderTabsShell(): HTMLElement {
     btn.addEventListener('click', () => {
       activeTab = (btn as HTMLElement).dataset['tab'] as ConfigTab;
       state.editingAgent = null;
+      if (activeTab === 'spending') {
+        postMessage({ command: 'getUsageStats' });
+      }
       render();
     });
   });
@@ -422,9 +442,120 @@ function renderMcpTabPanel(): HTMLElement {
 
 function renderWorkspaceTabPanel(): HTMLElement {
   const el = div('tab-content');
-  const ws = renderWorkspace();
-  el.appendChild(ws);
+  el.appendChild(renderWorkspaceSettingsForm(false));
   return el;
+}
+
+function formatDurationMs(ms: number): string {
+  if (!ms || ms < 1000) return `${ms || 0}ms`;
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return `${sec}s`;
+  const min = Math.floor(sec / 60);
+  const rem = sec % 60;
+  if (min < 60) return rem > 0 ? `${min}m ${rem}s` : `${min}m`;
+  const hr = Math.floor(min / 60);
+  const mrem = min % 60;
+  return mrem > 0 ? `${hr}h ${mrem}m` : `${hr}h`;
+}
+
+function agentLabel(id: AgentId): string {
+  return AGENTS.find((a) => a.id === id)?.label ?? id;
+}
+
+function renderSpendingTabPanel(): HTMLElement {
+  const el = div('tab-content');
+  const stats = state.usageStats;
+  const total = stats?.total;
+  const byAgent = stats?.byAgent;
+
+  const providerRows = (['copilot', 'cursor', 'claude', 'devin', 'kiro'] as AgentId[])
+    .map((id) => {
+      const row = byAgent?.[id];
+      if (!row || row.requests === 0) {
+        return `<tr><td>${agentLabel(id)}</td><td colspan="4" class="spend-muted">—</td></tr>`;
+      }
+      return `<tr>
+        <td>${agentLabel(id)}</td>
+        <td>${row.requests.toLocaleString()}</td>
+        <td>${row.tokensTotal.toLocaleString()}</td>
+        <td>${row.tokensIn.toLocaleString()} / ${row.tokensOut.toLocaleString()}</td>
+        <td>${formatDurationMs(row.totalDurationMs)}</td>
+      </tr>`;
+    })
+    .join('');
+
+  const recentRows = (stats?.recent ?? [])
+    .slice(0, 15)
+    .map(
+      (r) => `<tr>
+        <td>${new Date(r.at).toLocaleString()}</td>
+        <td>${agentLabel(r.agent)}</td>
+        <td>${r.tokensTotal.toLocaleString()}</td>
+        <td>${formatDurationMs(r.durationMs)}</td>
+        <td>${r.mode ?? '—'}</td>
+      </tr>`,
+    )
+    .join('');
+
+  el.innerHTML = /* html */`
+    <p class="tab-intro">Token counts are <strong>estimates</strong> (~4 chars/token). Persisted in <code>.harness/usage-stats.json</code>.</p>
+
+    <div class="spend-summary">
+      <div class="spend-card">
+        <div class="spend-card__label">Total tokens</div>
+        <div class="spend-card__value">${(total?.tokensTotal ?? 0).toLocaleString()}</div>
+      </div>
+      <div class="spend-card">
+        <div class="spend-card__label">Total requests</div>
+        <div class="spend-card__value">${(total?.requests ?? 0).toLocaleString()}</div>
+      </div>
+      <div class="spend-card">
+        <div class="spend-card__label">Agent time</div>
+        <div class="spend-card__value">${formatDurationMs(total?.totalDurationMs ?? 0)}</div>
+      </div>
+      <div class="spend-card">
+        <div class="spend-card__label">Workspace</div>
+        <div class="spend-card__value spend-card__value--sm">${escapeHtml(state.resolvedWorkspace || '(none)')}</div>
+      </div>
+    </div>
+
+    ${stats?.firstRequestAt ? `<p class="form-hint">First use: ${new Date(stats.firstRequestAt).toLocaleString()} · Last: ${stats.lastRequestAt ? new Date(stats.lastRequestAt).toLocaleString() : '—'}</p>` : ''}
+
+    <h3 class="spend-section-title">By provider</h3>
+    <table class="spend-table">
+      <thead><tr><th>Provider</th><th>Requests</th><th>Tokens</th><th>In / Out</th><th>Time</th></tr></thead>
+      <tbody>${providerRows}</tbody>
+    </table>
+
+    <h3 class="spend-section-title">Recent turns</h3>
+    <table class="spend-table spend-table--compact">
+      <thead><tr><th>When</th><th>Provider</th><th>Tokens</th><th>Duration</th><th>Mode</th></tr></thead>
+      <tbody>${recentRows || '<tr><td colspan="5" class="spend-muted">No requests yet — send a chat message.</td></tr>'}</tbody>
+    </table>
+
+    <div class="spend-actions">
+      <button type="button" id="btn-refresh-usage" class="btn-secondary btn-sm">Refresh</button>
+      <button type="button" id="btn-reset-usage" class="btn-ghost btn-sm">Reset stats</button>
+    </div>`;
+
+  el.querySelector('#btn-refresh-usage')!.addEventListener('click', () => {
+    postMessage({ command: 'getUsageStats' });
+  });
+  el.querySelector('#btn-reset-usage')!.addEventListener('click', () => {
+    if (confirm('Reset all Harness usage statistics for this workspace?')) {
+      postMessage({ command: 'resetUsageStats' });
+    }
+  });
+
+  return el;
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 // ---------------------------------------------------------------------------
@@ -680,8 +811,45 @@ function advanceAgentQueue(): void {
 // Screen 4 — Workspace Settings
 // ---------------------------------------------------------------------------
 
-function renderWorkspace(): HTMLElement {
-  const el = div('screen');
+function saveWorkspaceFieldsFrom(container: HTMLElement): void {
+  state.defaultAgent = (container.querySelector('#ws-default-agent') as HTMLSelectElement)
+    .value as AgentSelectionId;
+  state.defaultWorkspace = (container.querySelector('#ws-default-workspace') as HTMLInputElement).value.trim();
+  state.specsDirectory = (container.querySelector('#ws-specs-dir') as HTMLInputElement).value.trim();
+  state.cliPath = (container.querySelector('#ws-cli-path') as HTMLInputElement).value.trim();
+  state.promptOptimizationEnabled = (container.querySelector('#ws-prompt-opt') as HTMLInputElement).checked;
+  state.maxContextCharsPerFile = Number(
+    (container.querySelector('#ws-max-ctx-chars') as HTMLInputElement).value,
+  );
+  state.maxHistoryMessages = Number(
+    (container.querySelector('#ws-max-history') as HTMLInputElement).value,
+  );
+
+  postMessage({ command: 'saveSetting', payload: { key: 'harness.defaultAgent', value: state.defaultAgent } });
+  postMessage({
+    command: 'saveSetting',
+    payload: { key: 'harness.defaultWorkspace', value: state.defaultWorkspace },
+  });
+  postMessage({ command: 'saveSetting', payload: { key: 'harness.specsDirectory', value: state.specsDirectory } });
+  if (state.cliPath) {
+    postMessage({ command: 'saveSetting', payload: { key: 'harness.cliPath', value: state.cliPath } });
+  }
+  postMessage({
+    command: 'saveSetting',
+    payload: { key: 'harness.promptOptimization.enabled', value: state.promptOptimizationEnabled },
+  });
+  postMessage({
+    command: 'saveSetting',
+    payload: { key: 'harness.promptOptimization.maxContextCharsPerFile', value: state.maxContextCharsPerFile },
+  });
+  postMessage({
+    command: 'saveSetting',
+    payload: { key: 'harness.promptOptimization.maxHistoryMessages', value: state.maxHistoryMessages },
+  });
+}
+
+function renderWorkspaceSettingsForm(wizardMode: boolean): HTMLElement {
+  const el = div(wizardMode ? 'screen' : 'tab-content');
   const agentOptions =
     `<option value="auto" ${state.defaultAgent === 'auto' ? 'selected' : ''}>Auto (Harness picks)</option>` +
     AGENTS.map(
@@ -689,63 +857,94 @@ function renderWorkspace(): HTMLElement {
         `<option value="${a.id}" ${state.defaultAgent === a.id ? 'selected' : ''}>${a.label}</option>`,
     ).join('');
 
-  el.innerHTML = /* html */`
-    <div class="screen-header">
+  const header = wizardMode
+    ? `<div class="screen-header">
       <h2>Workspace settings</h2>
       <p class="screen-sub">These settings apply to the current workspace.</p>
+    </div>`
+    : `<p class="tab-intro">Workspace root, specs path, and prompt efficiency (all providers).</p>`;
+
+  const footer = wizardMode
+    ? `<div class="screen-footer">
+      <button id="btn-ws-back" class="btn-ghost">&#8592; Back</button>
+      <button id="btn-ws-next" class="btn-primary">Next &#8594;</button>
+    </div>`
+    : `<div class="form-actions">
+      <button type="button" id="btn-ws-save" class="btn-primary btn-sm">Save workspace settings</button>
+    </div>`;
+
+  el.innerHTML = /* html */`
+    ${header}
+
+    <div class="form-group">
+      <label class="form-label">Default workspace path</label>
+      <input type="text" id="ws-default-workspace" class="text-input" value="${escapeHtml(state.defaultWorkspace)}"
+        placeholder="Absolute path — empty = VS Code folder" />
+      <div class="form-hint">CLI uses this as <code>HARNESS_WORKSPACE</code>. Active: <code>${escapeHtml(state.resolvedWorkspace || '(VS Code folder)')}</code></div>
     </div>
 
     <div class="form-group">
       <label class="form-label">Default agent</label>
       <select id="ws-default-agent" class="select-input">${agentOptions}</select>
-      <div class="form-hint">Default provider in chat; Auto routes each message to the best agent.</div>
     </div>
 
     <div class="form-group">
       <label class="form-label">Specs directory</label>
-      <input type="text" id="ws-specs-dir" class="text-input" value="${state.specsDirectory}" />
-      <div class="form-hint">Relative to workspace root. Default: <code>.harness/specs</code></div>
+      <input type="text" id="ws-specs-dir" class="text-input" value="${escapeHtml(state.specsDirectory)}" />
+    </div>
+
+    <div class="form-group form-group--row">
+      <label class="form-label"><input type="checkbox" id="ws-prompt-opt" ${state.promptOptimizationEnabled ? 'checked' : ''} /> Prompt optimization (token efficiency)</label>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Max chars per context file</label>
+      <input type="number" id="ws-max-ctx-chars" class="text-input" min="1000" max="500000"
+        value="${state.maxContextCharsPerFile}" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Max history messages</label>
+      <input type="number" id="ws-max-history" class="text-input" min="4" max="200"
+        value="${state.maxHistoryMessages}" />
     </div>
 
     <div class="form-group">
       <label class="form-label">CLI path <span class="form-optional">(optional)</span></label>
-      <input type="text" id="ws-cli-path" class="text-input" value="${state.cliPath}"
-        placeholder="Leave empty to auto-detect" />
-      <div class="form-hint">Absolute path to <code>packages/cli/dist/index.js</code>.</div>
+      <input type="text" id="ws-cli-path" class="text-input" value="${escapeHtml(state.cliPath)}"
+        placeholder="Leave empty to use bundled CLI" />
     </div>
 
-    <div class="screen-footer">
-      <button id="btn-ws-back" class="btn-ghost">&#8592; Back</button>
-      <button id="btn-ws-next" class="btn-primary">Next &#8594;</button>
-    </div>`;
+    ${footer}`;
 
-  el.querySelector('#btn-ws-back')!.addEventListener('click', () => {
-    if (state.agentQueue.length > 0) {
-      state.step = 'configureAgent';
-      state.agentQueueIndex = state.agentQueue.length - 1;
-    } else {
-      state.step = 'agentSelect';
-    }
-    render();
-  });
-
-  el.querySelector('#btn-ws-next')!.addEventListener('click', () => {
-    state.defaultAgent = (el.querySelector('#ws-default-agent') as HTMLSelectElement)
-      .value as AgentSelectionId;
-    state.specsDirectory = (el.querySelector('#ws-specs-dir') as HTMLInputElement).value.trim();
-    state.cliPath = (el.querySelector('#ws-cli-path') as HTMLInputElement).value.trim();
-
-    postMessage({ command: 'saveSetting', payload: { key: 'harness.defaultAgent', value: state.defaultAgent } });
-    postMessage({ command: 'saveSetting', payload: { key: 'harness.specsDirectory', value: state.specsDirectory } });
-    if (state.cliPath) {
-      postMessage({ command: 'saveSetting', payload: { key: 'harness.cliPath', value: state.cliPath } });
-    }
-    state.step = 'mcp';
-    render();
-  });
+  if (wizardMode) {
+    el.querySelector('#btn-ws-back')!.addEventListener('click', () => {
+      if (state.agentQueue.length > 0) {
+        state.step = 'configureAgent';
+        state.agentQueueIndex = state.agentQueue.length - 1;
+      } else {
+        state.step = 'agentSelect';
+      }
+      render();
+    });
+    el.querySelector('#btn-ws-next')!.addEventListener('click', () => {
+      saveWorkspaceFieldsFrom(el);
+      state.step = 'mcp';
+      render();
+    });
+  } else {
+    el.querySelector('#btn-ws-save')!.addEventListener('click', () => {
+      saveWorkspaceFieldsFrom(el);
+    });
+  }
 
   return el;
 }
+
+function renderWorkspace(): HTMLElement {
+  return renderWorkspaceSettingsForm(true);
+}
+
 
 // ---------------------------------------------------------------------------
 // Screen 5 — MCP Servers
@@ -927,7 +1126,14 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       const cfg = msg.payload as {
         specsDirectory: string;
         defaultAgent: AgentSelectionId;
+        defaultWorkspace?: string;
+        resolvedWorkspace?: string;
         cliPath: string;
+        promptOptimization?: {
+          enabled: boolean;
+          maxContextCharsPerFile: number;
+          maxHistoryMessages: number;
+        };
         mcpEnabled: boolean;
         mcpServers: McpServer[];
         apiServers?: ApiServerEntry[];
@@ -935,13 +1141,26 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       };
       state.specsDirectory = cfg.specsDirectory;
       state.defaultAgent = cfg.defaultAgent;
+      state.defaultWorkspace = cfg.defaultWorkspace ?? '';
+      state.resolvedWorkspace = cfg.resolvedWorkspace ?? '';
       state.cliPath = cfg.cliPath;
+      state.promptOptimizationEnabled = cfg.promptOptimization?.enabled ?? true;
+      state.maxContextCharsPerFile = cfg.promptOptimization?.maxContextCharsPerFile ?? 12_000;
+      state.maxHistoryMessages = cfg.promptOptimization?.maxHistoryMessages ?? 24;
       state.mcpEnabled = cfg.mcpEnabled;
       state.mcpServers = cfg.mcpServers ?? [];
       state.apiServers = cfg.apiServers ?? [];
       state.agentEndpoints = cfg.agentEndpoints ?? {};
       uiMode = 'tabs';
       render();
+      break;
+    }
+
+    case 'usageStats': {
+      state.usageStats = msg.payload as UsageStatsPayload;
+      if (activeTab === 'spending') {
+        render();
+      }
       break;
     }
 
@@ -1437,6 +1656,57 @@ body {
   margin-right: 2px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.spend-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.spend-card {
+  padding: 12px;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 8px;
+  background: var(--vscode-editor-background);
+}
+.spend-card__label {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 4px;
+}
+.spend-card__value {
+  font-size: 20px;
+  font-weight: 600;
+}
+.spend-card__value--sm {
+  font-size: 11px;
+  font-weight: 400;
+  word-break: break-all;
+}
+.spend-section-title {
+  font-size: 13px;
+  margin: 16px 0 8px;
+}
+.spend-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.spend-table th,
+.spend-table td {
+  border: 1px solid var(--vscode-panel-border);
+  padding: 6px 8px;
+  text-align: left;
+}
+.spend-table th {
+  background: var(--vscode-sideBar-background);
+  font-weight: 600;
+}
+.spend-muted { color: var(--vscode-descriptionForeground); }
+.spend-actions { display: flex; gap: 8px; margin-top: 12px; }
+.form-actions { margin-top: 12px; }
+.form-group--row label { display: flex; align-items: center; gap: 8px; }
 `;
 
 // ---------------------------------------------------------------------------

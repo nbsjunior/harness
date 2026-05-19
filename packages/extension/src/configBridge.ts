@@ -16,7 +16,8 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { execFile } from 'child_process';
-import type { AgentId, AgentSelectionId } from './types';
+import type { AgentSelectionId } from './types';
+import { resolveHarnessWorkspacePath } from './workspacePath.js';
 
 function readCachedKiroCliPath(): string | undefined {
   const marker = path.join(os.homedir(), '.harness', 'tools', 'kiro-cli', 'kiro-cli-path.txt');
@@ -53,10 +54,15 @@ export async function buildHarnessProcessEnv(
   baseEnv: NodeJS.ProcessEnv = process.env,
 ): Promise<NodeJS.ProcessEnv> {
   const harness = vscode.workspace.getConfiguration('harness');
-  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  const workspacePath = resolveHarnessWorkspacePath();
 
   const settingsBridge = {
     defaultAgent: harness.get<AgentSelectionId>('defaultAgent', 'auto'),
+    promptOptimization: {
+      enabled: harness.get<boolean>('promptOptimization.enabled', true),
+      maxContextCharsPerFile: harness.get<number>('promptOptimization.maxContextCharsPerFile', 12_000),
+      maxHistoryMessages: harness.get<number>('promptOptimization.maxHistoryMessages', 24),
+    },
     connectors: {
       copilot: {
         endpoint: harness.get<string>('connectors.copilot.endpoint', 'https://api.githubcopilot.com'),
@@ -90,7 +96,7 @@ export async function buildHarnessProcessEnv(
   const env: NodeJS.ProcessEnv = {
     ...baseEnv,
     HARNESS_IPC: baseEnv['HARNESS_IPC'] ?? '1',
-    HARNESS_WORKSPACE: workspaceFolder?.uri.fsPath ?? baseEnv['HARNESS_WORKSPACE'] ?? '',
+    HARNESS_WORKSPACE: workspacePath ?? baseEnv['HARNESS_WORKSPACE'] ?? '',
     HARNESS_SETTINGS_JSON: JSON.stringify(settingsBridge),
   };
 

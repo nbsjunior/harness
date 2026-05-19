@@ -59,9 +59,10 @@ export const AGENT_DESCRIPTORS: Record<AgentId, AgentDescriptor> = {
   cursor: {
     id: 'cursor',
     label: 'Cursor AI',
-    description: 'Cursor AI via MCP or HTTP',
+    description:
+      'Cursor Cloud Agents API (api.cursor.com) — not IDE chat; best for repo tasks; use Ask mode or Copilot for quick Q&A',
     supportsStreaming: true,
-    supportsMcp: true,
+    supportsMcp: false,
   },
   claude: {
     id: 'claude',
@@ -190,7 +191,12 @@ export type IpcAction =
   | 'aidlc:status'
   | 'aidlc:status:result'
   | 'setup:bootstrap'
-  | 'setup:bootstrap:result';
+  | 'setup:bootstrap:result'
+  | 'usage:get'
+  | 'usage:stats'
+  | 'usage:reset'
+  | 'usage:reset:result'
+  | 'chat:usage';
 
 /**
  * Base IPC message envelope. All extension ↔ CLI communication uses this shape.
@@ -296,7 +302,9 @@ export type WebviewCommand =
   | 'openChat'
   | 'openSettingsJson'
   | 'openExtensionSettings'
-  | 'initWorkspace';
+  | 'initWorkspace'
+  | 'getUsageStats'
+  | 'resetUsageStats';
 
 export interface WebviewMessage<T = unknown> {
   command: WebviewCommand;
@@ -326,7 +334,8 @@ export type ExtensionCommand =
   // Configuration wizard responses
   | 'configLoaded'
   | 'connectionResult'
-  | 'secretStatus';
+  | 'secretStatus'
+  | 'usageStats';
 
 export interface ExtensionMessage<T = unknown> {
   command: ExtensionCommand;
@@ -347,6 +356,42 @@ export interface TokenUsagePayload {
   sessionTokens: number;
   dailyTokens: number;
   budgetTokens: number;
+}
+
+export interface AgentUsageTotals {
+  requests: number;
+  tokensIn: number;
+  tokensOut: number;
+  tokensTotal: number;
+  totalDurationMs: number;
+}
+
+export interface UsageStatsPayload {
+  updatedAt: string;
+  firstRequestAt?: string;
+  lastRequestAt?: string;
+  total: AgentUsageTotals;
+  byAgent: Record<AgentId, AgentUsageTotals>;
+  recent?: Array<{
+    sessionId: string;
+    agent: AgentId;
+    at: string;
+    tokensIn: number;
+    tokensOut: number;
+    tokensTotal: number;
+    durationMs: number;
+    mode?: string;
+  }>;
+}
+
+export interface ChatUsagePayload {
+  sessionId: string;
+  agent: AgentId;
+  tokensIn: number;
+  tokensOut: number;
+  tokensTotal: number;
+  durationMs: number;
+  stats: UsageStatsPayload;
 }
 
 export interface ConnectionResultPayload {

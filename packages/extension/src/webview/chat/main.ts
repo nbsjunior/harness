@@ -35,7 +35,7 @@ const FILE_EXTENSIONS =
   'ts|tsx|js|jsx|mjs|cjs|py|go|rs|java|md|json|yaml|yml|css|scss|html|sh|sql|cs|cpp|h|vue|svelte|php|rb|kt|swift|toml|txt|xml';
 
 const SLASH_COMMANDS = [
-  { cmd: '/clear',    hint: '/clear — clear conversation' },
+  { cmd: '/clear',    hint: '/clear — new chat (keeps context files)' },
   { cmd: '/agent',    hint: '/agent <id> — switch provider' },
 ];
 
@@ -84,7 +84,7 @@ function injectShell(): void {
   <div id="composer">
     <div id="composer-toolbar">
       <button id="new-chat-btn" class="toolbar-btn" type="button" title="New chat">+ New chat</button>
-      <button id="clear-ctx-btn" class="toolbar-btn" type="button" title="Clear context files and input">Clear context</button>
+      <button id="clear-ctx-btn" class="toolbar-btn" type="button" title="Clear conversation, context files, and input">Clear all</button>
     </div>
     <div id="context-bar">
       <div id="context-list"></div>
@@ -428,27 +428,24 @@ function hideSlashPopover(): void {
 // Send
 // ---------------------------------------------------------------------------
 
-function clearContextAndInput(): void {
-  state.context = [];
-  renderContext();
+/** Clear chat, context files, and input — extension is source of truth via chatCleared + contextUpdated. */
+function clearAll(): void {
   inputEl.value = '';
   autoResize();
   hideSlashPopover();
+  if (state.isStreaming) {
+    postMessage({ command: 'stopStream' });
+  }
   postMessage({ command: 'clearContext' });
 }
 
 function startNewChat(): void {
-  if (state.isStreaming) {
-    postMessage({ command: 'stopStream' });
-  }
-  state.history = [];
-  state.sessionTokens = 0;
-  updateTokenFooter();
-  renderMessages();
   inputEl.value = '';
   autoResize();
   hideSlashPopover();
-  setStreaming(false);
+  if (state.isStreaming) {
+    postMessage({ command: 'stopStream' });
+  }
   postMessage({ command: 'newChat' });
 }
 
@@ -462,10 +459,7 @@ function sendMessage(): void {
   if (!text) return;
 
   if (text.startsWith('/clear')) {
-    state.history = [];
-    renderMessages();
-    inputEl.value = '';
-    autoResize();
+    startNewChat();
     return;
   }
   if (text.startsWith('/agent ')) {
@@ -519,7 +513,7 @@ function bindEvents(): void {
     });
   });
 
-  clearCtxBtn.addEventListener('click', () => clearContextAndInput());
+  clearCtxBtn.addEventListener('click', () => clearAll());
   newChatBtn.addEventListener('click', () => startNewChat());
   configBtn.addEventListener('click', () => postMessage({ command: 'openConfig' }));
 
@@ -618,8 +612,11 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       break;
     case 'chatCleared':
       state.history = [];
+      state.sessionTokens = 0;
       state.isStreaming = false;
+      state.lastAutoRoute = undefined;
       setStreaming(false);
+      updateTokenFooter();
       renderMessages();
       break;
     case 'agentChanged': {

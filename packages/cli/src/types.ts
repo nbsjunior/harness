@@ -47,7 +47,12 @@ export type IpcAction =
   | 'aidlc:status'
   | 'aidlc:status:result'
   | 'setup:bootstrap'
-  | 'setup:bootstrap:result';
+  | 'setup:bootstrap:result'
+  | 'usage:get'
+  | 'usage:stats'
+  | 'usage:reset'
+  | 'usage:reset:result'
+  | 'chat:usage';
 
 /**
  * Base IPC message envelope used for all stdin/stdout newline-delimited JSON
@@ -111,6 +116,40 @@ export interface ChatAutoRoutedPayload {
   reason: string;
   fallbackUsed: boolean;
   scores: Record<AgentId, number>;
+}
+
+/** Emitted after a chat turn completes — token estimates + timing. */
+export interface ChatUsagePayload {
+  sessionId: string;
+  agent: AgentId;
+  tokensIn: number;
+  tokensOut: number;
+  tokensTotal: number;
+  durationMs: number;
+  stats: UsageStatsPayload;
+}
+
+export interface UsageStatsPayload {
+  updatedAt: string;
+  firstRequestAt?: string;
+  lastRequestAt?: string;
+  total: {
+    requests: number;
+    tokensIn: number;
+    tokensOut: number;
+    tokensTotal: number;
+    totalDurationMs: number;
+  };
+  byAgent: Record<
+    AgentId,
+    {
+      requests: number;
+      tokensIn: number;
+      tokensOut: number;
+      tokensTotal: number;
+      totalDurationMs: number;
+    }
+  >;
 }
 
 export interface ContextBuildPayload {

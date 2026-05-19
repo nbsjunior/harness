@@ -243,11 +243,15 @@ function applyModeBonuses(
       scores.cursor += 15;
     } else if (ctx >= 2) {
       scores.cursor += 8;
+    } else {
+      // Agent mode without much context — prefer Cursor cloud over Devin when scoring
+      scores.cursor += 6;
     }
     const len = input.prompt.length;
     if (len > 400) {
-      scores.devin += 10;
       scores.claude += 8;
+      // Devin only when prompt signals long-horizon work (see autonomous-engineering rule)
+      scores.devin += 4;
     }
   }
 }
@@ -330,44 +334,33 @@ function labelAgent(agent: AgentId): string {
 export function resolveAutoAgent(input: AutoRouteInput): AutoRouteResult {
   const { scores, winningRuleId, winningReason } = scoreAutoAgents(input);
 
-  let preferred = (Object.keys(scores) as AgentId[]).reduce((a, b) =>
-    scores[b] > scores[a] ? b : a,
-  );
+  const ranked = (Object.keys(scores) as AgentId[]).sort((a, b) => scores[b] - scores[a]);
+  const topScored = ranked[0];
+  const readyRanked = ranked.filter((a) => checkAgentReadiness(a, input.config).ready);
 
-  const preferredReady = checkAgentReadiness(preferred, input.config).ready;
-  if (preferredReady) {
+  if (readyRanked.length > 0) {
+    const agent = readyRanked[0];
+    const fallbackUsed = agent !== topScored;
     return {
-      agent: preferred,
+      agent,
       ruleId: winningRuleId,
-      reason: winningReason,
+      reason: fallbackUsed
+        ? `${winningReason} (${labelAgent(topScored)} not configured — using ${labelAgent(agent)}).`
+        : winningReason,
       scores,
-      fallbackUsed: false,
+      fallbackUsed,
+      ...(fallbackUsed ? { requestedFallbackFrom: topScored } : {}),
     };
-  }
-
-  const requestedFallbackFrom = preferred;
-  for (const candidate of AUTO_FALLBACK_CHAIN) {
-    if (checkAgentReadiness(candidate, input.config).ready) {
-      return {
-        agent: candidate,
-        ruleId: winningRuleId,
-        reason:
-          `${winningReason} (${labelAgent(preferred)} not configured — fallback to ${labelAgent(candidate)}).`,
-        scores,
-        fallbackUsed: true,
-        requestedFallbackFrom,
-      };
-    }
   }
 
   return {
     agent: 'copilot',
     ruleId: winningRuleId,
     reason:
-      `${winningReason} (no agent fully configured — attempting GitHub Copilot; run harness check getGoat).`,
+      `${winningReason} (no agent configured — run harness check getGoat; configure Cursor, Copilot, etc.).`,
     scores,
     fallbackUsed: true,
-    requestedFallbackFrom,
+    requestedFallbackFrom: topScored,
   };
 }
 

@@ -85,7 +85,9 @@ export class AgentRouter {
 
     const readiness = checkAgentReadiness(agent, request.config);
     if (!readiness.ready) {
-      request.onError(readiness.hint);
+      request.onError(
+        `${readiness.label}: ${readiness.hint}`,
+      );
       return;
     }
 

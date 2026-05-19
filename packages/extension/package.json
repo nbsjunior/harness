@@ -106,7 +106,7 @@
       },
       {
         "command": "harness.clearContext",
-        "title": "Clear Context",
+        "title": "Clear Chat & Context",
         "category": "Harness",
         "icon": "$(clear-all)"
       },
@@ -218,10 +218,38 @@
     "configuration": {
       "title": "Harness",
       "properties": {
+        "harness.defaultWorkspace": {
+          "type": "string",
+          "default": "",
+          "description": "Override workspace root for Harness CLI and context (absolute path). Empty = use the opened VS Code workspace folder.",
+          "scope": "resource"
+        },
         "harness.specsDirectory": {
           "type": "string",
           "default": ".harness/specs",
           "description": "Directory (relative to workspace root) where Spec-Driven Development YAML/Markdown files are stored.",
+          "scope": "resource"
+        },
+        "harness.promptOptimization.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Inject provider-agnostic efficiency guidance and trim context/history to save tokens.",
+          "scope": "resource"
+        },
+        "harness.promptOptimization.maxContextCharsPerFile": {
+          "type": "number",
+          "default": 12000,
+          "minimum": 1000,
+          "maximum": 500000,
+          "description": "Max characters per context file sent to agents (truncates with a notice).",
+          "scope": "resource"
+        },
+        "harness.promptOptimization.maxHistoryMessages": {
+          "type": "number",
+          "default": 24,
+          "minimum": 4,
+          "maximum": 200,
+          "description": "Max non-system chat messages kept in the prompt (recent turns only).",
           "scope": "resource"
         },
         "harness.contextDirectories": {
