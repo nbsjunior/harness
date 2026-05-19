@@ -59,9 +59,12 @@ Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instea
 
 | Audience | Start here |
 |----------|------------|
+| **Wiki (users)** | **[GitHub Wiki](https://github.com/nbsjunior/harness/wiki)** · [Getting Started](https://github.com/nbsjunior/harness/wiki/Getting-Started) |
 | **AI assistants** | [AGENTS.md](AGENTS.md) → [docs/ai-reference.md](docs/ai-reference.md) → [docs/code-map.md](docs/code-map.md) |
 | **End users** | [docs/starter-kit.md](docs/starter-kit.md) · [docs/user-guide.md](docs/user-guide.md) |
 | **Developers** | [docs/README.md](docs/README.md) · [docs/architecture.md](docs/architecture.md) · [docs/ipc-protocol.md](docs/ipc-protocol.md) |
+
+Wiki source is in [`wiki/`](wiki/) — publish with `node scripts/publish-wiki.mjs`.
 
 ## Starter Kit (recommended)
 

@@ -17,6 +17,7 @@ Use this index to find the right doc without reading the whole repository.
 | [copilot-modes.md](copilot-modes.md) | Developers | Ask / Agent / Spec+Agent behaviour and flow. |
 | [getting-started.md](getting-started.md) | Developers | Clone, build, run locally. |
 | [user-guide.md](user-guide.md) | End users | Chat, context, specs, configuration UI. |
+| [../wiki/Home.md](../wiki/Home.md) | End users | **GitHub Wiki** source — publish with `node scripts/publish-wiki.mjs` |
 
 ## For AI assistants — recommended read order
 

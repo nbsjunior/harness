@@ -39,3 +39,6 @@ aidlc-docs/
 ipc-in.pipe
 ipc-out.txt
 ipc-err.txt
+
+# Wiki publish workspace (clone target for scripts/publish-wiki.mjs)
+.wiki-publish/
