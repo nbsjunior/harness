@@ -99,7 +99,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       if (!uri) {
         return;
       }
-      contextProvider.remove(uri.toString());
+      contextProvider.remove(uri.fsPath);
       chatViewProvider.notifyContextChanged();
     }),
 

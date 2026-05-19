@@ -278,8 +278,8 @@
         },
         "harness.connectors.cursor.endpoint": {
           "type": "string",
-          "default": "",
-          "description": "Cursor AI MCP/HTTP endpoint for agent calls.",
+          "default": "https://api.cursor.com",
+          "description": "Cursor Cloud Agents API base URL (https://api.cursor.com). Do not use api2.cursor.sh.",
           "scope": "machine"
         },
         "harness.connectors.cursor.apiKey": {

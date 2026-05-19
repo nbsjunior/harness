@@ -185,7 +185,11 @@ export function loadHarnessConfig(specsDir?: string): LoadedHarnessConfig {
         bridgeC.cursor?.apiKey ??
         process.env['CURSOR_API_KEY'] ??
         '',
-      endpoint: bridgeC.cursor?.endpoint ?? yamlC.cursor?.endpoint ?? '',
+      endpoint:
+        bridgeC.cursor?.endpoint ??
+        yamlC.cursor?.endpoint ??
+        process.env['CURSOR_API_ENDPOINT'] ??
+        'https://api.cursor.com',
     },
     claude: {
       path: bridgeC.claude?.path ?? yamlC.claude?.path ?? process.env['CLAUDE_PATH'] ?? 'claude',

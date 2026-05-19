@@ -60,6 +60,7 @@ let inputEl!: HTMLTextAreaElement;
 let sendBtn!: HTMLButtonElement;
 let providerPills!: HTMLDivElement;
 let clearCtxBtn!: HTMLButtonElement;
+let newChatBtn!: HTMLButtonElement;
 let contextList!: HTMLDivElement;
 let configBtn!: HTMLButtonElement;
 let slashPopover!: HTMLDivElement;
@@ -76,9 +77,12 @@ function injectShell(): void {
   <div id="messages"></div>
   <div id="slash-popover" class="slash-popover" style="display:none;"></div>
   <div id="composer">
+    <div id="composer-toolbar">
+      <button id="new-chat-btn" class="toolbar-btn" type="button" title="New chat">+ New chat</button>
+      <button id="clear-ctx-btn" class="toolbar-btn" type="button" title="Clear context files and input">Clear context</button>
+    </div>
     <div id="context-bar">
       <div id="context-list"></div>
-      <button id="clear-ctx-btn" class="icon-btn" type="button" title="Clear context">&#10005;</button>
     </div>
     <div class="composer-box">
       <textarea id="prompt-input" placeholder="Ask anything…" rows="1" autocomplete="off" spellcheck="true"></textarea>
@@ -106,6 +110,7 @@ function bindRefs(): void {
   sendBtn = document.getElementById('send-btn') as HTMLButtonElement;
   providerPills = document.getElementById('provider-pills') as HTMLDivElement;
   clearCtxBtn = document.getElementById('clear-ctx-btn') as HTMLButtonElement;
+  newChatBtn = document.getElementById('new-chat-btn') as HTMLButtonElement;
   contextList = document.getElementById('context-list') as HTMLDivElement;
   configBtn = document.getElementById('config-btn') as HTMLButtonElement;
   slashPopover = document.getElementById('slash-popover') as HTMLDivElement;
@@ -387,6 +392,30 @@ function hideSlashPopover(): void {
 // Send
 // ---------------------------------------------------------------------------
 
+function clearContextAndInput(): void {
+  state.context = [];
+  renderContext();
+  inputEl.value = '';
+  autoResize();
+  hideSlashPopover();
+  postMessage({ command: 'clearContext' });
+}
+
+function startNewChat(): void {
+  if (state.isStreaming) {
+    postMessage({ command: 'stopStream' });
+  }
+  state.history = [];
+  state.sessionTokens = 0;
+  updateTokenFooter();
+  renderMessages();
+  inputEl.value = '';
+  autoResize();
+  hideSlashPopover();
+  setStreaming(false);
+  postMessage({ command: 'newChat' });
+}
+
 function sendMessage(): void {
   if (state.isStreaming) {
     postMessage({ command: 'stopStream' });
@@ -454,7 +483,8 @@ function bindEvents(): void {
     });
   });
 
-  clearCtxBtn.addEventListener('click', () => postMessage({ command: 'clearContext' }));
+  clearCtxBtn.addEventListener('click', () => clearContextAndInput());
+  newChatBtn.addEventListener('click', () => startNewChat());
   configBtn.addEventListener('click', () => postMessage({ command: 'openConfig' }));
 
   messagesEl.addEventListener('click', (e) => {
@@ -543,6 +573,12 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
     case 'contextUpdated':
       state.context = msg.payload as ContextItem[];
       renderContext();
+      break;
+    case 'chatCleared':
+      state.history = [];
+      state.isStreaming = false;
+      setStreaming(false);
+      renderMessages();
       break;
     case 'agentChanged': {
       const p = msg.payload as { agent: AgentId };
@@ -737,12 +773,33 @@ body {
   gap: 6px;
 }
 
+#composer-toolbar {
+  display: flex;
+  gap: 6px;
+  padding: 0 2px 2px;
+}
+.toolbar-btn {
+  background: none;
+  border: 1px solid var(--vscode-widget-border, transparent);
+  color: var(--vscode-descriptionForeground);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  cursor: pointer;
+  line-height: 18px;
+}
+.toolbar-btn:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+}
+
 #context-bar {
   display: none;
   flex-wrap: wrap;
   gap: 4px;
   align-items: center;
-  padding: 0 2px;
+  padding: 0 2px 4px;
 }
 .ctx-chip {
   display: inline-flex;

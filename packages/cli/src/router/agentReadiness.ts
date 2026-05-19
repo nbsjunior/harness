@@ -3,6 +3,7 @@ import type { AgentConnectorConfig } from '../config.js';
 import type { AgentId } from '../types.js';
 import { validateCopilotToken } from '../connectors/copilotAuth.js';
 import { isGhCliAvailable } from '../connectors/ghToken.js';
+import { CURSOR_CLOUD_API_DEFAULT, normalizeCursorBaseUrl } from '../connectors/cursorCloud.js';
 
 /** Returns true if `bin` is found in PATH (sync, best-effort). */
 function isBinAvailable(bin: string): boolean {
@@ -75,19 +76,22 @@ export function checkAgentReadiness(
       };
     }
     case 'cursor': {
-      if (!config.cursor.endpoint) {
+      if (!config.cursor.apiKey) {
         return {
           agent,
           label: LABELS.cursor,
           ready: false,
-          hint: 'Set harness.connectors.cursor.endpoint or connectors.cursor.endpoint in .harness/config.yaml.',
+          hint:
+            'Set CURSOR_API_KEY or harness.connectors.cursor.apiKey ' +
+            '(create at https://cursor.com/dashboard/integrations).',
         };
       }
+      const base = normalizeCursorBaseUrl(config.cursor.endpoint || CURSOR_CLOUD_API_DEFAULT);
       return {
         agent,
         label: LABELS.cursor,
         ready: true,
-        hint: `Endpoint: ${config.cursor.endpoint}`,
+        hint: `Cloud Agents API: ${base}`,
       };
     }
     case 'claude': {

@@ -235,6 +235,20 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         this.notifyContextChanged();
         break;
 
+      case 'newChat': {
+        const streaming = this.history.find((m) => m.streaming);
+        if (streaming) {
+          this.agentService.cancelSession(this.activeSessionId, () => {
+            streaming.streaming = false;
+            this.post({ command: 'streamStopped' });
+          });
+        }
+        this.history = [];
+        this.activeSessionId = crypto.randomUUID();
+        this.post({ command: 'chatCleared' });
+        break;
+      }
+
       case 'showContext':
         await vscode.commands.executeCommand('harness.showContext');
         break;

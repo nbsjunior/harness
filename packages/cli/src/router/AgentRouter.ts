@@ -28,6 +28,7 @@ import { buildKiroPrompt } from '../aidlc/prompt.js';
 import { checkAgentReadiness } from './agentReadiness.js';
 import { isChatSessionCancelled } from '../session/cancel.js';
 import { harnessLog } from '../log.js';
+import { routeCursorCloud } from '../connectors/cursorCloud.js';
 
 export interface AgentRequest {
   sessionId: string;
@@ -272,29 +273,22 @@ export class AgentRouter {
   }
 
   // ---------------------------------------------------------------------------
-  // Cursor AI — OpenAI-compatible endpoint
+  // Cursor AI — Cloud Agents API v1 (https://api.cursor.com)
   // ---------------------------------------------------------------------------
 
   private async routeCursor(req: AgentRequest): Promise<void> {
     const cfg = req.config.cursor;
-    if (!cfg.endpoint) {
-      req.onError('Cursor AI endpoint not configured. Set harness.connectors.cursor.endpoint.');
-      return;
-    }
-
-    const url = new URL('/chat/completions', cfg.endpoint);
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (cfg.apiKey) {
-      headers['Authorization'] = `Bearer ${cfg.apiKey}`;
-    }
-
-    const body = JSON.stringify({
-      model: 'claude-3-5-sonnet',
-      stream: true,
-      messages: this.buildOpenAiMessages(req.messages, 'ask'),
+    await routeCursorCloud({
+      sessionId: req.sessionId,
+      messages: req.messages,
+      context: req.context,
+      mode: req.mode,
+      apiKey: cfg.apiKey,
+      endpoint: cfg.endpoint,
+      onChunk: req.onChunk,
+      onDone: req.onDone,
+      onError: req.onError,
     });
-
-    await this.streamSseRequest(url, headers, body, req.onChunk, req.onDone, req.onError);
   }
 
   // ---------------------------------------------------------------------------
