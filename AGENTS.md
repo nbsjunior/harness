@@ -15,13 +15,18 @@
 
 ## What is Harness?
 
-Harness is a **meta-agent orchestrator** — a single interface that routes natural-language
-requests to multiple AI coding agents (GitHub Copilot, Devin, Cursor AI, Claude Code, Kiro)
-from either a **VS Code extension** or a standalone **CLI**.
+Harness is a **meta-agent orchestrator** — one **VS Code** sidebar (or CLI) for multiple AI
+providers (GitHub Copilot, Devin, Cursor AI, Claude Code, Kiro) so developers **do not switch
+IDEs per vendor**.
 
-**Core idea:** the user should never care which AI is running. They pick an agent (or let
-Harness pick), type a prompt, and Harness handles authentication, context injection, streaming
-and result display.
+**Product advantages** (documented in [docs/why-harness.md](docs/why-harness.md)):
+
+1. **One IDE, many providers** — same chat UI; switch provider pills or use **Auto** routing.
+2. **Spec-Driven Development** — `.harness/specs/` + **Spec+Agent** mode injects specs as context.
+3. **Context engineering** — attached files are provider-agnostic; context survives agent switches.
+
+**Core idea:** pick an agent (or Auto), attach context and specs, send a prompt — Harness
+handles auth, routing, streaming, and display.
 
 ---
 
@@ -56,7 +61,7 @@ avoid cross-package runtime imports.
 └──────────────────────────────┘       └──────────────────────────────┘
          OR (standalone)
 ┌──────────────────────────────┐
-│  harness chat / run / doctor │  (CLI commands, no extension needed)
+│  harness chat / run / check getGoat │  (CLI commands, no extension needed)
 └──────────────────────────────┘
 ```
 
@@ -68,8 +73,10 @@ The extension host never reads file contents — keeping the UI thread unblocked
 
 ## Key Concepts
 
-### Agents (`AgentId`)
-`copilot | devin | cursor | claude | kiro`
+### Agents (`AgentId` / `AgentSelectionId`)
+`copilot | devin | cursor | claude | kiro` — routable providers.
+
+`auto` — UI/CLI selection; CLI resolves per message via `packages/cli/src/router/autoRouter.ts` (default: Copilot; see [docs/auto-routing.md](docs/auto-routing.md)).
 
 Each agent has a connector in `packages/cli/src/connectors/` or is routed inline in
 `AgentRouter.ts`.
@@ -115,18 +122,18 @@ CLI `loadHarnessConfig()` also calls `getGhCliToken()` when no env token is set.
 
 | Path | Purpose |
 |------|---------|
-| `index.ts` | CLI entry-point. Registers all commands (`chat`, `run`, `doctor`, `init`, `setup`, `aidlc`). |
+| `index.ts` | CLI entry-point. Registers all commands (`chat`, `run`, `check getGoat`, `init`, `setup`, `aidlc`). |
 | `config.ts` | `loadHarnessConfig()` — merges all config sources into `AgentConnectorConfig`. |
 | `ipc/IpcServer.ts` | Daemon entry-point. Reads stdin frames, dispatches to handlers, writes stdout frames. |
 | `router/AgentRouter.ts` | Routes `AgentRequest` to the correct connector. Implements Ask/Agent/Spec+Agent loops. |
-| `router/agentReadiness.ts` | `checkAgentReadiness()` — validates tokens/keys before routing. Used by `doctor`. |
+| `router/agentReadiness.ts` | `checkAgentReadiness()` — validates tokens/keys before routing. Used by `check getGoat`. |
 | `connectors/copilotAuth.ts` | GitHub Copilot 2-step auth: `getCopilotApiToken()` exchanges `gho_` OAuth token → short-lived Copilot token (15 min TTL, in-process cache). Falls back to direct OAuth if exchange returns 404. |
 | `connectors/ghToken.ts` | `getGhCliToken()` — calls `gh auth token` subprocess; skips classic PATs (`ghp_`). |
 | `connectors/kiroCli.ts` | `runKiroCli()` — runs kiro-cli headless with AI-DLC steering prompt. |
 | `aidlc/` | AI-DLC (AI-Driven Development Life Cycle) integration: install/status/prompt helpers for Kiro steering rules. |
 | `kiro/bootstrap.ts` | `ensureKiroCli()` — downloads, installs and caches Kiro CLI binary for the current OS/arch. |
 | `parsers/specParser.ts` | Parses `.harness/specs/*.yaml` into `SpecDefinition` objects. |
-| `commands/doctor.ts` | `harness doctor` — prints readiness status for all 5 agents. |
+| `commands/getGoat.ts` | `harness check getGoat` — prints readiness status for all 5 agents. |
 | `commands/setup.ts` | `harness setup` — one-shot bootstrap: workspace init + Kiro CLI download + AI-DLC install. |
 | `log.ts` | `harnessLog()` / `harnessWarn()` — routes output to stderr in IPC mode, stdout otherwise. Prevents pollution of JSON frames. |
 

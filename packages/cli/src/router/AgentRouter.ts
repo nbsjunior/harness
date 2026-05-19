@@ -18,7 +18,7 @@ import https from 'https';
 import http from 'http';
 import { URL } from 'url';
 import { execa } from 'execa';
-import type { ChatMessage, ContextItem, AgentId, CopilotMode } from '../types.js';
+import type { ChatMessage, ContextItem, AgentId, AgentSelectionId, CopilotMode } from '../types.js';
 import type { AgentConnectorConfig } from '../config.js';
 import { buildCopilotAuthHeaders, validateCopilotToken, getCopilotApiToken } from '../connectors/copilotAuth.js';
 import { runKiroCli } from '../connectors/kiroCli.js';
@@ -29,18 +29,27 @@ import { checkAgentReadiness } from './agentReadiness.js';
 import { isChatSessionCancelled } from '../session/cancel.js';
 import { harnessLog } from '../log.js';
 import { routeCursorCloud } from '../connectors/cursorCloud.js';
+import {
+  isAutoSelection,
+  resolveAutoAgent,
+  type AutoRouteResult,
+} from './autoRouter.js';
 
 export interface AgentRequest {
   sessionId: string;
   messages: ChatMessage[];
   context: ContextItem[];
-  agent: AgentId;
+  agent: AgentSelectionId;
   /** Interaction mode: ask | agent | spec+agent */
   mode?: CopilotMode;
+  /** Active spec files (for Auto scoring in spec+agent mode). */
+  specCount?: number;
   config: AgentConnectorConfig;
   onChunk: (chunk: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
+  /** Called when `agent` is `auto` and a concrete provider was chosen. */
+  onAutoRouted?: (result: AutoRouteResult) => void;
 }
 
 /**
@@ -54,13 +63,33 @@ export interface AgentRequest {
  */
 export class AgentRouter {
   async route(request: AgentRequest): Promise<void> {
-    const readiness = checkAgentReadiness(request.agent, request.config);
+    let agent: AgentId;
+
+    if (isAutoSelection(request.agent)) {
+      const lastUser = [...request.messages].reverse().find((m) => m.role === 'user');
+      const auto = resolveAutoAgent({
+        prompt: lastUser?.content ?? '',
+        mode: request.mode ?? 'ask',
+        contextCount: request.context.length,
+        specCount: request.specCount ?? 0,
+        config: request.config,
+      });
+      agent = auto.agent;
+      harnessLog(
+        `[auto] rule=${auto.ruleId} → ${agent} fallback=${auto.fallbackUsed} scores=${JSON.stringify(auto.scores)}`,
+      );
+      request.onAutoRouted?.(auto);
+    } else {
+      agent = request.agent;
+    }
+
+    const readiness = checkAgentReadiness(agent, request.config);
     if (!readiness.ready) {
       request.onError(readiness.hint);
       return;
     }
 
-    switch (request.agent) {
+    switch (agent) {
       case 'copilot':
         await this.routeCopilot(request);
         break;
@@ -77,8 +106,7 @@ export class AgentRouter {
         await this.routeKiro(request);
         break;
       default: {
-        // Exhaustiveness check — TypeScript will error here if a new AgentId is added
-        const _exhaustive: never = request.agent;
+        const _exhaustive: never = agent;
         request.onError(`Unknown agent: ${String(_exhaustive)}`);
       }
     }

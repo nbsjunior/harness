@@ -2,6 +2,8 @@
 
 Day-to-day usage of Harness in VS Code.
 
+Harness keeps you in **one IDE** while you use **Copilot, Claude, Cursor, Devin, or Kiro**, with **specs** and **context files** applied in the same chat. Overview: [Why Harness](Why-Harness).
+
 ## Open panels
 
 | Panel | Command |
@@ -37,8 +39,8 @@ Change the provider pill before sending the next message. History remains in the
 
 Configure in **Configuration → MCP** tab. Harness connects MCP servers defined in workspace settings for tool augmentation (extension-side).
 
-## Doctor
+## Check getGoat
 
-**Harness: Doctor** prints agent readiness in a notification and the Output channel.
+**Harness: Check getGoat** prints agent readiness in a notification and the Output channel.
 
 More: [Configuration](Configuration) · [Troubleshooting](Troubleshooting)

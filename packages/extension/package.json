@@ -1,7 +1,7 @@
 {
   "name": "harness-vscode",
   "displayName": "Harness — Meta-Agent Orchestrator",
-  "description": "Unified AI coding agent interface: GitHub Copilot, Devin, Cursor, Claude Code and AWS KIRO in one place.",
+  "description": "One VS Code sidebar for Copilot, Claude, Cursor, Devin, and Kiro — with Spec-Driven Development and shared file context. No IDE switching per provider.",
   "version": "0.1.0",
   "private": true,
   "publisher": "harness-ai",
@@ -116,8 +116,8 @@
         "category": "Harness"
       },
       {
-        "command": "harness.doctor",
-        "title": "Run Doctor (Check Setup)",
+        "command": "harness.check.getGoat",
+        "title": "Check getGoat",
         "category": "Harness",
         "icon": "$(pulse)"
       },
@@ -205,7 +205,7 @@
           "command": "harness.showContext"
         },
         {
-          "command": "harness.doctor"
+          "command": "harness.check.getGoat"
         },
         {
           "command": "harness.aidlcInstall"
@@ -236,14 +236,15 @@
         "harness.defaultAgent": {
           "type": "string",
           "enum": [
+            "auto",
             "copilot",
             "devin",
             "cursor",
             "claude",
             "kiro"
           ],
-          "default": "copilot",
-          "description": "Default agent to use when no agent is specified in a Spec.",
+          "default": "auto",
+          "description": "Default provider in chat (auto = Harness picks the best agent per message).",
           "scope": "resource"
         },
         "harness.cliPath": {

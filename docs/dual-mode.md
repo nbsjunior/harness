@@ -2,6 +2,8 @@
 
 Harness offers **two ways** to use the same orchestrator. Pick one — both share `.harness/` config and the same agent router.
 
+**Value proposition:** the extension is how most teams get **one IDE + many providers + SDD + context** in a single UI. The CLI is the same engine for scripts and CI. See [why-harness.md](why-harness.md).
+
 ```
                     ┌─────────────────────────────────┐
                     │     Harness Agent Router        │
@@ -61,7 +63,7 @@ export GH_TOKEN=$(gh auth token)
 node packages/cli/dist/index.js init .
 
 # 4. Check setup
-npm run doctor
+npm run getGoat
 
 # 5. One-shot prompt
 node packages/cli/dist/index.js agent:run \
@@ -74,7 +76,7 @@ Or link globally after build:
 
 ```bash
 cd packages/cli && npm link
-harness doctor
+harness check getGoat
 harness agent:run -a copilot -p "Hello"
 ```
 
@@ -89,7 +91,7 @@ harness agent:run -a copilot -p "Hello"
 | Project config | `.harness/config.yaml` | `.harness/config.yaml` |
 | Shell env | `GH_TOKEN`, `ANTHROPIC_API_KEY`, … | Same |
 
-**Tip:** Run **`Harness: Run Doctor`** or `harness doctor` before your first chat to see which agents are ready.
+**Tip:** Run **`Harness: Check getGoat`** or `harness check getGoat` before your first chat to see which agents are ready.
 
 ---
 
@@ -97,13 +99,13 @@ harness agent:run -a copilot -p "Hello"
 
 ```bash
 # From repo root (CLI)
-npm run doctor
+npm run getGoat
 ```
 
 In VS Code:
 
 ```
-Ctrl+Shift+P → Harness: Run Doctor (Check Setup)
+Ctrl+Shift+P → Harness: Check getGoat
 ```
 
 Expected: at least **GitHub Copilot** shows ✓ when `GH_TOKEN` is set with a valid OAuth token (`gho_…`), not classic `ghp_…`.
@@ -127,7 +129,7 @@ Reload VSCode. CLI inside the `.vsix` updates automatically with the extension.
 | Symptom | Fix |
 |---|---|
 | Extension says CLI not found | Reinstall `.vsix` built with `npm run package:vsix` |
-| Doctor shows 0/5 agents | `gh auth login` → `export GH_TOKEN=$(gh auth token)` |
+| getGoat shows 0/5 agents | `gh auth login` → `export GH_TOKEN=$(gh auth token)` |
 | Copilot HTTP 400 PAT | Do not use `ghp_` tokens — use `gh auth token` |
-| CLI works, Extension does not | Reload window; **Harness: Run Doctor** |
+| CLI works, Extension does not | Reload window; **Harness: Check getGoat** |
 | Extension works, CLI does not | Run CLI from project root; `harness init` |

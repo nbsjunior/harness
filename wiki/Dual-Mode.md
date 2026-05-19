@@ -17,7 +17,7 @@ Extension UI  ←IPC→  CLI daemon (--ipc)  ←→  Agents
 ```bash
 harness chat -a copilot "Explain this repo"
 harness run -a claude "Refactor utils"
-harness doctor
+harness check getGoat
 harness init
 harness setup
 harness aidlc install

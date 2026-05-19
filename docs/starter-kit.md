@@ -2,6 +2,8 @@
 
 > Install the extension, use the bundled CLI, configure **GitHub Copilot** as your first agent, and keep the solution updated.
 
+**Why Harness?** One **VS Code** sidebar for **Copilot, Claude, Cursor, Devin, and Kiro** — plus **SDD specs** and **file context** that stay with you when you switch provider. See **[why-harness.md](why-harness.md)**.
+
 **Choose CLI or Extension?** See [dual-mode.md](dual-mode.md) — most developers use the **VS Code Extension**; use the **CLI** for terminal/CI.
 
 **Kiro + AI-DLC:** See [aidlc-kiro.md](aidlc-kiro.md) — Kiro CLI is installed automatically by Harness (`harness setup` or on extension activate).
@@ -88,13 +90,13 @@ your-project/
 ## Step 3b — Verify setup (recommended)
 
 ```
-Ctrl+Shift+P → Harness: Run Doctor (Check Setup)
+Ctrl+Shift+P → Harness: Check getGoat
 ```
 
 Or from terminal (monorepo):
 
 ```bash
-npm run doctor
+npm run getGoat
 ```
 
 You should see **GitHub Copilot** as ✓ after configuring a token (next step).

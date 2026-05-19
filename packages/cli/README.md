@@ -12,7 +12,7 @@ Read in order: [../../AGENTS.md](../../AGENTS.md) → [../../docs/ai-reference.m
 |---------|--------|
 | `harness --ipc` | `src/ipc/IpcServer.ts` — daemon (stdout = JSON only) |
 | `harness chat` / `run` | `src/commands/` → `AgentRouter` |
-| `harness doctor` | `src/commands/doctor.ts` |
+| `harness check getGoat` | `src/commands/getGoat.ts` |
 | `harness setup` | `src/commands/setup.ts` |
 
 ## Build

@@ -10,6 +10,9 @@
 /** Identifies which AI agent handles a request. Add new agents here + in AgentRouter. */
 export type AgentId = 'copilot' | 'devin' | 'cursor' | 'claude' | 'kiro';
 
+/** UI / IPC selection — `auto` is resolved to an `AgentId` before routing. */
+export type AgentSelectionId = AgentId | 'auto';
+
 export type ChatRole = 'user' | 'assistant' | 'system';
 export type ContextItemKind = 'file' | 'directory' | 'snippet';
 
@@ -28,6 +31,7 @@ export type IpcAction =
   | 'chat:chunk'
   | 'chat:done'
   | 'chat:error'
+  | 'chat:auto-routed'
   | 'context:build'
   | 'context:result'
   | 'spec:parse'
@@ -83,7 +87,7 @@ export interface ChatSendPayload {
   messages: ChatMessage[];
   /** Absolute paths to context files/dirs selected by the user. CLI reads them. */
   contextPaths: string[];
-  agent: AgentId;
+  agent: AgentSelectionId;
   /** Relative or absolute path to the specs directory (default: .harness/specs). */
   specsDir?: string;
   /** Interaction mode — defaults to 'ask'. Only used for copilot agent today. */
@@ -97,6 +101,16 @@ export interface ChatChunkPayload {
   messageId: string;
   chunk: string;
   done: boolean;
+}
+
+/** Emitted when the user selected Auto and the CLI picked a concrete agent. */
+export interface ChatAutoRoutedPayload {
+  sessionId: string;
+  agent: AgentId;
+  ruleId: string;
+  reason: string;
+  fallbackUsed: boolean;
+  scores: Record<AgentId, number>;
 }
 
 export interface ContextBuildPayload {

@@ -56,10 +56,10 @@ Never commit API keys in YAML.
 | `KIRO_API_KEY` | Kiro |
 | `HARNESS_WORKSPACE` | CLI working directory |
 
-## Doctor
+## Check getGoat
 
 ```bash
-harness doctor
+harness check getGoat
 ```
 
-Or **Harness: Doctor** — shows which agents are ready and hints for missing config.
+Or **Harness: Check getGoat** — shows which agents are ready and hints for missing config.

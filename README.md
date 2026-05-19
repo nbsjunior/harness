@@ -1,7 +1,7 @@
 # Harness — Meta-Agent Orchestrator for VSCode
 
-> **One interface. Every AI agent.**
-> Harness abstracts GitHub Copilot, Devin, Cursor AI, Claude Code and AWS KIRO behind a unified conversational and spec-driven workflow inside VSCode.
+> **One IDE. Every AI agent. One workflow.**
+> Use GitHub Copilot, Claude Code, Cursor, Devin, and Kiro from a **single VS Code sidebar** — with **Spec-Driven Development** and **context engineering** in the same place. No switching IDEs per provider.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-green)](https://nodejs.org)
@@ -10,9 +10,21 @@
 
 ---
 
+## Why Harness?
+
+| Advantage | What it means for you |
+|-----------|------------------------|
+| **One IDE, many providers** | Stay in **VS Code**. Pick Copilot, Claude, Cursor, Devin, or Kiro from the chat bar — or let **Auto** choose. You do not open Cursor IDE, a separate Claude app, and Copilot in parallel. |
+| **Spec-Driven Development (SDD)** | Define skills and workflows in `.harness/specs/`. Use **Spec+Agent** mode to inject specs as authoritative context. Specs live in git beside your code. |
+| **Context engineering** | Attach files and folders once (**Add to Harness Context**). The same context goes to **any** provider on the next message — no copy-paste between tools. |
+
+**[→ Full explanation: docs/why-harness.md](docs/why-harness.md)** · [Wiki](https://github.com/nbsjunior/harness/wiki/Why-Harness)
+
+---
+
 ## What is Harness?
 
-Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instead of switching between different AI tools, you interact through a single sidebar panel and Harness routes your requests to the right agent — based on your configured preferences, Spec-Driven Development (SDD) definitions, and the context you've selected.
+Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: you interact through one sidebar panel; Harness routes each request to the right agent using your provider choice (or **Auto**), your **SDD** specs, and the **context** you attached.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -44,13 +56,14 @@ Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instea
 
 | Feature | Description |
 |---|---|
+| **Multi-provider chat** | Copilot, Claude, Cursor, Devin, Kiro — one UI; switch with a pill or **Auto** routing |
 | **Chat Sidebar** | Conversational interface with streaming responses and message history |
-| **Context Selector** | Add files and directories to the agent context with right-click → *Add to Harness Context* |
-| **Spec Manager** | Browse, create and edit SDD specs (Skills, Tools, Workflows) in Markdown format |
-| **Agent Menu** | Quick-pick to switch between agents mid-conversation |
-| **Configuration Panel** | Set API keys, endpoints, CLI path, and MCP server definitions |
-| **CLI Orchestrator** | Node.js daemon that handles all file I/O, spec parsing and agent routing |
-| **MCP Support** | Connect to any Model Context Protocol server (stdio or HTTP) |
+| **Context engineering** | Right-click → *Add to Harness Context*; chips above composer; shared across providers |
+| **Spec Manager (SDD)** | Browse, create and edit specs (Skills, Tools, Workflows) in `.harness/specs/` |
+| **Spec+Agent mode** | Inject active specs as system context before agent runs (Copilot) |
+| **Configuration Panel** | API keys and endpoints for all providers in one place |
+| **CLI Orchestrator** | Node.js daemon: file I/O, spec parsing, agent routing (bundled in `.vsix`) |
+| **MCP Support** | Connect Model Context Protocol servers (stdio or HTTP) |
 | **Auto-reconnect** | CLI daemon restarts automatically if it crashes |
 
 ---
@@ -59,6 +72,7 @@ Harness is a VSCode extension that acts as a **Meta-Agent Orchestrator**: instea
 
 | Audience | Start here |
 |----------|------------|
+| **Why Harness?** | [docs/why-harness.md](docs/why-harness.md) · [Wiki: Why Harness](https://github.com/nbsjunior/harness/wiki/Why-Harness) |
 | **Wiki (users)** | **[GitHub Wiki](https://github.com/nbsjunior/harness/wiki)** · [Getting Started](https://github.com/nbsjunior/harness/wiki/Getting-Started) |
 | **AI assistants** | [AGENTS.md](AGENTS.md) → [docs/ai-reference.md](docs/ai-reference.md) → [docs/code-map.md](docs/code-map.md) |
 | **End users** | [docs/starter-kit.md](docs/starter-kit.md) · [docs/user-guide.md](docs/user-guide.md) |

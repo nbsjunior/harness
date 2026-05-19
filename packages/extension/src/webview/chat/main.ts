@@ -6,6 +6,8 @@ import { marked } from 'marked';
 import type {
   AgentDescriptor,
   AgentId,
+  AgentSelectionId,
+  ChatAutoRoutedPayload,
   ChatMessage,
   ContextItem,
   CopilotMode,
@@ -17,7 +19,9 @@ import type {
 
 marked.setOptions({ breaks: true, gfm: true });
 
-const vscode = acquireVsCodeApi<{ history: ChatMessage[]; agent: AgentId }>();
+const vscode = acquireVsCodeApi<{ history: ChatMessage[]; agent: AgentSelectionId }>();
+
+const AUTO_META = { short: 'Auto', color: '#a855f7', label: 'Auto (Harness picks provider)' };
 
 const AGENT_META: Record<AgentId, { short: string; color: string; label: string }> = {
   copilot: { short: 'Copilot', color: '#238636', label: 'GitHub Copilot' },
@@ -39,7 +43,8 @@ interface State {
   history: ChatMessage[];
   context: ContextItem[];
   agents: AgentDescriptor[];
-  selectedAgent: AgentId;
+  selectedAgent: AgentSelectionId;
+  lastAutoRoute?: ChatAutoRoutedPayload;
   selectedMode: CopilotMode;
   isStreaming: boolean;
   sessionTokens: number;
@@ -49,7 +54,7 @@ const state: State = {
   history: [],
   context: [],
   agents: [],
-  selectedAgent: 'copilot',
+  selectedAgent: 'auto',
   selectedMode: 'ask',
   isStreaming: false,
   sessionTokens: 0,
@@ -224,8 +229,13 @@ function buildMessageEl(msg: ChatMessage): HTMLElement {
   if (msg.role === 'user') {
     el.innerHTML = `<div class="msg__body user-text">${escapeHtml(msg.content)}</div>`;
   } else {
-    const agentId = msg.agent ?? state.selectedAgent;
-    const meta = AGENT_META[agentId] ?? { short: 'AI', color: '#888', label: agentId };
+    const agentId = msg.agent;
+    const meta =
+      agentId && AGENT_META[agentId]
+        ? AGENT_META[agentId]
+        : state.selectedAgent === 'auto'
+          ? AUTO_META
+          : { short: 'AI', color: '#888', label: String(state.selectedAgent) };
     const bodyHtml = msg.streaming
       ? '<span class="typing"><span></span><span></span><span></span></span>'
       : renderMarkdown(msg.content);
@@ -255,6 +265,21 @@ function appendChunkToMessage(messageId: string, chunk: string): void {
   body.dataset['raw'] = (body.dataset['raw'] ?? '') + chunk;
   body.innerHTML = renderMarkdown(body.dataset['raw']);
   bindCodeCopyButtons(body);
+  scrollToBottom();
+}
+
+function showAutoRouteNotice(route: ChatAutoRoutedPayload): void {
+  state.lastAutoRoute = route;
+  const meta = AGENT_META[route.agent];
+  const notice = document.createElement('div');
+  notice.className = 'auto-route-notice';
+  notice.setAttribute('aria-live', 'polite');
+  notice.innerHTML = /* html */`
+    <span class="auto-route-notice__badge" style="border-color:${meta.color};color:${meta.color}">
+      Auto → ${escapeHtml(meta.short)}
+    </span>
+    <span class="auto-route-notice__reason">${escapeHtml(route.reason)}</span>`;
+  messagesEl.appendChild(notice);
   scrollToBottom();
 }
 
@@ -301,6 +326,17 @@ function renderContext(): void {
 
 function renderProviderPills(): void {
   providerPills.innerHTML = '';
+
+  const autoBtn = document.createElement('button');
+  autoBtn.type = 'button';
+  autoBtn.className =
+    'pill pill--provider' + (state.selectedAgent === 'auto' ? ' pill--active' : '');
+  autoBtn.dataset['agent'] = 'auto';
+  autoBtn.title = AUTO_META.label;
+  autoBtn.innerHTML = `<span class="pill-dot" style="background:${AUTO_META.color}"></span>${AUTO_META.short}`;
+  autoBtn.addEventListener('click', () => selectAgent('auto'));
+  providerPills.appendChild(autoBtn);
+
   const list = state.agents.length > 0
     ? state.agents
     : (Object.keys(AGENT_META) as AgentId[]).map(id => ({ id, label: AGENT_META[id].short }));
@@ -319,7 +355,7 @@ function renderProviderPills(): void {
   }
 }
 
-function selectAgent(agentId: AgentId): void {
+function selectAgent(agentId: AgentSelectionId): void {
   if (state.selectedAgent === agentId) return;
   state.selectedAgent = agentId;
   renderProviderPills();
@@ -433,8 +469,8 @@ function sendMessage(): void {
     return;
   }
   if (text.startsWith('/agent ')) {
-    const agentId = text.slice(7).trim() as AgentId;
-    if (AGENT_META[agentId]) selectAgent(agentId);
+    const agentId = text.slice(7).trim() as AgentSelectionId;
+    if (agentId === 'auto' || AGENT_META[agentId as AgentId]) selectAgent(agentId);
     inputEl.value = '';
     autoResize();
     return;
@@ -519,10 +555,16 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       state.selectedMode = p.mode ?? 'ask';
       state.history = p.history;
       state.context = p.context;
+      state.lastAutoRoute = p.lastAutoRoute;
       renderProviderPills();
       renderMessages();
       renderContext();
       updateModePills();
+      break;
+    }
+    case 'autoRouted': {
+      const route = msg.payload as ChatAutoRoutedPayload;
+      showAutoRouteNotice(route);
       break;
     }
     case 'appendChunk': {
@@ -581,7 +623,7 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       renderMessages();
       break;
     case 'agentChanged': {
-      const p = msg.payload as { agent: AgentId };
+      const p = msg.payload as { agent: AgentSelectionId };
       state.selectedAgent = p.agent;
       renderProviderPills();
       break;
@@ -739,6 +781,30 @@ body {
 .file-ref:hover {
   border-bottom-color: var(--vscode-textLink-foreground);
   text-decoration: none;
+}
+
+.auto-route-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 12px;
+  padding: 8px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: var(--vscode-editor-inactiveSelectionBackground);
+  border: 1px solid var(--vscode-widget-border);
+}
+.auto-route-notice__badge {
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid;
+}
+.auto-route-notice__reason {
+  color: var(--vscode-descriptionForeground);
+  flex: 1;
+  min-width: 120px;
 }
 
 .msg__error {

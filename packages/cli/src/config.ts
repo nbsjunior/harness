@@ -15,7 +15,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import yaml from 'js-yaml';
-import type { AgentId } from './types.js';
+import type { AgentId, AgentSelectionId } from './types.js';
 import { resolveKiroCliPathSync } from './kiro/bootstrap.js';
 import { getGhCliToken } from './connectors/ghToken.js';
 
@@ -44,11 +44,11 @@ export interface KiroConnectorConfig {
 
 export interface LoadedHarnessConfig {
   connectors: AgentConnectorConfig;
-  defaultAgent: AgentId;
+  defaultAgent: AgentSelectionId;
 }
 
 interface HarnessConfigFile {
-  defaultAgent?: AgentId;
+  defaultAgent?: AgentSelectionId;
   connectors?: {
     copilot?: { token?: string; endpoint?: string };
     devin?: { apiKey?: string; endpoint?: string };
@@ -69,7 +69,7 @@ interface HarnessConfigFile {
 
 /** Non-secret settings pushed from the VS Code extension via HARNESS_SETTINGS_JSON. */
 interface HarnessSettingsBridge {
-  defaultAgent?: AgentId;
+  defaultAgent?: AgentSelectionId;
   connectors?: HarnessConfigFile['connectors'];
   aidlc?: HarnessConfigFile['aidlc'];
 }
@@ -96,6 +96,16 @@ function loadSettingsBridge(): HarnessSettingsBridge {
     process.stderr.write('[harness-cli] Failed to parse HARNESS_SETTINGS_JSON\n');
     return {};
   }
+}
+
+/** First non-empty trimmed string; treats `""` as unset (settings bridge often sends empty defaults). */
+function pickNonEmpty(...values: (string | undefined | null)[]): string {
+  for (const v of values) {
+    if (v !== undefined && v !== null && String(v).trim() !== '') {
+      return String(v).trim();
+    }
+  }
+  return '';
 }
 
 function loadYamlConfig(specsDir?: string): HarnessConfigFile {
@@ -171,25 +181,26 @@ export function loadHarnessConfig(specsDir?: string): LoadedHarnessConfig {
         'https://api.githubcopilot.com',
     },
     devin: {
-      apiKey:
-        yamlC.devin?.apiKey ??
-        bridgeC.devin?.apiKey ??
-        process.env['DEVIN_API_KEY'] ??
-        '',
+      apiKey: pickNonEmpty(
+        process.env['DEVIN_API_KEY'],
+        bridgeC.devin?.apiKey,
+        yamlC.devin?.apiKey,
+      ),
       endpoint:
         bridgeC.devin?.endpoint ?? yamlC.devin?.endpoint ?? 'https://api.devin.ai/v1',
     },
     cursor: {
-      apiKey:
-        yamlC.cursor?.apiKey ??
-        bridgeC.cursor?.apiKey ??
-        process.env['CURSOR_API_KEY'] ??
-        '',
-      endpoint:
-        bridgeC.cursor?.endpoint ??
-        yamlC.cursor?.endpoint ??
-        process.env['CURSOR_API_ENDPOINT'] ??
+      apiKey: pickNonEmpty(
+        process.env['CURSOR_API_KEY'],
+        bridgeC.cursor?.apiKey,
+        yamlC.cursor?.apiKey,
+      ),
+      endpoint: pickNonEmpty(
+        bridgeC.cursor?.endpoint,
+        yamlC.cursor?.endpoint,
+        process.env['CURSOR_API_ENDPOINT'],
         'https://api.cursor.com',
+      ),
     },
     claude: {
       path: bridgeC.claude?.path ?? yamlC.claude?.path ?? process.env['CLAUDE_PATH'] ?? 'claude',
@@ -210,11 +221,11 @@ export function loadHarnessConfig(specsDir?: string): LoadedHarnessConfig {
         bridgeC.kiro?.cliPath ??
         yamlC.kiro?.cliPath ??
         resolveKiroCliPathSync(),
-      apiKey:
-        yamlC.kiro?.apiKey ??
-        bridgeC.kiro?.apiKey ??
-        process.env['KIRO_API_KEY'] ??
-        '',
+      apiKey: pickNonEmpty(
+        process.env['KIRO_API_KEY'],
+        bridgeC.kiro?.apiKey,
+        yamlC.kiro?.apiKey,
+      ),
       trustTools:
         bridgeC.kiro?.trustTools ??
         yamlC.kiro?.trustTools ??

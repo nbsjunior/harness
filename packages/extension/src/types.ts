@@ -17,6 +17,22 @@
 
 export type AgentId = 'copilot' | 'devin' | 'cursor' | 'claude' | 'kiro';
 
+/** Chat provider selection — `auto` is resolved by the CLI auto-router before routing. */
+export type AgentSelectionId = AgentId | 'auto';
+
+export interface AutoSelectionDescriptor {
+  id: 'auto';
+  label: string;
+  description: string;
+}
+
+export const AUTO_SELECTION_DESCRIPTOR: AutoSelectionDescriptor = {
+  id: 'auto',
+  label: 'Auto',
+  description:
+    'Harness picks the best provider from your prompt (default: Copilot; complex code → Claude; integrations → Claude; specs → Kiro; …)',
+};
+
 export interface AgentDescriptor {
   id: AgentId;
   label: string;
@@ -158,6 +174,7 @@ export type IpcAction =
   | 'chat:chunk'
   | 'chat:done'
   | 'chat:error'
+  | 'chat:auto-routed'
   | 'context:build'
   | 'context:result'
   | 'spec:parse'
@@ -200,7 +217,7 @@ export interface ChatSendPayload {
   messages: ChatMessage[];
   /** Absolute paths to context files/directories */
   contextPaths: string[];
-  agent: AgentId;
+  agent: AgentSelectionId;
   specsDir?: string;
   /** Interaction mode — defaults to 'ask' */
   mode?: CopilotMode;
@@ -213,6 +230,15 @@ export interface ChatChunkPayload {
   messageId: string;
   chunk: string;
   done: boolean;
+}
+
+export interface ChatAutoRoutedPayload {
+  sessionId: string;
+  agent: AgentId;
+  ruleId: string;
+  reason: string;
+  fallbackUsed: boolean;
+  scores: Record<AgentId, number>;
 }
 
 export interface ContextBuildPayload {
@@ -296,6 +322,7 @@ export type ExtensionCommand =
   // Token usage (for status bar display)
   | 'tokenUsage'
   | 'streamStopped'
+  | 'autoRouted'
   // Configuration wizard responses
   | 'configLoaded'
   | 'connectionResult'
@@ -307,11 +334,13 @@ export interface ExtensionMessage<T = unknown> {
 }
 
 export interface InitializePayload {
-  agent: AgentId;
+  agent: AgentSelectionId;
   mode: CopilotMode;
   context: ContextItem[];
   history: ChatMessage[];
   agents: AgentDescriptor[];
+  /** Last Auto routing decision for the active session (if any). */
+  lastAutoRoute?: ChatAutoRoutedPayload;
 }
 
 export interface TokenUsagePayload {

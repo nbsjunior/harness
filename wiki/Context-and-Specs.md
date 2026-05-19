@@ -1,5 +1,7 @@
 # Context and Specs
 
+Harness combines **context engineering** (which files the model sees) and **Spec-Driven Development** (how the agent should behave) in **one workflow** — regardless of whether you use Copilot, Claude, Cursor, or another provider.
+
 ## Context files
 
 Add files or folders to the agent context:
@@ -12,6 +14,8 @@ Context chips appear above the composer. Click a chip to open the file; **×** r
 **Clear context** removes all chips and clears the input field.
 
 Context paths are sent to the CLI on each message — the daemon reads file contents (never the extension host).
+
+**Provider-agnostic:** attach context once, then switch from Copilot to Claude (or **Auto**) — the same files are still included. You do not re-upload context in another IDE.
 
 ## Spec Manager
 

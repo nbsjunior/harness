@@ -30,6 +30,7 @@ import {
   isChatSessionCancelled,
 } from '../session/cancel.js';
 import { harnessLog } from '../log.js';
+import { cancelCursorCloudSession } from '../connectors/cursorCloud.js';
 import type {
   IPCMessage,
   ChatSendPayload,
@@ -149,6 +150,12 @@ async function dispatchMessage(msg: IPCMessage, router: AgentRouter): Promise<vo
       const { sessionId } = (msg.payload ?? {}) as { sessionId?: string };
       if (sessionId) {
         cancelChatSession(sessionId);
+        const cursorCfg = loadAgentConfig().cursor;
+        void cancelCursorCloudSession(
+          sessionId,
+          cursorCfg.apiKey,
+          cursorCfg.endpoint,
+        );
         harnessLog(`[ipc] chat:cancel sessionId=${sessionId}`);
       }
       writeFrame({ id: msg.id, action: 'chat:cancel', payload: { sessionId } });
@@ -256,7 +263,22 @@ async function handleChatSend(
       context: contextPaths.map((p) => ({ absolutePath: p, kind: 'file', label: p })),
       agent,
       mode: mode ?? 'ask',
+      specCount: specPaths?.length ?? 0,
       config: agentConfig,
+      onAutoRouted: (auto) => {
+        writeFrame({
+          id: msg.id,
+          action: 'chat:auto-routed',
+          payload: {
+            sessionId,
+            agent: auto.agent,
+            ruleId: auto.ruleId,
+            reason: auto.reason,
+            fallbackUsed: auto.fallbackUsed,
+            scores: auto.scores,
+          },
+        });
+      },
       onChunk: (chunk) => {
         if (isChatSessionCancelled(sessionId)) {
           return;

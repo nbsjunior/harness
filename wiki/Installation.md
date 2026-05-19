@@ -15,7 +15,7 @@ After install, Harness runs `harness setup` automatically (workspace init, AI-DL
 cd harness
 npm install
 npm run build
-node packages/cli/dist/index.js doctor
+node packages/cli/dist/index.js check getGoat
 node packages/cli/dist/index.js chat -a copilot "Hello"
 ```
 
@@ -26,7 +26,7 @@ See [Dual Mode](Dual-Mode) for when to use CLI vs extension.
 ```bash
 harness init [path]    # creates .harness/config.yaml and specs/
 harness setup          # bootstrap + AI-DLC install
-harness doctor         # agent readiness
+harness check getGoat  # agent readiness
 ```
 
 ## Updating

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import type {
-  AgentId,
+  AgentSelectionId,
+  ChatAutoRoutedPayload,
   ChatMessage,
   ChatSendPayload,
   ChatChunkPayload,
@@ -31,12 +32,13 @@ export class AgentService {
     sessionId: string;
     messages: ChatMessage[];
     contextPaths: string[];
-    agent: AgentId;
+    agent: AgentSelectionId;
     mode?: CopilotMode;
     specPaths?: string[];
     onChunk: (chunk: string, messageId: string) => void;
     onComplete: (messageId: string) => void;
     onError: (error: string, messageId: string) => void;
+    onAutoRouted?: (route: ChatAutoRoutedPayload) => void;
     onStopped?: () => void;
   }): Promise<void> {
     const {
@@ -49,6 +51,7 @@ export class AgentService {
       onChunk,
       onComplete,
       onError,
+      onAutoRouted,
       onStopped,
     } = options;
 
@@ -84,6 +87,20 @@ export class AgentService {
       }
     });
 
+    const autoDisposable = this.cliService.onCliMessage('chat:auto-routed', (msg: IPCMessage) => {
+      const p = msg.payload as ChatAutoRoutedPayload;
+      if (p.sessionId !== sessionId) {
+        return;
+      }
+      traceLog(this.output, 'chat', 'auto-routed', {
+        sessionId,
+        agent: p.agent,
+        ruleId: p.ruleId,
+        fallback: p.fallbackUsed,
+      });
+      onAutoRouted?.(p);
+    });
+
     const errorDisposable = this.cliService.onCliMessage('chat:error', (msg: IPCMessage) => {
       const payload = msg.payload as { sessionId?: string; error?: string };
       if (payload.sessionId !== sessionId && msg.id !== requestId) {
@@ -97,7 +114,7 @@ export class AgentService {
 
     this.activeChats.set(sessionId, {
       sessionId,
-      disposables: [chunkDisposable, errorDisposable],
+      disposables: [chunkDisposable, autoDisposable, errorDisposable],
     });
 
     try {

@@ -5,10 +5,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * Diagnose Harness setup: config sources, bundled paths, agent readiness.
+ * `harness check getGoat` — diagnose Harness setup: config, agents, AI-DLC.
  * All output goes to stderr except JSON mode.
  */
-export async function doctorCommand(options: {
+export async function getGoatCommand(options: {
   specsDir?: string;
   json?: boolean;
 }): Promise<number> {
@@ -53,7 +53,7 @@ export async function doctorCommand(options: {
     return readiness.some((r) => r.ready) ? 0 : 1;
   }
 
-  process.stderr.write('\nHarness Doctor\n');
+  process.stderr.write('\nHarness getGoat\n');
   process.stderr.write('═'.repeat(50) + '\n\n');
   process.stderr.write(`Workspace: ${workspace}\n`);
   process.stderr.write(`.harness/: ${hasHarnessDir ? 'found' : 'missing (run: harness init)'}\n`);

@@ -3,12 +3,14 @@
 **[Home](Home)**
 
 **Getting started**
+- [Why Harness](Why-Harness)
 - [Getting Started](Getting-Started)
 - [Installation](Installation)
 - [User Guide](User-Guide)
 
 **Using Harness**
 - [Chat Interface](Chat-Interface)
+- [Auto Routing](Auto-Routing)
 - [Configuration](Configuration)
 - [Context and Specs](Context-and-Specs)
 - [SDD Specs](SDD-Specs)

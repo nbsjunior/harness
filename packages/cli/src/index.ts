@@ -5,7 +5,7 @@ import { initCommand } from './commands/init.js';
 import { agentRunCommand } from './commands/agentRun.js';
 import { specParseCommand } from './commands/specParse.js';
 import { contextBuildCommand } from './commands/contextBuild.js';
-import { doctorCommand } from './commands/doctor.js';
+import { getGoatCommand } from './commands/getGoat.js';
 import { aidlcInstallCommand, aidlcStatusCommand } from './commands/aidlc.js';
 import { setupCommand } from './commands/setup.js';
 import { startIpcServer } from './ipc/IpcServer.js';
@@ -55,14 +55,17 @@ if (process.argv.includes('--ipc')) {
   program
     .command('agent:run')
     .description('Run an agent with a one-shot prompt')
-    .requiredOption('-a, --agent <agent>', 'Agent to use (copilot|devin|cursor|claude|kiro)')
+    .requiredOption(
+      '-a, --agent <agent>',
+      'Agent to use (auto|copilot|devin|cursor|claude|kiro)',
+    )
     .requiredOption('-p, --prompt <text>', 'Prompt to send to the agent')
     .option('-d, --dirs <dirs>', 'Comma-separated list of context directories')
     .option('-s, --specs-dir <dir>', 'Path to the specs directory')
     .option('-c, --config <file>', 'Path to harness config.yaml')
     .action(async (options) => {
-      const validAgents: AgentId[] = ['copilot', 'devin', 'cursor', 'claude', 'kiro'];
-      const agent = options.agent as AgentId;
+      const validAgents = ['auto', 'copilot', 'devin', 'cursor', 'claude', 'kiro'] as const;
+      const agent = options.agent as (typeof validAgents)[number];
 
       if (!validAgents.includes(agent)) {
         console.error(`Error: Invalid agent "${agent}". Choose from: ${validAgents.join(', ')}`);
@@ -106,16 +109,18 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // harness doctor
+  // harness check getGoat
   // ---------------------------------------------------------------------------
 
   program
-    .command('doctor')
+    .command('check')
+    .description('Diagnostics and health checks')
+    .command('getGoat')
     .description('Check workspace setup and agent connector readiness')
     .option('-s, --specs-dir <dir>', 'Path to the specs directory')
     .option('--json', 'Output JSON to stdout', false)
     .action(async (options: { specsDir?: string; json?: boolean }) => {
-      const code = await doctorCommand({
+      const code = await getGoatCommand({
         ...(options.specsDir ? { specsDir: options.specsDir } : {}),
         ...(options.json !== undefined ? { json: options.json } : {}),
       });

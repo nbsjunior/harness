@@ -15,6 +15,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type {
   AgentId,
+  AgentSelectionId,
+  ChatAutoRoutedPayload,
   ChatMessage,
   ContextItem,
   CopilotMode,
@@ -36,8 +38,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private agentService: AgentService;
   private history: ChatMessage[] = [];
   private activeSessionId = crypto.randomUUID();
-  private selectedAgent: AgentId;
+  private selectedAgent: AgentSelectionId;
   private selectedMode: CopilotMode = 'ask';
+  private lastAutoRoute?: ChatAutoRoutedPayload;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -48,7 +51,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     this.agentService = new AgentService(cliService, output);
     this.selectedAgent = vscode.workspace
       .getConfiguration('harness')
-      .get<AgentId>('defaultAgent', 'copilot');
+      .get<AgentSelectionId>('defaultAgent', 'auto');
   }
 
   // ---------------------------------------------------------------------------
@@ -94,7 +97,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  async sendChatMessage(text: string, agent?: AgentId, mode?: CopilotMode): Promise<void> {
+  async sendChatMessage(
+    text: string,
+    agent?: AgentSelectionId,
+    mode?: CopilotMode,
+  ): Promise<void> {
     if (agent) {
       this.selectedAgent = agent;
     }
@@ -144,6 +151,14 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       agent: this.selectedAgent,
       mode: this.selectedMode,
       specPaths,
+      onAutoRouted: (route: ChatAutoRoutedPayload) => {
+        this.lastAutoRoute = route;
+        const msg = this.history.find((m) => m.id === assistantMessage.id);
+        if (msg) {
+          msg.agent = route.agent;
+        }
+        this.post({ command: 'autoRouted', payload: route });
+      },
       onChunk: (chunk: string, messageId: string) => {
         // Accumulate chunk in local history
         const msg = this.history.find((m) => m.id === assistantMessage.id);
@@ -197,15 +212,22 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         break;
 
       case 'sendMessage': {
-        const payload = msg.payload as { text: string; agent?: AgentId; mode?: CopilotMode };
+        const payload = msg.payload as {
+          text: string;
+          agent?: AgentSelectionId;
+          mode?: CopilotMode;
+        };
         await this.sendChatMessage(payload.text, payload.agent, payload.mode);
         break;
       }
 
       case 'selectAgent': {
-        const payload = msg.payload as { agent: AgentId };
+        const payload = msg.payload as { agent: AgentSelectionId };
         this.selectedAgent = payload.agent;
-        this.post({ command: 'agentChanged', payload: { agent: this.selectedAgent } });
+        this.post({
+          command: 'agentChanged',
+          payload: { agent: this.selectedAgent },
+        });
         break;
       }
 
@@ -287,6 +309,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       context: this.contextProvider.getItems(),
       history: this.history,
       agents: Object.values(AGENTS),
+      ...(this.lastAutoRoute ? { lastAutoRoute: this.lastAutoRoute } : {}),
     };
     this.post({ command: 'initialize', payload: initPayload });
   }

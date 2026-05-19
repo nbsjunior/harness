@@ -10,7 +10,7 @@ Harness routes chat to five agents via the CLI `AgentRouter`.
 | **Claude Code** | CLI subprocess | `claude` on PATH + optional `ANTHROPIC_API_KEY` |
 | **Kiro (AI-DLC)** | kiro-cli + steering | `KIRO_API_KEY` |
 
-Run `harness doctor` or **Harness: Doctor** to see readiness.
+Run `harness check getGoat` or **Harness: Check getGoat** to see readiness.
 
 ---
 
