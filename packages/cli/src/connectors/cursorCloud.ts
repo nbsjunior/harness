@@ -8,17 +8,46 @@
  */
 import https from 'https';
 import http from 'http';
+import { execSync } from 'child_process';
 import { URL } from 'url';
 import type { ChatMessage, ContextItem, CopilotMode } from '../types.js';
 import { harnessLog } from '../log.js';
 
 export const CURSOR_CLOUD_API_DEFAULT = 'https://api.cursor.com';
 
-/** harness sessionId → Cursor cloud agent id (multi-turn follow-ups) */
-const agentBySession = new Map<string, string>();
+/** Max wait for first assistant/thinking text (heartbeats do not reset this). */
+const STREAM_NO_CONTENT_TIMEOUT_MS = 90_000;
+/** After content started, max gap without new tokens. */
+const STREAM_IDLE_AFTER_CONTENT_MS = 120_000;
+const STREAM_MAX_DURATION_MS = 600_000;
+const RUN_STATUS_POLL_MS = 12_000;
+
+interface CursorSessionState {
+  agentId: string;
+  /** Run still active on Cursor side (CREATING/RUNNING) — blocks new runs until cleared. */
+  activeRunId?: string;
+}
+
+/** harness sessionId → Cursor cloud agent + active run */
+const sessionByHarnessId = new Map<string, CursorSessionState>();
 
 export function clearCursorCloudSession(sessionId: string): void {
-  agentBySession.delete(sessionId);
+  sessionByHarnessId.delete(sessionId);
+}
+
+function getSession(sessionId: string): CursorSessionState | undefined {
+  return sessionByHarnessId.get(sessionId);
+}
+
+function setSession(sessionId: string, state: CursorSessionState): void {
+  sessionByHarnessId.set(sessionId, state);
+}
+
+function clearActiveRun(sessionId: string): void {
+  const s = sessionByHarnessId.get(sessionId);
+  if (s) {
+    s.activeRunId = undefined;
+  }
 }
 
 /** Normalize endpoint — reject IDE-internal hosts that return 404 for /chat/completions */
@@ -58,7 +87,13 @@ function buildPrompt(
 
   if (includeHistory) {
     for (const m of messages) {
-      if (m.role === 'system') continue;
+      if (m.role === 'system') {
+        if (m.content.trim()) {
+          parts.push(m.content.trim());
+          parts.push('');
+        }
+        continue;
+      }
       const who = m.role === 'user' ? 'User' : 'Assistant';
       parts.push(`${who}:\n${m.content}\n`);
     }
@@ -74,6 +109,59 @@ function cursorMode(mode?: CopilotMode): 'agent' | 'plan' {
   return mode === 'ask' ? 'plan' : 'agent';
 }
 
+/** Optional GitHub repo for Cloud Agents (speeds up real coding tasks). */
+function detectGithubRepo(): { url: string; startingRef: string } | undefined {
+  const workspace = process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  try {
+    const remote = execSync('git remote get-url origin', {
+      cwd: workspace,
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    let url = remote.replace(/\.git$/i, '');
+    if (url.startsWith('git@github.com:')) {
+      url = `https://github.com/${url.slice('git@github.com:'.length)}`;
+    }
+    if (!/^https:\/\/github\.com\//i.test(url)) {
+      return undefined;
+    }
+    let startingRef = 'main';
+    try {
+      startingRef =
+        execSync('git branch --show-current', {
+          cwd: workspace,
+          encoding: 'utf-8',
+          stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim() || 'main';
+    } catch {
+      // keep main
+    }
+    return { url, startingRef };
+  } catch {
+    return undefined;
+  }
+}
+
+function buildCreateAgentBody(
+  promptText: string,
+  mode: 'agent' | 'plan',
+): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    prompt: { text: promptText },
+    mode,
+  };
+  const repo = detectGithubRepo();
+  if (repo) {
+    body['repos'] = [{ url: repo.url, startingRef: repo.startingRef }];
+    harnessLog(`[cursor] using repo ${repo.url} @ ${repo.startingRef}`);
+  }
+  return body;
+}
+
+function isAgentBusyError(message: string): boolean {
+  return /409/.test(message) && /agent_busy/i.test(message);
+}
+
 interface CreateAgentResponse {
   agent: { id: string };
   run: { id: string };
@@ -83,11 +171,17 @@ interface CreateRunResponse {
   run: { id: string };
 }
 
+interface RunRecord {
+  id: string;
+  status?: string;
+}
+
 async function httpJson<T>(
   method: string,
   url: URL,
   apiKey: string,
   body?: unknown,
+  allowStatuses: number[] = [],
 ): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const lib = url.protocol === 'https:' ? https : http;
@@ -114,12 +208,13 @@ async function httpJson<T>(
         res.on('data', (c: Buffer) => chunks.push(c));
         res.on('end', () => {
           const text = Buffer.concat(chunks).toString('utf-8');
-          if (res.statusCode !== undefined && res.statusCode >= 400) {
-            reject(
-              new Error(
-                `HTTP ${res.statusCode} from ${url.hostname}: ${text.slice(0, 400)}`,
-              ),
-            );
+          const code = res.statusCode ?? 0;
+          if (code >= 400 && !allowStatuses.includes(code)) {
+            reject(new Error(`HTTP ${code} from ${url.hostname}: ${text.slice(0, 400)}`));
+            return;
+          }
+          if (!text.trim()) {
+            resolve({} as T);
             return;
           }
           try {
@@ -137,6 +232,106 @@ async function httpJson<T>(
   });
 }
 
+async function cancelRun(
+  baseUrl: string,
+  apiKey: string,
+  agentId: string,
+  runId: string,
+): Promise<void> {
+  try {
+    await httpJson(
+      'POST',
+      new URL(`/v1/agents/${agentId}/runs/${runId}/cancel`, baseUrl),
+      apiKey,
+      undefined,
+      [409],
+    );
+    harnessLog(`[cursor] cancelled run=${runId} agent=${agentId}`);
+  } catch (err) {
+    harnessLog(`[cursor] cancel run failed (ignored): ${(err as Error).message}`);
+  }
+}
+
+async function getRun(
+  baseUrl: string,
+  apiKey: string,
+  agentId: string,
+  runId: string,
+): Promise<RunRecord> {
+  return httpJson<RunRecord>(
+    'GET',
+    new URL(`/v1/agents/${agentId}/runs/${runId}`, baseUrl),
+    apiKey,
+  );
+}
+
+function isTerminalRunStatus(status: string | undefined): boolean {
+  if (!status) return false;
+  return /FINISHED|FAILED|CANCELLED|COMPLETED|ERROR/i.test(status);
+}
+
+/** Cancel any run still marked active for this Harness session (prevents HTTP 409 agent_busy). */
+async function cancelActiveRunForSession(
+  baseUrl: string,
+  apiKey: string,
+  sessionId: string,
+): Promise<void> {
+  const state = getSession(sessionId);
+  if (!state?.activeRunId) return;
+  await cancelRun(baseUrl, apiKey, state.agentId, state.activeRunId);
+  clearActiveRun(sessionId);
+}
+
+async function createFollowUpRun(
+  baseUrl: string,
+  apiKey: string,
+  agentId: string,
+  promptText: string,
+  mode: 'agent' | 'plan',
+  sessionId: string,
+): Promise<string> {
+  const postRun = async (): Promise<string> => {
+    const created = await httpJson<CreateRunResponse>(
+      'POST',
+      new URL(`/v1/agents/${agentId}/runs`, baseUrl),
+      apiKey,
+      { prompt: { text: promptText }, mode },
+    );
+    return created.run.id;
+  };
+
+  try {
+    return await postRun();
+  } catch (err) {
+    const msg = (err as Error).message;
+    if (!isAgentBusyError(msg)) throw err;
+
+    harnessLog(`[cursor] agent_busy — cancelling previous run session=${sessionId}`);
+    await cancelActiveRunForSession(baseUrl, apiKey, sessionId);
+    await new Promise((r) => setTimeout(r, 800));
+    return postRun();
+  }
+}
+
+function extractStreamText(
+  eventType: string,
+  data: Record<string, unknown>,
+): string {
+  if (eventType === 'assistant' || eventType === 'thinking') {
+    return typeof data['text'] === 'string' ? data['text'] : '';
+  }
+  if (eventType === 'status') {
+    const status =
+      typeof data['status'] === 'string'
+        ? data['status']
+        : typeof data['runId'] === 'string'
+          ? ''
+          : '';
+    return status ? `*(Cursor: ${status})*\n` : '';
+  }
+  return '';
+}
+
 async function streamRun(
   baseUrl: string,
   apiKey: string,
@@ -150,8 +345,168 @@ async function streamRun(
 
   return new Promise<void>((resolve) => {
     const lib = url.protocol === 'https:' ? https : http;
+    let finished = false;
+    let sawContent = false;
+    let lastContentAt = Date.now();
+    let lastStatusShown = '';
+    let req: http.ClientRequest | null = null;
 
-    const req = lib.request(
+    const cleanup = () => {
+      if (noContentTimer) clearTimeout(noContentTimer);
+      if (idleAfterContentTimer) clearTimeout(idleAfterContentTimer);
+      if (maxTimer) clearTimeout(maxTimer);
+      if (pollTimer) clearInterval(pollTimer);
+    };
+
+    const finish = (callDone: boolean) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      if (callDone) onDone();
+      resolve();
+    };
+
+    const failNoContent = () => {
+      harnessLog(`[cursor] no content within ${STREAM_NO_CONTENT_TIMEOUT_MS}ms run=${runId}`);
+      req?.destroy();
+      onError(
+        'Cursor cloud agent did not return text within 90 seconds. ' +
+          'Cloud Agents often need a linked GitHub repo and can take several minutes. ' +
+          'Try **Ask** mode, a **+ New chat**, or check https://cursor.com/agents for the run status.',
+      );
+      finish(false);
+    };
+
+    let noContentTimer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+      if (!sawContent && !finished) failNoContent();
+    }, STREAM_NO_CONTENT_TIMEOUT_MS);
+
+    let idleAfterContentTimer: ReturnType<typeof setTimeout> | null = null;
+    let maxTimer: ReturnType<typeof setTimeout> | null = null;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+    const armIdleAfterContent = () => {
+      if (idleAfterContentTimer) clearTimeout(idleAfterContentTimer);
+      idleAfterContentTimer = setTimeout(() => {
+        if (finished) return;
+        harnessLog(`[cursor] idle after content run=${runId}`);
+        req?.destroy();
+        finish(true);
+      }, STREAM_IDLE_AFTER_CONTENT_MS);
+    };
+
+    const onStreamText = (text: string, countsAsContent = true) => {
+      if (!text) return;
+      if (countsAsContent) {
+        sawContent = true;
+        lastContentAt = Date.now();
+        if (noContentTimer) {
+          clearTimeout(noContentTimer);
+          noContentTimer = null;
+        }
+        armIdleAfterContent();
+      }
+      onChunk(text);
+    };
+
+    const handleSseBlock = (block: string) => {
+      if (!block.trim()) return;
+
+      const lines = block.split('\n');
+      let eventType = '';
+      const dataParts: string[] = [];
+
+      for (const line of lines) {
+        if (line.startsWith('event:')) {
+          eventType = line.slice(6).trim();
+        } else if (line.startsWith('data:')) {
+          dataParts.push(line.slice(5).trim());
+        }
+      }
+
+      const dataLine = dataParts.join('\n').trim();
+      if (!dataLine) return;
+
+      try {
+        const data = JSON.parse(dataLine) as Record<string, unknown>;
+        harnessLog(`[cursor] sse event=${eventType} run=${runId}`);
+
+        if (eventType === 'heartbeat') {
+          return;
+        }
+
+        const text = extractStreamText(eventType, data);
+        if (text) {
+          if (eventType === 'status') {
+            if (text === lastStatusShown) return;
+            lastStatusShown = text;
+            onStreamText(text, false);
+          } else {
+            onStreamText(text, true);
+          }
+        }
+
+        if (eventType === 'error') {
+          const msg =
+            typeof data['message'] === 'string' ? data['message'] : 'Cursor stream error';
+          onError(msg);
+          finish(false);
+          return;
+        }
+
+        if (eventType === 'result') {
+          const status = typeof data['status'] === 'string' ? data['status'] : undefined;
+          if (isTerminalRunStatus(status)) {
+            finish(true);
+            return;
+          }
+        }
+
+        if (eventType === 'done') {
+          finish(true);
+        }
+      } catch {
+        harnessLog(`[cursor] malformed sse: ${dataLine.slice(0, 80)}`);
+      }
+    };
+
+    pollTimer = setInterval(() => {
+      if (finished) return;
+      void getRun(baseUrl, apiKey, agentId, runId)
+        .then((run) => {
+          if (finished) return;
+          harnessLog(`[cursor] poll status=${run.status ?? '?'} run=${runId}`);
+          if (isTerminalRunStatus(run.status)) {
+            if (!sawContent) {
+              onStreamText(
+                `*(Cursor run ${run.status} — no streamed text. View progress at cursor.com/agents)*\n`,
+                true,
+              );
+            }
+            req?.destroy();
+            finish(true);
+          }
+        })
+        .catch(() => {
+          /* ignore poll errors */
+        });
+    }, RUN_STATUS_POLL_MS);
+
+    maxTimer = setTimeout(() => {
+      if (finished) return;
+      harnessLog(`[cursor] stream max duration exceeded run=${runId}`);
+      req?.destroy();
+      if (!sawContent) {
+        onError('Cursor request exceeded maximum wait time (10 minutes).');
+        finish(false);
+      } else {
+        finish(true);
+      }
+    }, STREAM_MAX_DURATION_MS);
+
+    onStreamText('*(Waiting for Cursor cloud agent…)*\n', false);
+
+    req = lib.request(
       url,
       {
         method: 'GET',
@@ -163,79 +518,56 @@ async function streamRun(
       (res) => {
         if (res.statusCode !== undefined && res.statusCode >= 400) {
           onError(`HTTP ${res.statusCode} from ${url.hostname} (stream)`);
-          resolve();
+          finish(false);
           return;
         }
 
         let buffer = '';
-        let currentEvent = '';
-        let finished = false;
-
-        const finish = () => {
-          if (!finished) {
-            finished = true;
-            onDone();
-          }
-          resolve();
-        };
 
         res.on('data', (chunk: Buffer) => {
           buffer += chunk.toString('utf-8');
-          const blocks = buffer.split('\n\n');
+          const blocks = buffer.split(/\n\n/);
           buffer = blocks.pop() ?? '';
 
           for (const block of blocks) {
-            const lines = block.split('\n');
-            let eventType = currentEvent;
-            let dataLine = '';
-
-            for (const line of lines) {
-              if (line.startsWith('event:')) {
-                eventType = line.slice(6).trim();
-              } else if (line.startsWith('data:')) {
-                dataLine = line.slice(5).trim();
-              }
-            }
-
-            if (eventType) currentEvent = eventType;
-            if (!dataLine) continue;
-
-            try {
-              const data = JSON.parse(dataLine) as Record<string, unknown>;
-
-              if (eventType === 'assistant' || eventType === 'thinking') {
-                const text = typeof data['text'] === 'string' ? data['text'] : '';
-                if (text) onChunk(text);
-              } else if (eventType === 'error') {
-                const msg =
-                  typeof data['message'] === 'string'
-                    ? data['message']
-                    : 'Cursor stream error';
-                onError(msg);
-                finished = true;
-                resolve();
-                return;
-              } else if (eventType === 'done' || eventType === 'result') {
-                finish();
-                return;
-              }
-            } catch {
-              // ignore malformed SSE JSON
-            }
+            handleSseBlock(block);
           }
         });
 
-        res.on('end', finish);
+        res.on('end', async () => {
+          if (finished) {
+            resolve();
+            return;
+          }
+          if (buffer.trim()) {
+            handleSseBlock(buffer);
+          }
+          try {
+            const run = await getRun(baseUrl, apiKey, agentId, runId);
+            if (isTerminalRunStatus(run.status)) {
+              finish(true);
+              return;
+            }
+          } catch {
+            // best-effort
+          }
+          if (!sawContent && Date.now() - lastContentAt > STREAM_NO_CONTENT_TIMEOUT_MS) {
+            failNoContent();
+            return;
+          }
+          finish(sawContent);
+        });
+
         res.on('error', (err: Error) => {
           onError(err.message);
-          resolve();
+          finish(false);
         });
       },
     );
 
     req.on('error', (err: Error) => {
       onError(err.message);
-      resolve();
+      finish(false);
     });
     req.end();
   });
@@ -254,6 +586,28 @@ export interface CursorCloudRequest {
 }
 
 /**
+ * Cancel the active Cursor run for a Harness session (e.g. user clicked Stop).
+ */
+export async function cancelCursorCloudSession(
+  sessionId: string,
+  apiKey: string,
+  endpoint: string,
+): Promise<void> {
+  const state = getSession(sessionId);
+  if (!state?.activeRunId) {
+    clearCursorCloudSession(sessionId);
+    return;
+  }
+  if (!apiKey.trim()) {
+    clearCursorCloudSession(sessionId);
+    return;
+  }
+  const baseUrl = normalizeCursorBaseUrl(endpoint);
+  await cancelRun(baseUrl, apiKey.trim(), state.agentId, state.activeRunId);
+  clearCursorCloudSession(sessionId);
+}
+
+/**
  * Route a chat turn through Cursor Cloud Agents API v1.
  */
 export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
@@ -268,8 +622,8 @@ export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
 
   const baseUrl = normalizeCursorBaseUrl(req.endpoint);
   const mode = cursorMode(req.mode);
-  const existingAgentId = agentBySession.get(req.sessionId);
-  const promptText = buildPrompt(req.messages, req.context, !existingAgentId);
+  const existing = getSession(req.sessionId);
+  const promptText = buildPrompt(req.messages, req.context, !existing);
 
   if (!promptText) {
     req.onError('No user message to send to Cursor.');
@@ -277,7 +631,9 @@ export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
   }
 
   try {
-    let agentId = existingAgentId;
+    await cancelActiveRunForSession(baseUrl, apiKey, req.sessionId);
+
+    let agentId = existing?.agentId;
     let runId: string;
 
     if (!agentId) {
@@ -286,28 +642,62 @@ export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
         'POST',
         new URL('/v1/agents', baseUrl),
         apiKey,
-        { prompt: { text: promptText }, mode },
+        buildCreateAgentBody(promptText, mode),
       );
       agentId = created.agent.id;
       runId = created.run.id;
-      agentBySession.set(req.sessionId, agentId);
+      setSession(req.sessionId, { agentId, activeRunId: runId });
     } else {
       harnessLog(`[cursor] follow-up run agent=${agentId} session=${req.sessionId}`);
-      const created = await httpJson<CreateRunResponse>(
-        'POST',
-        new URL(`/v1/agents/${agentId}/runs`, baseUrl),
+      runId = await createFollowUpRun(
+        baseUrl,
         apiKey,
-        { prompt: { text: promptText }, mode },
+        agentId,
+        promptText,
+        mode,
+        req.sessionId,
       );
-      runId = created.run.id;
+      setSession(req.sessionId, { agentId, activeRunId: runId });
     }
 
-    await streamRun(baseUrl, apiKey, agentId, runId, req.onChunk, req.onDone, req.onError);
+    let doneCalled = false;
+    const safeDone = () => {
+      if (doneCalled) return;
+      doneCalled = true;
+      clearActiveRun(req.sessionId);
+      req.onDone();
+    };
+    const safeError = (msg: string) => {
+      clearActiveRun(req.sessionId);
+      req.onError(msg);
+    };
+
+    await streamRun(
+      baseUrl,
+      apiKey,
+      agentId,
+      runId,
+      req.onChunk,
+      safeDone,
+      safeError,
+    );
+
+    if (!doneCalled) {
+      safeDone();
+    }
   } catch (err) {
+    clearActiveRun(req.sessionId);
     const msg = (err as Error).message;
     if (/401|Unauthorized/i.test(msg)) {
       req.onError(
         `Cursor authentication failed. Check your API key at https://cursor.com/dashboard/integrations. ${msg}`,
+      );
+      return;
+    }
+    if (isAgentBusyError(msg)) {
+      clearCursorCloudSession(req.sessionId);
+      req.onError(
+        'Cursor agent is still busy from a previous message. Start a **+ New chat** or wait a few seconds and try again.',
       );
       return;
     }

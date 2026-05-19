@@ -1,10 +1,10 @@
 import * as path from 'path';
 import { AgentRouter } from '../router/AgentRouter.js';
 import { loadAgentConfig } from '../config.js';
-import type { AgentId } from '../types.js';
+import type { AgentSelectionId } from '../types.js';
 
 interface AgentRunOptions {
-  agent: AgentId;
+  agent: AgentSelectionId;
   prompt: string;
   contextDirs?: string[];
   specsDir?: string;
@@ -34,10 +34,8 @@ export async function agentRunCommand(options: AgentRunOptions): Promise<void> {
     label: dir,
   }));
 
-  const agentId = options.agent;
-
   // Progress info to stderr (never stdout — that must stay clean for piping)
-  process.stderr.write(`\nAgent: ${agentId}\n`);
+  process.stderr.write(`\nAgent: ${options.agent}\n`);
   process.stderr.write(`Prompt: ${options.prompt.slice(0, 80)}${options.prompt.length > 80 ? '…' : ''}\n`);
   if (context.length > 0) {
     process.stderr.write(`Context: ${context.map((c) => c.label).join(', ')}\n`);
@@ -49,8 +47,14 @@ export async function agentRunCommand(options: AgentRunOptions): Promise<void> {
       sessionId: crypto.randomUUID(),
       messages,
       context,
-      agent: agentId,
+      agent: options.agent,
       config: agentConfig,
+      onAutoRouted: (auto) => {
+        process.stderr.write(
+          `[auto] ${auto.ruleId} → ${auto.agent}${auto.fallbackUsed ? ' (fallback)' : ''}\n`,
+        );
+        process.stderr.write(`[auto] ${auto.reason}\n`);
+      },
       onChunk: (chunk) => {
         // Agent response goes to stdout — safe for piping
         process.stdout.write(chunk);

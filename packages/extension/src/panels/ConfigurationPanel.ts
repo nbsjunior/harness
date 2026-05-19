@@ -191,9 +191,13 @@ export class ConfigurationPanel {
           return { agent, ok: true };
         }
         case 'cursor': {
-          if (!endpoint) return { agent, ok: false, error: 'Endpoint is required for Cursor AI' };
-          await this.httpGet(new URL('/models', endpoint), { Authorization: `Bearer ${token}` });
-          return { agent, ok: true };
+          const base = (endpoint || 'https://api.cursor.com').replace(/\/+$/, '');
+          const auth = `Basic ${Buffer.from(`${token}:`, 'utf-8').toString('base64')}`;
+          await this.httpGet(new URL('/v1/me', base), {
+            Authorization: auth,
+            Accept: 'application/json',
+          });
+          return { agent, ok: true, model: 'Cloud Agents API v1' };
         }
         case 'kiro': {
           if (!token) {

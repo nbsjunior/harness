@@ -6,7 +6,7 @@ import { ConfigurationPanel } from './panels/ConfigurationPanel';
 import { ContextProvider } from './providers/ContextProvider';
 import { CliService } from './services/CliService';
 import { McpClientManager } from './mcp/McpClientManager';
-import type { AgentId } from './types';
+import type { AgentId, AgentSelectionId } from './types';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const outputChannel = vscode.window.createOutputChannel('Harness', { log: true });
@@ -124,6 +124,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Run agent via Quick Pick
     vscode.commands.registerCommand('harness.runAgent', async () => {
       const agentItems: vscode.QuickPickItem[] = [
+        { label: '$(sparkle) Auto (Harness picks)', description: 'auto' },
         { label: '$(copilot) GitHub Copilot', description: 'copilot' },
         { label: '$(robot) Devin', description: 'devin' },
         { label: '$(sparkle) Cursor AI', description: 'cursor' },
@@ -140,7 +141,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         return;
       }
 
-      const agentId = chosen.description as AgentId;
+      const agentId = chosen.description as AgentSelectionId;
       const prompt = await vscode.window.showInputBox({
         title: `Run ${chosen.label} Agent`,
         prompt: 'Enter your prompt',
@@ -161,7 +162,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       ConfigurationPanel.createOrShow(context.extensionUri, context, cliService);
     }),
 
-    // Diagnose setup (runs CLI doctor with extension secrets/env)
+    // Diagnose setup (runs CLI `check getGoat` with extension secrets/env)
     vscode.commands.registerCommand('harness.setup', async () => {
       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
       try {
@@ -211,22 +212,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
     }),
 
-    vscode.commands.registerCommand('harness.doctor', async () => {
-      const result = await cliService.runCommand('doctor', []);
-      const channel = vscode.window.createOutputChannel('Harness Doctor');
+    vscode.commands.registerCommand('harness.check.getGoat', async () => {
+      const result = await cliService.runCommand('check', ['getGoat']);
+      const channel = vscode.window.createOutputChannel('Harness getGoat');
       channel.clear();
-      channel.appendLine(result.stderr || result.stdout || 'Doctor completed.');
+      channel.appendLine(result.stderr || result.stdout || 'getGoat completed.');
       channel.show();
       if (!result.success) {
         const action = await vscode.window.showWarningMessage(
-          'Harness doctor: no agents ready. See Output → Harness Doctor.',
+          'Harness getGoat: no agents ready. See Output → Harness getGoat.',
           'Login GitHub Copilot',
         );
         if (action === 'Login GitHub Copilot') {
           await vscode.commands.executeCommand('harness.copilotLogin');
         }
       } else {
-        void vscode.window.showInformationMessage('Harness doctor: at least one agent is ready.');
+        void vscode.window.showInformationMessage('Harness getGoat: at least one agent is ready.');
       }
     }),
 

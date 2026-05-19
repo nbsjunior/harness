@@ -2,6 +2,8 @@
 
 Harness uses **Spec-Driven Development** (SDD) to define reusable agent capabilities. Specs are Markdown files with YAML frontmatter stored in `.harness/specs/`.
 
+SDD is one of Harness's core advantages: specs live **in the same VS Code workflow** as multi-provider chat and file context — see [why-harness.md](why-harness.md).
+
 ---
 
 ## Why Spec-Driven Development?

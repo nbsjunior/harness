@@ -25,7 +25,16 @@
 
 ## 1. What is Harness?
 
-Harness is a VSCode extension that works as a **Meta-Agent Orchestrator**: you write your request once in the chat, and Harness routes it to the AI agent you choose — **GitHub Copilot**, **Devin**, **Cursor AI**, **Claude Code**, or **AWS KIRO** — enriching the prompt with the files you selected and the specs you defined.
+Harness is a VSCode extension that works as a **Meta-Agent Orchestrator**. Its main advantage: you stay in **one IDE** and reuse **multiple AI providers** (Copilot, Claude, Cursor, Devin, Kiro) without opening a different editor for each vendor.
+
+You also get **Spec-Driven Development (SDD)** and **context engineering** in the **same** chat:
+
+- **SDD** — define behaviour in `.harness/specs/` and run **Spec+Agent** mode to inject specs into the prompt.
+- **Context** — attach files/folders once; the same context is sent to **whichever provider** you pick next.
+
+You write your request once; Harness routes it to the agent you choose (or **Auto**), with your selected files and active specs included.
+
+**[→ Why Harness (detailed)](why-harness.md)**
 
 ```
 ┌─────────────────────────────────────────────────┐

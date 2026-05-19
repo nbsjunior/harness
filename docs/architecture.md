@@ -19,7 +19,7 @@ is completely separated from the agent-calling layer (CLI daemon).
 │                                                                 │
 │  ┌─────────────────────────┐    ┌──────────────────────────┐   │
 │  │  VS Code Extension       │    │  Standalone CLI          │   │
-│  │  packages/extension/     │    │  harness chat/run/doctor │   │
+│  │  packages/extension/     │    │  harness chat/run/check  │   │
 │  │                         │    │                          │   │
 │  │  ChatViewProvider        │    │  commander program       │   │
 │  │  SpecManagerPanel        │    │  (index.ts)              │   │

@@ -2,6 +2,8 @@
 
 The Harness chat is designed like **Cursor**: messages on top, composer at the bottom, provider pills below the input.
 
+This is where you **switch AI providers without leaving VS Code** — Copilot, Claude, Cursor, Devin, Kiro, or **Auto** — while keeping the same **context chips** and (for Copilot) **Spec+Agent** mode. See [Why Harness](Why-Harness).
+
 ## Layout
 
 ```
@@ -28,7 +30,9 @@ The Harness chat is designed like **Cursor**: messages on top, composer at the b
 
 ## Provider pills (bottom)
 
-Click a provider to switch: **Copilot**, **Devin**, **Cursor**, **Claude**, **Kiro**.
+Click a provider to switch: **Auto**, **Copilot**, **Devin**, **Cursor**, **Claude**, **Kiro**.
+
+**Auto** (default) lets Harness pick the best provider per message — see [Auto Routing](Auto-Routing).
 
 The selected pill is highlighted. Changing provider applies to the next message.
 

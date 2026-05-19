@@ -1,6 +1,8 @@
 # Harness Wiki
 
-**Harness** is a meta-agent orchestrator for VS Code — one chat interface for GitHub Copilot, Cursor, Claude Code, Devin, and Kiro (AI-DLC).
+**Harness** is a meta-agent orchestrator for VS Code: **one IDE**, **many AI providers** (Copilot, Claude, Cursor, Devin, Kiro), plus **Spec-Driven Development** and **context engineering** in the same sidebar — without switching editors per vendor.
+
+**[Why Harness?](Why-Harness)** — the main advantages explained.
 
 ---
 
@@ -8,11 +10,14 @@
 
 | I want to… | Start here |
 |------------|------------|
+| Understand why to use Harness | [Why Harness](Why-Harness) |
+
 | Install and send my first message | [Getting Started](Getting-Started) |
 | Use the chat UI (providers, modes) | [Chat Interface](Chat-Interface) |
 | Configure API keys | [Configuration](Configuration) |
 | Set up GitHub Copilot | [Copilot Modes](Copilot-Modes) |
 | Set up Cursor AI | [Agent Connectors → Cursor](Agent-Connectors#cursor-ai-cloud-agents-api) |
+| Use Auto provider | [Auto Routing](Auto-Routing) |
 | Use Specs (SDD) | [SDD Specs](SDD-Specs) |
 | Run without VS Code (CLI only) | [Dual Mode](Dual-Mode) |
 | Fix errors | [Troubleshooting](Troubleshooting) |
@@ -27,6 +32,12 @@ VS Code Extension (UI)  ←→  CLI daemon (IPC)  ←→  Agent connectors
          Copilot · Devin · Cursor · Claude · Kiro
 ```
 
+### Three ideas in one product
+
+1. **One IDE, many providers** — use Copilot, Claude, Cursor, Devin, and Kiro from VS Code; no separate IDE per AI vendor.
+2. **Spec-Driven Development** — versioned specs in `.harness/specs/`; **Spec+Agent** injects them into the prompt.
+3. **Context engineering** — attach files once; the same context follows you when you switch provider.
+
 - **Extension** — chat sidebar, spec manager, configuration panel
 - **CLI** — all file I/O, authentication, agent routing (bundled inside the `.vsix`)
 - **Specs** — YAML skills/tools/workflows in `.harness/specs/`
@@ -38,6 +49,7 @@ Repository: [github.com/nbsjunior/harness](https://github.com/nbsjunior/harness)
 ## Documentation map
 
 ### Users
+- [Why Harness](Why-Harness)
 - [Getting Started](Getting-Started)
 - [Installation](Installation)
 - [User Guide](User-Guide)

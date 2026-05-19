@@ -2,7 +2,7 @@
 # This file is committed to version control (without secrets).
 # Set API keys via environment variables or VSCode settings (harness.connectors.*).
 
-defaultAgent: copilot
+defaultAgent: auto
 
 connectors:
   copilot:
@@ -14,9 +14,8 @@ connectors:
     endpoint: https://api.devin.ai/v1
 
   cursor:
-    # API Key: set CURSOR_API_KEY env var or harness.connectors.cursor.apiKey in VSCode settings
-    # Endpoint: your Cursor AI MCP/HTTP endpoint
-    endpoint: ''
+    # API Key: set CURSOR_API_KEY env var or save in Harness → Configuration (VS Code Secrets)
+    endpoint: https://api.cursor.com
 
   claude:
     # Path to the Claude Code CLI binary (must be on PATH or provide full path)

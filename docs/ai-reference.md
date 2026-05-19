@@ -7,9 +7,16 @@
 
 ## Product intent
 
-Harness is a **meta-agent orchestrator**: one UI (VS Code sidebar or CLI) talks to many backends
-(Copilot, Devin, Cursor, Claude Code, Kiro). The user picks an agent and a mode; Harness handles
-auth, context injection, streaming, and (for Copilot Agent modes) file tools.
+Harness is a **meta-agent orchestrator**: one **VS Code** UI (or CLI) talks to many backends
+(Copilot, Devin, Cursor, Claude Code, Kiro) so developers **do not change IDE per provider**.
+
+Differentiators (user-facing copy in [why-harness.md](why-harness.md)):
+
+- **One IDE, many providers** — provider pills + **Auto** routing in one sidebar.
+- **Spec-Driven Development** — `.harness/specs/` + **Spec+Agent** injects specs as system context.
+- **Context engineering** — file/directory attachments are **provider-agnostic** (same context after switching agent).
+
+The user picks an agent and mode; Harness handles auth, context, specs, streaming, and Copilot tool loops.
 
 **Non-goals:** Harness is not a new LLM. It does not embed model weights. It routes and wraps.
 

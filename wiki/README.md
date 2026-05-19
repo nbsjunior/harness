@@ -17,6 +17,7 @@ Requires:
 | Page | Description |
 |------|-------------|
 | `Home.md` | Wiki home |
+| `Why-Harness.md` | Value proposition — one IDE, multi-provider, SDD, context |
 | `_Sidebar.md` | Left navigation |
 | `Getting-Started.md` | Quick start |
 | `Agent-Connectors.md` | All agents including Cursor Cloud API |

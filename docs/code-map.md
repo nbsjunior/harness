@@ -7,7 +7,7 @@
 ## CLI — `packages/cli/src/`
 
 ### `index.ts`
-CLI entry (commander). Registers commands: `chat`, `run`, `doctor`, `init`, `setup`, `aidlc`, `--ipc` daemon mode.
+CLI entry (commander). Registers commands: `chat`, `run`, `check getGoat`, `init`, `setup`, `aidlc`, `--ipc` daemon mode.
 
 ### `types.ts`
 Shared IPC and domain types (mirror extension). Key: `AgentId`, `CopilotMode`, `ChatSendPayload`, `IpcAction`.
@@ -33,6 +33,15 @@ Shared IPC and domain types (mirror extension). Key: `AgentId`, `CopilotMode`, `
 | `startIpcServer()` | Main daemon loop: read stdin NDJSON, dispatch, write stdout frames. |
 
 Internal handlers: `handleChatSend` (context + spec injection), `handleContextBuild`, `handleSpecParse`, `handleAidlcInstall`, `handleSetupBootstrap`.
+
+### `router/autoRouter.ts`
+
+| Export | Purpose |
+|--------|---------|
+| `AUTO_ROUTING_RULES` | Keyword/signal table for Auto provider selection (documented in file). |
+| `scoreAutoAgents()` | Score each `AgentId` from prompt + mode + context. |
+| `resolveAutoAgent()` | Pick ready agent; fallback chain if winner unavailable. |
+| `resolveAgentSelection()` | Map `auto` → concrete `AgentId`. |
 
 ### `router/AgentRouter.ts`
 | Export | Purpose |
@@ -60,7 +69,7 @@ Module-level: `buildCopilotTools()`, `executeCopilotTool()` — agent file tools
 |--------|---------|
 | `AgentReadiness` | `{ agent, label, ready, hint }`. |
 | `checkAgentReadiness()` | Per-agent token/CLI checks. |
-| `checkAllAgents()` | All five agents for `doctor`. |
+| `checkAllAgents()` | All five agents for `check getGoat`. |
 
 ### `connectors/copilotAuth.ts`
 | Export | Purpose |
@@ -134,10 +143,10 @@ Version, steering rule names, release zip URL for AI-DLC rules.
 | `parseMarkdownFile()` | Section-based markdown parse (legacy/spec docs). |
 | `scanMarkdownDirectory()` | Find markdown files under tree. |
 
-### `commands/doctor.ts`
+### `commands/getGoat.ts`
 | Export | Purpose |
 |--------|---------|
-| `doctorCommand()` | Print agent readiness + AI-DLC status; exit code 0 if any agent ready. |
+| `getGoatCommand()` | Print agent readiness + AI-DLC status; exit code 0 if any agent ready. |
 
 ### `commands/setup.ts`
 | Export | Purpose |
@@ -185,7 +194,7 @@ Version, steering rule names, release zip URL for AI-DLC rules.
 | `activate()` | Start CliService daemon, bootstrap setup subprocess, register commands/webviews. |
 | `deactivate()` | Subscriptions dispose CLI/MCP. |
 
-Commands include: `harness.doctor`, `harness.copilotLogin`, `harness.setup`, `harness.aidlcInstall`, context commands.
+Commands include: `harness.check.getGoat`, `harness.copilotLogin`, `harness.setup`, `harness.aidlcInstall`, context commands.
 
 ### `types.ts`
 Canonical types for extension + webview: `AGENT_DESCRIPTORS`, `CopilotMode`, IPC payloads, webview command unions.

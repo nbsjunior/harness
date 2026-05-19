@@ -13,7 +13,7 @@
     "build:extension": "npm run build -w packages/extension",
     "bundle:cli": "node scripts/bundle-cli.mjs",
     "package:vsix": "npm run build:cli && npm run bundle:cli && npm run build:prod -w packages/extension && npm run package -w packages/extension",
-    "doctor": "npm run build:cli && node packages/cli/dist/index.js doctor",
+    "getGoat": "npm run build:cli && node packages/cli/dist/index.js check getGoat",
     "setup": "npm run build:cli && node packages/cli/dist/index.js setup",
     "watch": "npm run watch --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",

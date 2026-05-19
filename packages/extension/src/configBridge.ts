@@ -16,7 +16,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { execFile } from 'child_process';
-import type { AgentId } from './types';
+import type { AgentId, AgentSelectionId } from './types';
 
 function readCachedKiroCliPath(): string | undefined {
   const marker = path.join(os.homedir(), '.harness', 'tools', 'kiro-cli', 'kiro-cli-path.txt');
@@ -56,7 +56,7 @@ export async function buildHarnessProcessEnv(
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
 
   const settingsBridge = {
-    defaultAgent: harness.get<AgentId>('defaultAgent', 'copilot'),
+    defaultAgent: harness.get<AgentSelectionId>('defaultAgent', 'auto'),
     connectors: {
       copilot: {
         endpoint: harness.get<string>('connectors.copilot.endpoint', 'https://api.githubcopilot.com'),
@@ -65,8 +65,10 @@ export async function buildHarnessProcessEnv(
         endpoint: harness.get<string>('connectors.devin.endpoint', 'https://api.devin.ai/v1'),
       },
       cursor: {
-        endpoint: harness.get<string>('connectors.cursor.endpoint', ''),
-        apiKey: harness.get<string>('connectors.cursor.apiKey', ''),
+        endpoint: harness.get<string>(
+          'connectors.cursor.endpoint',
+          'https://api.cursor.com',
+        ),
       },
       claude: {
         path: harness.get<string>('connectors.claude.path', 'claude'),

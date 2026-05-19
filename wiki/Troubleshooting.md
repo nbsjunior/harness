@@ -22,13 +22,14 @@
 |-------|-----|
 | **HTTP 404 from api2.cursor.sh** | Wrong endpoint — use `https://api.cursor.com`, not `api2.cursor.sh` |
 | HTTP 401 | Create key at [cursor.com/dashboard/integrations](https://cursor.com/dashboard/integrations) |
-| No response | Cloud Agents API is async — check Output for stream errors |
+| No response / stuck thinking | Cursor Cloud can take minutes; Harness now shows status text and errors after **90s** without text. Use **Ask** mode for simple chat. Open **View → Output → Harness** for `[cursor]` logs. **+ New chat** if stuck. |
+| HTTP 409 `agent_busy` | Previous Cursor run still active — **+ New chat**, or wait a few seconds; Harness now cancels stale runs automatically |
 
 ## Claude
 
 | Error | Fix |
 |-------|-----|
-| Doctor shows ready but CLI missing | Install [Claude Code CLI](https://claude.ai/code) |
+| getGoat shows ready but CLI missing | Install [Claude Code CLI](https://claude.ai/code) |
 | Command not found | Set `harness.connectors.claude.path` |
 
 ## Context / chat UI
@@ -43,5 +44,5 @@
 Always check **View → Output → Harness** first.
 
 ```bash
-harness doctor    # CLI-side readiness
+harness check getGoat    # CLI-side readiness
 ```

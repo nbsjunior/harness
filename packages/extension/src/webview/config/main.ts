@@ -1,5 +1,6 @@
 import type {
   AgentId,
+  AgentSelectionId,
   ConnectionResultPayload,
   ExtensionMessage,
   SecretStatusPayload,
@@ -180,7 +181,7 @@ interface WizardState {
   connectionResults: Record<AgentId, { ok: boolean; error?: string; model?: string }>;
   pendingTestAgent: AgentId | null;
   specsDirectory: string;
-  defaultAgent: AgentId;
+  defaultAgent: AgentSelectionId;
   cliPath: string;
   mcpEnabled: boolean;
   mcpServers: McpServer[];
@@ -203,7 +204,7 @@ const state: WizardState = {
   connectionResults: {} as Record<AgentId, { ok: boolean; error?: string; model?: string }>,
   pendingTestAgent: null,
   specsDirectory: '.harness/specs',
-  defaultAgent: 'copilot',
+  defaultAgent: 'auto',
   cliPath: '',
   mcpEnabled: true,
   mcpServers: [],
@@ -681,9 +682,12 @@ function advanceAgentQueue(): void {
 
 function renderWorkspace(): HTMLElement {
   const el = div('screen');
-  const agentOptions = AGENTS.map(a =>
-    `<option value="${a.id}" ${state.defaultAgent === a.id ? 'selected' : ''}>${a.label}</option>`
-  ).join('');
+  const agentOptions =
+    `<option value="auto" ${state.defaultAgent === 'auto' ? 'selected' : ''}>Auto (Harness picks)</option>` +
+    AGENTS.map(
+      (a) =>
+        `<option value="${a.id}" ${state.defaultAgent === a.id ? 'selected' : ''}>${a.label}</option>`,
+    ).join('');
 
   el.innerHTML = /* html */`
     <div class="screen-header">
@@ -694,7 +698,7 @@ function renderWorkspace(): HTMLElement {
     <div class="form-group">
       <label class="form-label">Default agent</label>
       <select id="ws-default-agent" class="select-input">${agentOptions}</select>
-      <div class="form-hint">Used when no agent is specified in a Spec.</div>
+      <div class="form-hint">Default provider in chat; Auto routes each message to the best agent.</div>
     </div>
 
     <div class="form-group">
@@ -726,7 +730,8 @@ function renderWorkspace(): HTMLElement {
   });
 
   el.querySelector('#btn-ws-next')!.addEventListener('click', () => {
-    state.defaultAgent = (el.querySelector('#ws-default-agent') as HTMLSelectElement).value as AgentId;
+    state.defaultAgent = (el.querySelector('#ws-default-agent') as HTMLSelectElement)
+      .value as AgentSelectionId;
     state.specsDirectory = (el.querySelector('#ws-specs-dir') as HTMLInputElement).value.trim();
     state.cliPath = (el.querySelector('#ws-cli-path') as HTMLInputElement).value.trim();
 
@@ -921,7 +926,7 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
     case 'configLoaded': {
       const cfg = msg.payload as {
         specsDirectory: string;
-        defaultAgent: AgentId;
+        defaultAgent: AgentSelectionId;
         cliPath: string;
         mcpEnabled: boolean;
         mcpServers: McpServer[];

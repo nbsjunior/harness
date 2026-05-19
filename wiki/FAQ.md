@@ -1,5 +1,9 @@
 # FAQ
 
+## What is the main advantage of Harness?
+
+**One IDE (VS Code), many AI providers** — without juggling Cursor IDE, Copilot chat, and Claude in separate apps. Plus **SDD** (`.harness/specs/`) and **context engineering** (attached files) in the same sidebar. See [Why Harness](Why-Harness).
+
 ## Do I need to install the CLI separately?
 
 No. The VSIX bundles the compiled CLI at `extension/cli/dist/index.js`.

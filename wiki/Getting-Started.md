@@ -2,6 +2,8 @@
 
 Get Harness running in under 10 minutes.
 
+Harness lets you use **Copilot, Claude, Cursor, Devin, and Kiro from one VS Code sidebar**, with **specs** and **file context** shared across providers. Read **[Why Harness](Why-Harness)** for the full picture.
+
 ## Requirements
 
 | Requirement | Version |
@@ -36,7 +38,7 @@ The `.vsix` includes the compiled CLI — no separate install needed.
 
 1. `Ctrl+Shift+P` → **Harness: Copilot Login** (or run `gh auth login --scopes copilot`)
 2. Open **Harness: Open Configuration** → verify Copilot shows ready
-3. Run **Harness: Doctor** to confirm agents
+3. Run **Harness: Check getGoat** to confirm agents
 
 ## 4. Send your first message
 
