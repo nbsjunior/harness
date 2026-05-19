@@ -65,7 +65,9 @@ export function checkAgentReadiness(
           agent,
           label: LABELS.devin,
           ready: false,
-          hint: 'Set DEVIN_API_KEY or configure in Harness.',
+          hint:
+            '[Devin] API key missing — set DEVIN_API_KEY or Harness → Configuration → Devin. ' +
+            '(If you meant Cursor, select the **Cursor** pill in chat, not Auto/Devin.)',
         };
       }
       return {
@@ -82,8 +84,8 @@ export function checkAgentReadiness(
           label: LABELS.cursor,
           ready: false,
           hint:
-            'Set CURSOR_API_KEY or harness.connectors.cursor.apiKey ' +
-            '(create at https://cursor.com/dashboard/integrations).',
+            '[Cursor] API key missing — set CURSOR_API_KEY or Harness → Configuration → Cursor ' +
+            '(https://cursor.com/dashboard/integrations).',
         };
       }
       const base = normalizeCursorBaseUrl(config.cursor.endpoint || CURSOR_CLOUD_API_DEFAULT);

@@ -41,6 +41,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private selectedAgent: AgentSelectionId;
   private selectedMode: CopilotMode = 'ask';
   private lastAutoRoute?: ChatAutoRoutedPayload;
+  private sessionTokens = 0;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -95,6 +96,44 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       command: 'contextUpdated',
       payload: this.contextProvider.getItems(),
     });
+  }
+
+  /** View title command — clears chat messages, context files, and starts a new CLI session. */
+  clearChatAndContext(): void {
+    this.resetChat({ clearContext: true });
+  }
+
+  /** Toolbar "+ New chat" — clears messages only; context file chips stay attached. */
+  startNewChatSession(): void {
+    this.resetChat({ clearContext: false });
+  }
+
+  private resetChat(options: { clearContext: boolean }): void {
+    const streaming = this.history.find((m) => m.streaming);
+    if (streaming) {
+      this.agentService.cancelSession(this.activeSessionId, () => {
+        streaming.streaming = false;
+        this.post({ command: 'streamStopped' });
+      });
+    }
+
+    if (options.clearContext) {
+      this.contextProvider.clear();
+    }
+
+    this.history = [];
+    this.activeSessionId = crypto.randomUUID();
+    this.lastAutoRoute = undefined;
+    this.sessionTokens = 0;
+
+    this.post({ command: 'chatCleared' });
+    this.postTokenUsage();
+    if (options.clearContext) {
+      this.post({
+        command: 'contextUpdated',
+        payload: [] as ContextItem[],
+      });
+    }
   }
 
   async sendChatMessage(
@@ -158,6 +197,10 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           msg.agent = route.agent;
         }
         this.post({ command: 'autoRouted', payload: route });
+      },
+      onUsage: (usage) => {
+        this.sessionTokens += usage.tokensTotal;
+        this.postTokenUsage(usage.stats.total.tokensTotal);
       },
       onChunk: (chunk: string, messageId: string) => {
         // Accumulate chunk in local history
@@ -253,23 +296,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       }
 
       case 'clearContext':
-        this.contextProvider.clear();
-        this.notifyContextChanged();
+        this.resetChat({ clearContext: true });
         break;
 
-      case 'newChat': {
-        const streaming = this.history.find((m) => m.streaming);
-        if (streaming) {
-          this.agentService.cancelSession(this.activeSessionId, () => {
-            streaming.streaming = false;
-            this.post({ command: 'streamStopped' });
-          });
-        }
-        this.history = [];
-        this.activeSessionId = crypto.randomUUID();
-        this.post({ command: 'chatCleared' });
+      case 'newChat':
+        this.resetChat({ clearContext: false });
         break;
-      }
 
       case 'showContext':
         await vscode.commands.executeCommand('harness.showContext');
@@ -341,6 +373,17 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
   private post(msg: ExtensionMessage): void {
     void this.view?.webview.postMessage(msg);
+  }
+
+  private postTokenUsage(lifetimeTokens?: number): void {
+    this.post({
+      command: 'tokenUsage',
+      payload: {
+        sessionTokens: this.sessionTokens,
+        dailyTokens: lifetimeTokens ?? this.sessionTokens,
+        budgetTokens: 0,
+      },
+    });
   }
 
   /** Open a file in the editor, optionally at a specific line/column (Cursor-style refs). */

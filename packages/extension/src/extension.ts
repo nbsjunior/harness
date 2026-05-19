@@ -103,11 +103,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       chatViewProvider.notifyContextChanged();
     }),
 
-    // Clear all context items
+    // Clear chat + context (view title toolbar — same as in-webview "Clear all")
     vscode.commands.registerCommand('harness.clearContext', () => {
-      contextProvider.clear();
-      chatViewProvider.notifyContextChanged();
-      void vscode.window.showInformationMessage('Harness context cleared.');
+      chatViewProvider.clearChatAndContext();
     }),
 
     // Show current context items

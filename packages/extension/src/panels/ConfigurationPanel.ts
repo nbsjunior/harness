@@ -2,7 +2,13 @@ import * as vscode from 'vscode';
 import * as https from 'https';
 import * as http from 'http';
 import { URL } from 'url';
-import type { AgentId, ConnectionResultPayload, SecretStatusPayload } from '../types';
+import type {
+  AgentId,
+  ConnectionResultPayload,
+  SecretStatusPayload,
+  UsageStatsPayload,
+} from '../types';
+import { resolveHarnessWorkspacePath } from '../workspacePath.js';
 import { buildCopilotAuthHeaders, validateCopilotToken } from '../copilotAuth';
 import type { CliService } from '../services/CliService';
 
@@ -107,7 +113,41 @@ export class ConfigurationPanel {
           break;
         }
         const config = vscode.workspace.getConfiguration();
-        await config.update(key, value, vscode.ConfigurationTarget.Global);
+        await config.update(key, value, configurationTarget(key));
+        if (
+          key === 'harness.defaultWorkspace' &&
+          this.cliService &&
+          typeof value === 'string' &&
+          value.trim()
+        ) {
+          await this.cliService.restart().catch(() => undefined);
+        }
+        break;
+      }
+
+      case 'getUsageStats': {
+        await this.sendUsageStats();
+        break;
+      }
+
+      case 'resetUsageStats': {
+        if (!this.cliService) {
+          break;
+        }
+        try {
+          const response = await this.cliService.send<Record<string, never>, UsageStatsPayload>(
+            { id: crypto.randomUUID(), action: 'usage:reset', payload: {} },
+            { expectResponse: 'usage:reset:result', timeoutMs: 15_000 },
+          );
+          await this.panel.webview.postMessage({
+            command: 'usageStats',
+            payload: response.payload,
+          });
+        } catch (err) {
+          void vscode.window.showErrorMessage(
+            `Failed to reset usage stats: ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
         break;
       }
 
@@ -247,7 +287,14 @@ export class ConfigurationPanel {
     const cfg = {
       specsDirectory: config.get<string>('specsDirectory', '.harness/specs'),
       defaultAgent: config.get<string>('defaultAgent', 'copilot'),
+      defaultWorkspace: config.get<string>('defaultWorkspace', ''),
+      resolvedWorkspace: resolveHarnessWorkspacePath() ?? '',
       cliPath: config.get<string>('cliPath', ''),
+      promptOptimization: {
+        enabled: config.get<boolean>('promptOptimization.enabled', true),
+        maxContextCharsPerFile: config.get<number>('promptOptimization.maxContextCharsPerFile', 12_000),
+        maxHistoryMessages: config.get<number>('promptOptimization.maxHistoryMessages', 24),
+      },
       mcpEnabled: config.get<boolean>('mcp.enabled', true),
       mcpServers: config.get<unknown[]>('mcp.servers', []),
       apiServers: config.get<ApiServerEntry[]>('apiServers', []),
@@ -259,6 +306,25 @@ export class ConfigurationPanel {
       },
     };
     await this.panel.webview.postMessage({ command: 'configLoaded', payload: cfg });
+    await this.sendUsageStats();
+  }
+
+  private async sendUsageStats(): Promise<void> {
+    if (!this.cliService) {
+      return;
+    }
+    try {
+      const response = await this.cliService.send<Record<string, never>, UsageStatsPayload>(
+        { id: crypto.randomUUID(), action: 'usage:get', payload: {} },
+        { expectResponse: 'usage:stats', timeoutMs: 15_000 },
+      );
+      await this.panel.webview.postMessage({
+        command: 'usageStats',
+        payload: response.payload,
+      });
+    } catch {
+      // CLI may still be starting — Spending tab shows empty state
+    }
   }
 
   private async sendSecretStatus(): Promise<void> {
@@ -306,4 +372,17 @@ export class ConfigurationPanel {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     return Array.from({ length: 32 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
   }
+}
+
+function configurationTarget(key: string): vscode.ConfigurationTarget {
+  if (
+    key === 'harness.cliPath' ||
+    key.startsWith('harness.connectors.') ||
+    key === 'harness.telemetry.enabled' ||
+    key === 'harness.mcp.enabled' ||
+    key.startsWith('harness.mcp.servers')
+  ) {
+    return vscode.ConfigurationTarget.Global;
+  }
+  return vscode.ConfigurationTarget.Workspace;
 }

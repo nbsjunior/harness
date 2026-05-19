@@ -1,4 +1,5 @@
 import { loadAgentConfig } from '../config.js';
+import { probeCursorApi } from '../connectors/cursorCloud.js';
 import { checkAllAgents } from '../router/agentReadiness.js';
 import { getAidlcStatus } from '../aidlc/status.js';
 import * as fs from 'fs';
@@ -70,6 +71,27 @@ export async function getGoatCommand(options: {
   for (const r of readiness) {
     const icon = r.ready ? '✓' : '✗';
     process.stderr.write(`  ${icon} ${r.label.padEnd(18)} ${r.hint}\n`);
+  }
+
+  const cursorCfg = config.cursor;
+  if (cursorCfg.apiKey) {
+    const probe = await probeCursorApi(cursorCfg.apiKey, cursorCfg.endpoint);
+    if (probe.ok) {
+      const who = probe.userEmail ?? probe.apiKeyName ?? 'authenticated';
+      process.stderr.write(
+        `\n  Cursor API live check: OK (${who}) @ ${probe.endpoint}\n`,
+      );
+    } else {
+      process.stderr.write(`\n  Cursor API live check: FAILED — ${probe.error}\n`);
+      process.stderr.write(
+        '    Fix: key at https://cursor.com/dashboard/integrations, endpoint https://api.cursor.com\n',
+      );
+    }
+  } else {
+    process.stderr.write(
+      '\n  Cursor: no API key — create one at https://cursor.com/dashboard/integrations\n' +
+        '    VS Code: Harness → Configuration → Cursor → paste key → Test Connection → Reload\n',
+    );
   }
 
   const ready = readiness.filter((r) => r.ready);

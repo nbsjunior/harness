@@ -21,7 +21,13 @@ import * as fs from 'fs';
 import { AgentRouter } from '../router/AgentRouter.js';
 import { parseSpecDirectory } from '../parsers/specParser.js';
 import { contextBuildCommand } from '../commands/contextBuild.js';
-import { loadAgentConfig } from '../config.js';
+import { getWorkspaceRoot, loadAgentConfig, loadPromptSettings } from '../config.js';
+import {
+  applyContextTruncation,
+  optimizeMessagesForRouting,
+} from '../prompt/systemGuidance.js';
+import { estimateTokens, loadUsageStats, recordChatUsage, resetUsageStats } from '../usage/usageTracker.js';
+import type { AgentId } from '../types.js';
 import { installAidlcRules } from '../aidlc/install.js';
 import { getAidlcStatus } from '../aidlc/status.js';
 import {
@@ -190,6 +196,20 @@ async function dispatchMessage(msg: IPCMessage, router: AgentRouter): Promise<vo
       await handleSetupBootstrap(msg);
       break;
 
+    case 'usage:get': {
+      const workspaceRoot = getWorkspaceRoot();
+      const stats = loadUsageStats(workspaceRoot);
+      writeFrame({ id: msg.id, action: 'usage:stats', payload: stats });
+      break;
+    }
+
+    case 'usage:reset': {
+      const workspaceRoot = getWorkspaceRoot();
+      const stats = resetUsageStats(workspaceRoot);
+      writeFrame({ id: msg.id, action: 'usage:reset:result', payload: stats });
+      break;
+    }
+
     default:
       process.stderr.write(`[harness-cli] Unknown action: ${msg.action}\n`);
       writeError(msg.id, msg.action as IPCMessage['action'], `Unknown action: ${msg.action}`);
@@ -207,12 +227,20 @@ async function handleChatSend(
   const { sessionId, messages, contextPaths, agent, specsDir, mode, specPaths } = msg.payload;
   const agentConfig = loadAgentConfig(specsDir);
   const messageId = crypto.randomUUID();
+  const workspaceRoot = getWorkspaceRoot();
+  const promptSettings = loadPromptSettings();
+  const startedAt = Date.now();
+  let resolvedAgent: AgentId = agent === 'auto' ? 'copilot' : agent;
+  let outputText = '';
+  const inputText = messages.map((m) => m.content).join('\n');
 
   // Read context files from absolute paths (CLI owns all file I/O)
-  const contextFiles = await readContextFiles(contextPaths);
+  let contextFiles = await readContextFiles(contextPaths);
+  if (promptSettings.enabled) {
+    contextFiles = applyContextTruncation(contextFiles, promptSettings.maxContextCharsPerFile);
+  }
 
-  // Append context as a system message so the router can inject it
-  const enrichedMessages = [...messages];
+  let enrichedMessages = optimizeMessagesForRouting(messages, promptSettings, mode);
   if (contextFiles.length > 0) {
     const contextBlock = contextFiles
       .map(({ path, content }) => `<file path="${path}">\n${content}\n</file>`)
@@ -228,7 +256,10 @@ async function handleChatSend(
 
   // For spec+agent mode: read and inject spec files as additional system context
   if (mode === 'spec+agent' && specPaths && specPaths.length > 0) {
-    const specFiles = await readContextFiles(specPaths);
+    let specFiles = await readContextFiles(specPaths);
+    if (promptSettings.enabled) {
+      specFiles = applyContextTruncation(specFiles, promptSettings.maxContextCharsPerFile);
+    }
     if (specFiles.length > 0) {
       const specBlock = specFiles
         .map(({ path, content }) => `<spec path="${path}">\n${content}\n</spec>`)
@@ -266,6 +297,7 @@ async function handleChatSend(
       specCount: specPaths?.length ?? 0,
       config: agentConfig,
       onAutoRouted: (auto) => {
+        resolvedAgent = auto.agent;
         writeFrame({
           id: msg.id,
           action: 'chat:auto-routed',
@@ -283,6 +315,7 @@ async function handleChatSend(
         if (isChatSessionCancelled(sessionId)) {
           return;
         }
+        outputText += chunk;
         writeFrame({
           id: msg.id,
           action: 'chat:chunk',
@@ -291,6 +324,15 @@ async function handleChatSend(
       },
       onDone: () => {
         clearChatSessionCancel(sessionId);
+        emitUsageAndFinish(msg.id, {
+          sessionId,
+          agent: resolvedAgent,
+          inputText,
+          outputText,
+          startedAt,
+          mode: mode ?? 'ask',
+          workspaceRoot,
+        });
         writeFrame({
           id: msg.id,
           action: 'chat:chunk',
@@ -426,6 +468,51 @@ async function readContextFiles(
   }
 
   return results;
+}
+
+function emitUsageAndFinish(
+  requestId: string,
+  params: {
+    sessionId: string;
+    agent: AgentId;
+    inputText: string;
+    outputText: string;
+    startedAt: number;
+    mode: string;
+    workspaceRoot: string;
+  },
+): void {
+  const durationMs = Date.now() - params.startedAt;
+  const stats = recordChatUsage({
+    workspaceRoot: params.workspaceRoot,
+    sessionId: params.sessionId,
+    agent: params.agent,
+    inputText: params.inputText,
+    outputText: params.outputText,
+    durationMs,
+    mode: params.mode,
+  });
+  const tokensIn = estimateTokens(params.inputText);
+  const tokensOut = estimateTokens(params.outputText);
+  writeFrame({
+    id: requestId,
+    action: 'chat:usage',
+    payload: {
+      sessionId: params.sessionId,
+      agent: params.agent,
+      tokensIn,
+      tokensOut,
+      tokensTotal: tokensIn + tokensOut,
+      durationMs,
+      stats: {
+        updatedAt: stats.updatedAt,
+        firstRequestAt: stats.firstRequestAt,
+        lastRequestAt: stats.lastRequestAt,
+        total: stats.total,
+        byAgent: stats.byAgent,
+      },
+    },
+  });
 }
 
 const TEXT_EXTENSIONS = new Set([

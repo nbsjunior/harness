@@ -23,6 +23,7 @@
 | **HTTP 404 from api2.cursor.sh** | Wrong endpoint — use `https://api.cursor.com`, not `api2.cursor.sh` |
 | HTTP 401 | Create key at [cursor.com/dashboard/integrations](https://cursor.com/dashboard/integrations) |
 | No response / stuck thinking | Cursor Cloud can take minutes; Harness now shows status text and errors after **90s** without text. Use **Ask** mode for simple chat. Open **View → Output → Harness** for `[cursor]` logs. **+ New chat** if stuck. |
+| **`read ECONNRESET` in Agent mode** | Normal for long cloud-agent runs — Harness reconnects the SSE stream automatically. If it persists, **+ New chat** or use **Ask** (Plan mode on Cursor). Rebuild VSIX after updates. |
 | HTTP 409 `agent_busy` | Previous Cursor run still active — **+ New chat**, or wait a few seconds; Harness now cancels stale runs automatically |
 
 ## Claude
@@ -36,7 +37,7 @@
 
 | Issue | Fix |
 |-------|-----|
-| Clear context does nothing | Update to latest VSIX — buttons moved above composer |
+| Clear does not remove messages | Use **Clear all** (composer) or view title **Clear Chat & Context**; **+ New chat** clears messages only (keeps context files) |
 | Stop does not stop | Ensure `chat:cancel` reaches daemon (check Output trace) |
 
 ## Logs

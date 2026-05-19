@@ -21,6 +21,9 @@ const STREAM_NO_CONTENT_TIMEOUT_MS = 90_000;
 const STREAM_IDLE_AFTER_CONTENT_MS = 120_000;
 const STREAM_MAX_DURATION_MS = 600_000;
 const RUN_STATUS_POLL_MS = 12_000;
+/** Agent mode runs tools for a long time — the SSE socket often drops; we reconnect. */
+const STREAM_MAX_RECONNECTS = 10;
+const STREAM_RECONNECT_DELAY_MS = 1_500;
 
 interface CursorSessionState {
   agentId: string;
@@ -33,6 +36,49 @@ const sessionByHarnessId = new Map<string, CursorSessionState>();
 
 export function clearCursorCloudSession(sessionId: string): void {
   sessionByHarnessId.delete(sessionId);
+}
+
+export interface CursorApiProbeResult {
+  ok: boolean;
+  userEmail?: string;
+  apiKeyName?: string;
+  endpoint: string;
+  error?: string;
+}
+
+/** Live check: GET /v1/me — used by `harness check getGoat` and scripts/test-cursor.mjs */
+export async function probeCursorApi(
+  apiKey: string,
+  endpoint: string,
+): Promise<CursorApiProbeResult> {
+  const baseUrl = normalizeCursorBaseUrl(endpoint);
+  const key = apiKey.trim();
+  if (!key) {
+    return {
+      ok: false,
+      endpoint: baseUrl,
+      error: 'CURSOR_API_KEY / harness.connectors.cursor.apiKey is empty',
+    };
+  }
+  try {
+    const me = await httpJson<{ userEmail?: string; apiKeyName?: string }>(
+      'GET',
+      new URL('/v1/me', baseUrl),
+      key,
+    );
+    return {
+      ok: true,
+      endpoint: baseUrl,
+      userEmail: me.userEmail,
+      apiKeyName: me.apiKeyName,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      endpoint: baseUrl,
+      error: (err as Error).message,
+    };
+  }
 }
 
 function getSession(sessionId: string): CursorSessionState | undefined {
@@ -329,8 +375,30 @@ function extractStreamText(
           : '';
     return status ? `*(Cursor: ${status})*\n` : '';
   }
+  if (eventType === 'tool_call') {
+    const tool =
+      typeof data['name'] === 'string'
+        ? data['name']
+        : typeof data['tool'] === 'string'
+          ? data['tool']
+          : 'tool';
+    const st = typeof data['status'] === 'string' ? data['status'] : '';
+    return st
+      ? `*(Cursor ${tool}: ${st})*\n`
+      : `*(Cursor running ${tool}…)*\n`;
+  }
   return '';
 }
+
+function isRecoverableStreamError(message: string): boolean {
+  return /ECONNRESET|ECONNABORTED|EPIPE|ETIMEDOUT|socket hang up|aborted/i.test(message);
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+type StreamConnectResult = 'completed' | 'reconnect' | 'fatal';
 
 async function streamRun(
   baseUrl: string,
@@ -342,235 +410,364 @@ async function streamRun(
   onError: (error: string) => void,
 ): Promise<void> {
   const url = new URL(`/v1/agents/${agentId}/runs/${runId}/stream`, baseUrl);
+  const lib = url.protocol === 'https:' ? https : http;
 
-  return new Promise<void>((resolve) => {
-    const lib = url.protocol === 'https:' ? https : http;
-    let finished = false;
-    let sawContent = false;
-    let lastContentAt = Date.now();
-    let lastStatusShown = '';
-    let req: http.ClientRequest | null = null;
+  let finished = false;
+  let sawContent = false;
+  let lastContentAt = Date.now();
+  let lastStatusShown = '';
+  let lastEventId = '';
+  let reconnectCount = 0;
+  let activeReq: http.ClientRequest | null = null;
 
-    const cleanup = () => {
-      if (noContentTimer) clearTimeout(noContentTimer);
-      if (idleAfterContentTimer) clearTimeout(idleAfterContentTimer);
-      if (maxTimer) clearTimeout(maxTimer);
-      if (pollTimer) clearInterval(pollTimer);
-    };
+  let noContentTimer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
+    if (!sawContent && !finished) failNoContent();
+  }, STREAM_NO_CONTENT_TIMEOUT_MS);
 
-    const finish = (callDone: boolean) => {
+  let idleAfterContentTimer: ReturnType<typeof setTimeout> | null = null;
+  let maxTimer: ReturnType<typeof setTimeout> | null = null;
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+  const destroyActiveReq = () => {
+    if (!activeReq) return;
+    activeReq.removeAllListeners();
+    activeReq.destroy();
+    activeReq = null;
+  };
+
+  const cleanup = () => {
+    destroyActiveReq();
+    if (noContentTimer) clearTimeout(noContentTimer);
+    if (idleAfterContentTimer) clearTimeout(idleAfterContentTimer);
+    if (maxTimer) clearTimeout(maxTimer);
+    if (pollTimer) clearInterval(pollTimer);
+  };
+
+  const finish = (callDone: boolean) => {
+    if (finished) return;
+    finished = true;
+    cleanup();
+    if (callDone) onDone();
+  };
+
+  const failNoContent = () => {
+    harnessLog(`[cursor] no content within ${STREAM_NO_CONTENT_TIMEOUT_MS}ms run=${runId}`);
+    destroyActiveReq();
+    onError(
+      'Cursor cloud agent did not return text within 90 seconds. ' +
+        'Cloud Agents often need a linked GitHub repo and can take several minutes. ' +
+        'Try **Ask** mode, a **+ New chat**, or check https://cursor.com/agents for the run status.',
+    );
+    finish(false);
+  };
+
+  const armIdleAfterContent = () => {
+    if (idleAfterContentTimer) clearTimeout(idleAfterContentTimer);
+    idleAfterContentTimer = setTimeout(() => {
       if (finished) return;
-      finished = true;
-      cleanup();
-      if (callDone) onDone();
-      resolve();
-    };
+      harnessLog(`[cursor] idle after content run=${runId}`);
+      destroyActiveReq();
+      finish(true);
+    }, STREAM_IDLE_AFTER_CONTENT_MS);
+  };
 
-    const failNoContent = () => {
-      harnessLog(`[cursor] no content within ${STREAM_NO_CONTENT_TIMEOUT_MS}ms run=${runId}`);
-      req?.destroy();
-      onError(
-        'Cursor cloud agent did not return text within 90 seconds. ' +
-          'Cloud Agents often need a linked GitHub repo and can take several minutes. ' +
-          'Try **Ask** mode, a **+ New chat**, or check https://cursor.com/agents for the run status.',
-      );
-      finish(false);
-    };
+  /** Any SSE activity (status, tool_call, assistant) — agent mode may stream tools before text. */
+  const bumpStreamActivity = () => {
+    lastContentAt = Date.now();
+    if (noContentTimer) {
+      clearTimeout(noContentTimer);
+      noContentTimer = setTimeout(() => {
+        if (!sawContent && !finished) failNoContent();
+      }, STREAM_NO_CONTENT_TIMEOUT_MS);
+    }
+  };
 
-    let noContentTimer: ReturnType<typeof setTimeout> | null = setTimeout(() => {
-      if (!sawContent && !finished) failNoContent();
-    }, STREAM_NO_CONTENT_TIMEOUT_MS);
+  const onStreamText = (text: string, countsAsContent = true) => {
+    if (!text) return;
+    bumpStreamActivity();
+    if (countsAsContent) {
+      sawContent = true;
+      if (noContentTimer) {
+        clearTimeout(noContentTimer);
+        noContentTimer = null;
+      }
+      armIdleAfterContent();
+    }
+    onChunk(text);
+  };
 
-    let idleAfterContentTimer: ReturnType<typeof setTimeout> | null = null;
-    let maxTimer: ReturnType<typeof setTimeout> | null = null;
-    let pollTimer: ReturnType<typeof setInterval> | null = null;
-
-    const armIdleAfterContent = () => {
-      if (idleAfterContentTimer) clearTimeout(idleAfterContentTimer);
-      idleAfterContentTimer = setTimeout(() => {
-        if (finished) return;
-        harnessLog(`[cursor] idle after content run=${runId}`);
-        req?.destroy();
+  const tryFinishFromRunStatus = async (): Promise<boolean> => {
+    try {
+      const run = await getRun(baseUrl, apiKey, agentId, runId);
+      if (isTerminalRunStatus(run.status)) {
+        if (!sawContent) {
+          onStreamText(
+            `*(Cursor run ${run.status} — no streamed text. View progress at cursor.com/agents)*\n`,
+            true,
+          );
+        }
         finish(true);
-      }, STREAM_IDLE_AFTER_CONTENT_MS);
-    };
-
-    const onStreamText = (text: string, countsAsContent = true) => {
-      if (!text) return;
-      if (countsAsContent) {
-        sawContent = true;
-        lastContentAt = Date.now();
-        if (noContentTimer) {
-          clearTimeout(noContentTimer);
-          noContentTimer = null;
-        }
-        armIdleAfterContent();
+        return true;
       }
-      onChunk(text);
-    };
+    } catch {
+      // best-effort
+    }
+    return false;
+  };
 
-    const handleSseBlock = (block: string) => {
-      if (!block.trim()) return;
+  const handleSseBlock = (block: string): StreamConnectResult => {
+    if (!block.trim()) return 'reconnect';
 
-      const lines = block.split('\n');
-      let eventType = '';
-      const dataParts: string[] = [];
+    const lines = block.split('\n');
+    let eventType = '';
+    const dataParts: string[] = [];
 
-      for (const line of lines) {
-        if (line.startsWith('event:')) {
-          eventType = line.slice(6).trim();
-        } else if (line.startsWith('data:')) {
-          dataParts.push(line.slice(5).trim());
+    for (const rawLine of lines) {
+      const line = rawLine.replace(/\r$/, '');
+      if (line.startsWith('event:')) {
+        eventType = line.slice(6).trim();
+      } else if (line.startsWith('data:')) {
+        dataParts.push(line.slice(5).trim());
+      } else if (line.startsWith('id:')) {
+        const id = line.slice(3).trim();
+        if (id) lastEventId = id;
+      }
+    }
+
+    const dataLine = dataParts.join('\n').trim();
+    if (!dataLine) return 'reconnect';
+
+    try {
+      const data = JSON.parse(dataLine) as Record<string, unknown>;
+      harnessLog(`[cursor] sse event=${eventType} run=${runId}`);
+
+      if (eventType === 'heartbeat') {
+        return 'reconnect';
+      }
+
+      bumpStreamActivity();
+
+      const text = extractStreamText(eventType, data);
+      if (text) {
+        if (eventType === 'status' || eventType === 'tool_call') {
+          if (text === lastStatusShown) return 'reconnect';
+          lastStatusShown = text;
+          onStreamText(text, false);
+        } else {
+          onStreamText(text, true);
         }
       }
 
-      const dataLine = dataParts.join('\n').trim();
-      if (!dataLine) return;
+      if (eventType === 'error') {
+        const msg =
+          typeof data['message'] === 'string' ? data['message'] : 'Cursor stream error';
+        onError(msg);
+        finish(false);
+        return 'fatal';
+      }
 
-      try {
-        const data = JSON.parse(dataLine) as Record<string, unknown>;
-        harnessLog(`[cursor] sse event=${eventType} run=${runId}`);
-
-        if (eventType === 'heartbeat') {
-          return;
+      if (eventType === 'result') {
+        const status = typeof data['status'] === 'string' ? data['status'] : undefined;
+        if (isTerminalRunStatus(status)) {
+          finish(true);
+          return 'completed';
         }
+      }
 
-        const text = extractStreamText(eventType, data);
-        if (text) {
-          if (eventType === 'status') {
-            if (text === lastStatusShown) return;
-            lastStatusShown = text;
-            onStreamText(text, false);
-          } else {
-            onStreamText(text, true);
+      if (eventType === 'done') {
+        finish(true);
+        return 'completed';
+      }
+    } catch {
+      harnessLog(`[cursor] malformed sse: ${dataLine.slice(0, 80)}`);
+    }
+
+    return 'reconnect';
+  };
+
+  pollTimer = setInterval(() => {
+    if (finished) return;
+    void getRun(baseUrl, apiKey, agentId, runId)
+      .then((run) => {
+        if (finished) return;
+        harnessLog(`[cursor] poll status=${run.status ?? '?'} run=${runId}`);
+        if (isTerminalRunStatus(run.status)) {
+          if (!sawContent) {
+            onStreamText(
+              `*(Cursor run ${run.status} — no streamed text. View progress at cursor.com/agents)*\n`,
+              true,
+            );
           }
-        }
-
-        if (eventType === 'error') {
-          const msg =
-            typeof data['message'] === 'string' ? data['message'] : 'Cursor stream error';
-          onError(msg);
-          finish(false);
-          return;
-        }
-
-        if (eventType === 'result') {
-          const status = typeof data['status'] === 'string' ? data['status'] : undefined;
-          if (isTerminalRunStatus(status)) {
-            finish(true);
-            return;
-          }
-        }
-
-        if (eventType === 'done') {
+          destroyActiveReq();
           finish(true);
         }
-      } catch {
-        harnessLog(`[cursor] malformed sse: ${dataLine.slice(0, 80)}`);
+      })
+      .catch(() => {
+        /* ignore poll errors */
+      });
+  }, RUN_STATUS_POLL_MS);
+
+  maxTimer = setTimeout(() => {
+    if (finished) return;
+    harnessLog(`[cursor] stream max duration exceeded run=${runId}`);
+    destroyActiveReq();
+    if (!sawContent) {
+      onError('Cursor request exceeded maximum wait time (10 minutes).');
+      finish(false);
+    } else {
+      finish(true);
+    }
+  }, STREAM_MAX_DURATION_MS);
+
+  onStreamText('*(Waiting for Cursor cloud agent…)*\n', false);
+
+  const connectOnce = (): Promise<StreamConnectResult> =>
+    new Promise((resolve) => {
+      if (finished) {
+        resolve('completed');
+        return;
       }
-    };
 
-    pollTimer = setInterval(() => {
-      if (finished) return;
-      void getRun(baseUrl, apiKey, agentId, runId)
-        .then((run) => {
-          if (finished) return;
-          harnessLog(`[cursor] poll status=${run.status ?? '?'} run=${runId}`);
-          if (isTerminalRunStatus(run.status)) {
-            if (!sawContent) {
-              onStreamText(
-                `*(Cursor run ${run.status} — no streamed text. View progress at cursor.com/agents)*\n`,
-                true,
-              );
-            }
-            req?.destroy();
-            finish(true);
-          }
-        })
-        .catch(() => {
-          /* ignore poll errors */
-        });
-    }, RUN_STATUS_POLL_MS);
-
-    maxTimer = setTimeout(() => {
-      if (finished) return;
-      harnessLog(`[cursor] stream max duration exceeded run=${runId}`);
-      req?.destroy();
-      if (!sawContent) {
-        onError('Cursor request exceeded maximum wait time (10 minutes).');
-        finish(false);
-      } else {
-        finish(true);
+      const headers: Record<string, string> = {
+        Authorization: basicAuth(apiKey),
+        Accept: 'text/event-stream',
+        'Cache-Control': 'no-cache',
+      };
+      if (lastEventId) {
+        headers['Last-Event-ID'] = lastEventId;
+        harnessLog(`[cursor] stream resume Last-Event-ID=${lastEventId} run=${runId}`);
       }
-    }, STREAM_MAX_DURATION_MS);
 
-    onStreamText('*(Waiting for Cursor cloud agent…)*\n', false);
+      const req = lib.request(
+        url,
+        { method: 'GET', headers },
+        (res) => {
+          const code = res.statusCode ?? 0;
 
-    req = lib.request(
-      url,
-      {
-        method: 'GET',
-        headers: {
-          Authorization: basicAuth(apiKey),
-          Accept: 'text/event-stream',
-        },
-      },
-      (res) => {
-        if (res.statusCode !== undefined && res.statusCode >= 400) {
-          onError(`HTTP ${res.statusCode} from ${url.hostname} (stream)`);
-          finish(false);
-          return;
-        }
-
-        let buffer = '';
-
-        res.on('data', (chunk: Buffer) => {
-          buffer += chunk.toString('utf-8');
-          const blocks = buffer.split(/\n\n/);
-          buffer = blocks.pop() ?? '';
-
-          for (const block of blocks) {
-            handleSseBlock(block);
-          }
-        });
-
-        res.on('end', async () => {
-          if (finished) {
-            resolve();
+          if (code === 410) {
+            harnessLog(`[cursor] stream_expired run=${runId} — polling run status`);
+            resolve('reconnect');
             return;
           }
-          if (buffer.trim()) {
-            handleSseBlock(buffer);
+
+          if (code >= 400) {
+            onError(`HTTP ${code} from ${url.hostname} (stream)`);
+            finish(false);
+            resolve('fatal');
+            return;
           }
-          try {
-            const run = await getRun(baseUrl, apiKey, agentId, runId);
-            if (isTerminalRunStatus(run.status)) {
-              finish(true);
+
+          let buffer = '';
+
+          res.on('data', (chunk: Buffer) => {
+            buffer += chunk.toString('utf-8');
+            const blocks = buffer.split(/\n\n/);
+            buffer = blocks.pop() ?? '';
+
+            for (const block of blocks) {
+              const outcome = handleSseBlock(block);
+              if (outcome === 'completed' || outcome === 'fatal') {
+                resolve(outcome);
+                return;
+              }
+            }
+          });
+
+          res.on('end', () => {
+            if (finished) {
+              resolve('completed');
               return;
             }
-          } catch {
-            // best-effort
-          }
-          if (!sawContent && Date.now() - lastContentAt > STREAM_NO_CONTENT_TIMEOUT_MS) {
-            failNoContent();
-            return;
-          }
-          finish(sawContent);
-        });
+            if (buffer.trim()) {
+              const outcome = handleSseBlock(buffer);
+              if (outcome === 'completed' || outcome === 'fatal') {
+                resolve(outcome);
+                return;
+              }
+            }
+            resolve('reconnect');
+          });
 
-        res.on('error', (err: Error) => {
-          onError(err.message);
-          finish(false);
-        });
-      },
-    );
+          res.on('error', (err: Error) => {
+            if (finished) {
+              resolve('completed');
+              return;
+            }
+            harnessLog(`[cursor] res error run=${runId}: ${err.message}`);
+            resolve(isRecoverableStreamError(err.message) ? 'reconnect' : 'fatal');
+          });
+        },
+      );
 
-    req.on('error', (err: Error) => {
-      onError(err.message);
-      finish(false);
+      activeReq = req;
+      req.setTimeout(0);
+
+      req.on('error', (err: Error) => {
+        if (finished) {
+          resolve('completed');
+          return;
+        }
+        harnessLog(`[cursor] req error run=${runId}: ${err.message}`);
+        resolve(isRecoverableStreamError(err.message) ? 'reconnect' : 'fatal');
+      });
+
+      req.end();
     });
-    req.end();
-  });
+
+  while (!finished) {
+    const outcome = await connectOnce();
+    destroyActiveReq();
+
+    if (outcome === 'completed') {
+      break;
+    }
+
+    if (outcome === 'fatal') {
+      if (!finished) {
+        onError('Cursor stream failed unexpectedly.');
+        finish(false);
+      }
+      break;
+    }
+
+    if (await tryFinishFromRunStatus()) {
+      break;
+    }
+
+    if (reconnectCount >= STREAM_MAX_RECONNECTS) {
+      harnessLog(`[cursor] max stream reconnects (${STREAM_MAX_RECONNECTS}) run=${runId}`);
+      if (!sawContent && Date.now() - lastContentAt > STREAM_NO_CONTENT_TIMEOUT_MS) {
+        failNoContent();
+      } else if (sawContent) {
+        finish(true);
+      } else {
+        onError(
+          'Cursor stream disconnected (ECONNRESET) and could not reconnect. ' +
+            'The agent may still be running — check https://cursor.com/agents or use **Ask** mode for chat.',
+        );
+        finish(false);
+      }
+      break;
+    }
+
+    reconnectCount += 1;
+    harnessLog(
+      `[cursor] stream reconnect #${reconnectCount} run=${runId} lastEventId=${lastEventId || '(none)'}`,
+    );
+    onStreamText(`*(Cursor stream reconnecting… #${reconnectCount})*\n`, false);
+    await delay(STREAM_RECONNECT_DELAY_MS);
+  }
+
+  if (!finished) {
+    if (await tryFinishFromRunStatus()) {
+      return;
+    }
+    if (!sawContent && Date.now() - lastContentAt > STREAM_NO_CONTENT_TIMEOUT_MS) {
+      failNoContent();
+      return;
+    }
+    finish(sawContent);
+  }
 }
 
 export interface CursorCloudRequest {
@@ -705,6 +902,13 @@ export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
       req.onError(
         'HTTP 404: api2.cursor.sh is the Cursor IDE internal API, not the Cloud Agents API. ' +
           'Set harness.connectors.cursor.endpoint to https://api.cursor.com and use a Cloud Agents API key.',
+      );
+      return;
+    }
+    if (isRecoverableStreamError(msg)) {
+      req.onError(
+        'Cursor connection dropped (ECONNRESET). In **Agent** mode the cloud VM may run tools for several minutes — ' +
+          'retry, use **+ New chat**, or check https://cursor.com/agents. **Ask** mode is more stable for quick chat.',
       );
       return;
     }

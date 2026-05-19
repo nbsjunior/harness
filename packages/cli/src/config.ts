@@ -72,10 +72,36 @@ interface HarnessSettingsBridge {
   defaultAgent?: AgentSelectionId;
   connectors?: HarnessConfigFile['connectors'];
   aidlc?: HarnessConfigFile['aidlc'];
+  promptOptimization?: {
+    enabled?: boolean;
+    maxContextCharsPerFile?: number;
+    maxHistoryMessages?: number;
+  };
 }
 
-function getWorkspaceRoot(): string {
-  return process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+export interface HarnessPromptSettings {
+  enabled: boolean;
+  maxContextCharsPerFile: number;
+  maxHistoryMessages: number;
+}
+
+/** Workspace root — set by extension via HARNESS_WORKSPACE (may override VS Code folder). */
+export function getWorkspaceRoot(): string {
+  const fromEnv = process.env['HARNESS_WORKSPACE']?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+  return process.cwd();
+}
+
+export function loadPromptSettings(): HarnessPromptSettings {
+  const bridge = loadSettingsBridge();
+  const p = bridge.promptOptimization ?? {};
+  return {
+    enabled: p.enabled !== false,
+    maxContextCharsPerFile: p.maxContextCharsPerFile ?? 12_000,
+    maxHistoryMessages: p.maxHistoryMessages ?? 24,
+  };
 }
 
 function resolveInWorkspace(relativeOrAbsolute: string): string {
