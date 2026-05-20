@@ -90,6 +90,9 @@ export async function buildHarnessProcessEnv(
     aidlc: {
       autoInstall: harness.get<boolean>('aidlc.autoInstall', true),
     },
+    cursor: {
+      agentExecution: harness.get<'auto' | 'local' | 'cloud'>('cursor.agentExecution', 'auto'),
+    },
     specsDirectory: harness.get<string>('specsDirectory', '.harness/specs'),
   };
 
