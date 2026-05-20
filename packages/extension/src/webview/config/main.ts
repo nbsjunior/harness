@@ -7,7 +7,7 @@ import type {
   UsageStatsPayload,
   WebviewMessage,
 } from '../../types';
-import { MANUAL_STYLES, renderManualBody, type ManualImageUrls } from '../manual/shared.js';
+import { MANUAL_STYLES, renderManualBody } from '../manual/shared.js';
 
 // ---------------------------------------------------------------------------
 // VSCode API
@@ -198,7 +198,6 @@ interface WizardState {
   selectedAgents: Set<AgentId>;
   /** When set, agents tab shows inline configure form for one agent */
   editingAgent: AgentId | null;
-  manualImages: ManualImageUrls | null;
 }
 
 /** Tabbed settings (gear icon) vs first-run wizard */
@@ -227,7 +226,6 @@ const state: WizardState = {
   agentEndpoints: {},
   selectedAgents: new Set<AgentId>(),
   editingAgent: null,
-  manualImages: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -1073,14 +1071,9 @@ function renderMcp(): HTMLElement {
 function renderManualWizard(): HTMLElement {
   const el = div('screen manual-wizard-screen');
 
-  if (!state.manualImages) {
-    el.innerHTML = '<p class="form-hint" style="padding:24px;">Loading user manual…</p>';
-    return el;
-  }
-
   el.innerHTML = /* html */`
     <div class="manual-wizard-scroll">
-      ${renderManualBody(state.manualImages)}
+      ${renderManualBody()}
     </div>
     <div class="screen-footer">
       <button type="button" id="btn-manual-back" class="btn-ghost">&#8592; Back</button>
@@ -1186,9 +1179,7 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
         mcpServers: McpServer[];
         apiServers?: ApiServerEntry[];
         agentEndpoints?: Record<string, string>;
-        manualImages?: ManualImageUrls;
       };
-      state.manualImages = cfg.manualImages ?? null;
       state.specsDirectory = cfg.specsDirectory;
       state.defaultAgent = cfg.defaultAgent;
       state.defaultWorkspace = cfg.defaultWorkspace ?? '';
