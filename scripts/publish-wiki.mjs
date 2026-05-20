@@ -63,7 +63,7 @@ for (const file of files) {
   fs.copyFileSync(path.join(wikiSrc, file), path.join(workDir, file));
 }
 
-/** Copy wiki/images/ (manual screenshots, etc.) */
+/** Copy wiki/images/ (logo, etc.) */
 const wikiImages = path.join(wikiSrc, 'images');
 if (fs.existsSync(wikiImages)) {
   function copyDir(src, dest) {

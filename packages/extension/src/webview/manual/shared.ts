@@ -1,13 +1,6 @@
 /** Shared user-manual markup for the dedicated manual panel and setup wizard. */
 
-export interface ManualImageUrls {
-  welcome: string;
-  chatContext: string;
-  configAgents: string;
-  configApi: string;
-}
-
-export function renderManualBody(images: ManualImageUrls): string {
+export function renderManualBody(): string {
   return /* html */`
     <article class="manual-doc">
       <header class="manual-doc__hero">
@@ -31,21 +24,13 @@ export function renderManualBody(images: ManualImageUrls): string {
 
       <section class="manual-section">
         <h2>2. Welcome &amp; setup wizard</h2>
-        <p>On first run, open configuration to see the welcome screen and feature overview:</p>
-        <figure class="manual-figure">
-          <img src="${images.welcome}" alt="Welcome to Harness of AI" loading="lazy" />
-          <figcaption>Welcome screen — unified chat, context, specs, and MCP</figcaption>
-        </figure>
-        <p>Click <strong>Get started →</strong> to configure agents, or <strong>Skip</strong> and configure later.</p>
+        <p>On first run, open configuration to see the welcome screen: unified chat, shared context, specs (SDD), and MCP.</p>
+        <p>Click <strong>Get started →</strong> to configure agents, or <strong>Skip</strong> and configure later. The wizard ends with this manual before you finish setup.</p>
       </section>
 
       <section class="manual-section">
         <h2>3. Chat &amp; shared context</h2>
-        <p>All providers share the same context chips and conversation panel:</p>
-        <figure class="manual-figure">
-          <img src="${images.chatContext}" alt="Chat with file context chips" loading="lazy" />
-          <figcaption>Chat sidebar with files and folders in context</figcaption>
-        </figure>
+        <p>All providers share the same context chips and conversation panel.</p>
         <ul>
           <li>Right-click in Explorer → <strong>Add to Harness of AI Context</strong></li>
           <li><strong>+ New chat</strong> — new thread, keeps context</li>
@@ -58,19 +43,12 @@ export function renderManualBody(images: ManualImageUrls): string {
 
       <section class="manual-section">
         <h2>4. Configure agents</h2>
-        <figure class="manual-figure">
-          <img src="${images.configAgents}" alt="Agents configuration tab" loading="lazy" />
-          <figcaption>Agents tab — connect each provider with Configure</figcaption>
-        </figure>
-        <p>Use <strong>Test Connection</strong> after saving API keys. Tokens live in VS Code Secret Storage.</p>
+        <p>Open <strong>Harness of AI: Open Configuration</strong> → <strong>Agents</strong>. Use <strong>Configure</strong> on each provider, then <strong>Test Connection</strong>. Tokens live in VS Code Secret Storage.</p>
       </section>
 
       <section class="manual-section">
         <h2>5. API servers</h2>
-        <figure class="manual-figure">
-          <img src="${images.configApi}" alt="API Servers tab" loading="lazy" />
-          <figcaption>Built-in endpoints and custom OpenAI-compatible servers</figcaption>
-        </figure>
+        <p>Built-in endpoints for Copilot, Devin, and Cursor. Add custom OpenAI-compatible servers with <strong>+ Add API server</strong>.</p>
       </section>
 
       <section class="manual-section">
@@ -143,19 +121,6 @@ export const MANUAL_STYLES = /* css */`
   }
   .manual-section p, .manual-section li { font-size: 13px; margin-bottom: 8px; }
   .manual-section ul, .manual-section ol { padding-left: 20px; margin-bottom: 10px; }
-  .manual-figure { margin: 12px 0 16px; }
-  .manual-figure img {
-    width: 100%;
-    border-radius: 6px;
-    border: 1px solid var(--vscode-panel-border);
-    display: block;
-  }
-  .manual-figure figcaption {
-    font-size: 11px;
-    color: var(--vscode-descriptionForeground);
-    margin-top: 6px;
-    text-align: center;
-  }
   .manual-table {
     width: 100%;
     border-collapse: collapse;

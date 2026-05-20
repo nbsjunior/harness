@@ -28,14 +28,7 @@ Today most teams use several AI tools. Each has its own window, login, and conte
 | **Spec-Driven Development** | Skills and workflows in `.harness/specs/`; **Spec+Agent** injects them before the agent runs. |
 | **Same CLI under the hood** | Extension and standalone CLI share routing, auth, and file I/O — no duplicate logic. |
 
-**[→ User Manual (screenshots)](docs/user-manual.md)** · [Wiki](https://github.com/nbsjunior/harness/wiki/User-Manual) · [Why Harness of AI?](docs/why-harness.md)
-
-| Screen | Preview |
-|--------|---------|
-| Welcome | ![Welcome](docs/images/manual/03-welcome.png) |
-| Chat + context | ![Chat](docs/images/manual/04-chat-context.png) |
-| Agents | ![Agents](docs/images/manual/01-chat-and-config-agents.png) |
-| API servers | ![API Servers](docs/images/manual/02-config-api-servers.png) |
+**[→ User Manual](docs/user-manual.md)** · [Wiki](https://github.com/nbsjunior/harness/wiki/User-Manual) · [Why Harness of AI?](docs/why-harness.md)
 
 ---
 

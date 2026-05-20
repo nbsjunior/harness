@@ -23,7 +23,7 @@
 
 ## 2. Welcome & setup wizard
 
-![Welcome screen](images/manual/03-welcome.png)
+The welcome screen lists unified chat, shared context, specs (SDD), and MCP. Click **Get started →** to configure agents, or **Skip** for later. The wizard ends with the **User Manual** step before setup completes.
 
 | Feature | Description |
 |---------|-------------|
@@ -32,13 +32,9 @@
 | Specs (SDD) | Versioned workflows in `.harness/specs/` |
 | MCP | External tool servers |
 
-The setup wizard ends with the **User Manual** screen before you finish.
-
 ---
 
 ## 3. Chat & shared context
-
-![Chat with context](images/manual/04-chat-context.png)
 
 - Right-click → **Add to Harness of AI Context**
 - **+ New chat** / **Clear context** / **Clear Chat & Context**
@@ -48,13 +44,13 @@ The setup wizard ends with the **User Manual** screen before you finish.
 
 ## 4. Configure agents
 
-![Agents tab](images/manual/01-chat-and-config-agents.png)
+**Harness of AI: Open Configuration** → **Agents** → **Configure** each provider → **Test Connection**.
 
 ---
 
 ## 5. API servers
 
-![API Servers tab](images/manual/02-config-api-servers.png)
+Built-in endpoints for Copilot, Devin, and Cursor; optional custom OpenAI-compatible servers via **+ Add API server**.
 
 ---
 
