@@ -7,6 +7,7 @@ import type {
   UsageStatsPayload,
   WebviewMessage,
 } from '../../types';
+import { MANUAL_STYLES, renderManualBody, type ManualImageUrls } from '../manual/shared.js';
 
 // ---------------------------------------------------------------------------
 // VSCode API
@@ -155,7 +156,7 @@ const AGENTS: AgentInfo[] = [
 // State machine
 // ---------------------------------------------------------------------------
 
-type Step = 'welcome' | 'agentSelect' | 'configureAgent' | 'workspace' | 'mcp' | 'done';
+type Step = 'welcome' | 'agentSelect' | 'configureAgent' | 'workspace' | 'mcp' | 'manual' | 'done';
 type ConfigTab = 'agents' | 'api' | 'mcp' | 'workspace' | 'spending';
 
 interface McpServer {
@@ -197,6 +198,7 @@ interface WizardState {
   selectedAgents: Set<AgentId>;
   /** When set, agents tab shows inline configure form for one agent */
   editingAgent: AgentId | null;
+  manualImages: ManualImageUrls | null;
 }
 
 /** Tabbed settings (gear icon) vs first-run wizard */
@@ -225,6 +227,7 @@ const state: WizardState = {
   agentEndpoints: {},
   selectedAgents: new Set<AgentId>(),
   editingAgent: null,
+  manualImages: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -246,6 +249,7 @@ function render(): void {
     case 'configureAgent': root.appendChild(renderConfigureAgent()); break;
     case 'workspace':     root.appendChild(renderWorkspace()); break;
     case 'mcp':           root.appendChild(renderMcp()); break;
+    case 'manual':        root.appendChild(renderManualWizard()); break;
     case 'done':          root.appendChild(renderDone()); break;
   }
 }
@@ -1055,6 +1059,45 @@ function renderMcp(): HTMLElement {
   });
 
   el.querySelector('#btn-mcp-next')!.addEventListener('click', () => {
+    state.step = 'manual';
+    render();
+  });
+
+  return el;
+}
+
+// ---------------------------------------------------------------------------
+// Screen 6 — User Manual (final wizard step)
+// ---------------------------------------------------------------------------
+
+function renderManualWizard(): HTMLElement {
+  const el = div('screen manual-wizard-screen');
+
+  if (!state.manualImages) {
+    el.innerHTML = '<p class="form-hint" style="padding:24px;">Loading user manual…</p>';
+    return el;
+  }
+
+  el.innerHTML = /* html */`
+    <div class="manual-wizard-scroll">
+      ${renderManualBody(state.manualImages)}
+    </div>
+    <div class="screen-footer">
+      <button type="button" id="btn-manual-back" class="btn-ghost">&#8592; Back</button>
+      <div style="display:flex;gap:8px;">
+        <button type="button" id="btn-manual-popout" class="btn-ghost">Open in editor tab</button>
+        <button type="button" id="btn-manual-finish" class="btn-primary">Finish setup &#8594;</button>
+      </div>
+    </div>`;
+
+  el.querySelector('#btn-manual-back')!.addEventListener('click', () => {
+    state.step = 'mcp';
+    render();
+  });
+  el.querySelector('#btn-manual-popout')!.addEventListener('click', () => {
+    postMessage({ command: 'openUserManual' });
+  });
+  el.querySelector('#btn-manual-finish')!.addEventListener('click', () => {
     state.step = 'done';
     render();
   });
@@ -1063,7 +1106,7 @@ function renderMcp(): HTMLElement {
 }
 
 // ---------------------------------------------------------------------------
-// Screen 6 — Done
+// Screen 7 — Done
 // ---------------------------------------------------------------------------
 
 function renderDone(): HTMLElement {
@@ -1088,7 +1131,7 @@ function renderDone(): HTMLElement {
     <div class="done-hero">
       <div class="done-check">&#10003;</div>
       <h2>You're all set!</h2>
-      <p class="screen-sub">Harness is configured and ready to use.</p>
+      <p class="screen-sub">Harness of AI is configured and ready to use.</p>
     </div>
 
     ${configuredCards.length > 0
@@ -1099,11 +1142,16 @@ function renderDone(): HTMLElement {
 
     <div class="done-actions">
       <button id="btn-open-chat" class="btn-primary btn-xl">Open Chat &#8594;</button>
+      <button id="btn-open-manual" class="btn-secondary">User Manual</button>
       <button id="btn-reconfigure" class="btn-ghost">Reconfigure agents</button>
     </div>`;
 
   el.querySelector('#btn-open-chat')!.addEventListener('click', () => {
     postMessage({ command: 'openChat' });
+  });
+
+  el.querySelector('#btn-open-manual')!.addEventListener('click', () => {
+    postMessage({ command: 'openUserManual' });
   });
 
   el.querySelector('#btn-reconfigure')!.addEventListener('click', () => {
@@ -1138,7 +1186,9 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
         mcpServers: McpServer[];
         apiServers?: ApiServerEntry[];
         agentEndpoints?: Record<string, string>;
+        manualImages?: ManualImageUrls;
       };
+      state.manualImages = cfg.manualImages ?? null;
       state.specsDirectory = cfg.specsDirectory;
       state.defaultAgent = cfg.defaultAgent;
       state.defaultWorkspace = cfg.defaultWorkspace ?? '';
@@ -1707,14 +1757,24 @@ body {
 .spend-actions { display: flex; gap: 8px; margin-top: 12px; }
 .form-actions { margin-top: 12px; }
 .form-group--row label { display: flex; align-items: center; gap: 8px; }
+
+/* ── User manual (wizard final step) ───────────────── */
+#root:has(.manual-wizard-screen) { max-width: 820px; }
+.manual-wizard-screen { width: 100%; }
+.manual-wizard-scroll {
+  max-height: calc(100vh - 88px);
+  overflow-y: auto;
+  padding: 8px 0 16px;
+}
 `;
+
 
 // ---------------------------------------------------------------------------
 // Bootstrap
 // ---------------------------------------------------------------------------
 
 const styleEl = document.createElement('style');
-styleEl.textContent = CSS;
+styleEl.textContent = CSS + MANUAL_STYLES;
 document.head.appendChild(styleEl);
 
 document.getElementById('root')!.innerHTML = '<div class="screen" style="padding-top:48px;text-align:center;color:var(--vscode-descriptionForeground);">Loading…</div>';

@@ -2,7 +2,7 @@
   "name": "harness-vscode",
   "displayName": "Harness of AI — Meta-Agent Orchestrator",
   "description": "One VS Code sidebar for Copilot, Claude, Cursor, Devin, and Kiro — with Spec-Driven Development and shared file context. No IDE switching per provider.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "publisher": "harness-ai",
   "license": "MIT",
@@ -93,6 +93,12 @@
         "icon": "$(settings-gear)"
       },
       {
+        "command": "harness.openUserManual",
+        "title": "Open User Manual",
+        "category": "Harness of AI",
+        "icon": "$(book)"
+      },
+      {
         "command": "harness.initWorkspace",
         "title": "Initialize Workspace",
         "category": "Harness of AI",
@@ -113,7 +119,7 @@
       {
         "command": "harness.showContext",
         "title": "Show Current Context",
-        "category": "Harness"
+        "category": "Harness of AI"
       },
       {
         "command": "harness.check.getGoat",
@@ -168,6 +174,11 @@
           "group": "navigation"
         },
         {
+          "command": "harness.openUserManual",
+          "when": "view == harness.chatView",
+          "group": "navigation"
+        },
+        {
           "command": "harness.clearContext",
           "when": "view == harness.chatView",
           "group": "navigation"
@@ -191,6 +202,9 @@
         },
         {
           "command": "harness.openConfig"
+        },
+        {
+          "command": "harness.openUserManual"
         },
         {
           "command": "harness.initWorkspace"

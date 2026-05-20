@@ -3,6 +3,7 @@ import * as path from 'path';
 import { ChatViewProvider } from './providers/ChatViewProvider';
 import { SpecManagerProvider } from './panels/SpecManagerPanel';
 import { ConfigurationPanel } from './panels/ConfigurationPanel';
+import { UserManualPanel } from './panels/UserManualPanel';
 import { ContextProvider } from './providers/ContextProvider';
 import { CliService } from './services/CliService';
 import { McpClientManager } from './mcp/McpClientManager';
@@ -158,6 +159,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Open configuration panel
     vscode.commands.registerCommand('harness.openConfig', () => {
       ConfigurationPanel.createOrShow(context.extensionUri, context, cliService);
+    }),
+
+    vscode.commands.registerCommand('harness.openUserManual', () => {
+      UserManualPanel.createOrShow(context.extensionUri);
     }),
 
     // Diagnose setup (runs CLI `check getGoat` with extension secrets/env)

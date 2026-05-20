@@ -300,6 +300,7 @@ export type WebviewCommand =
   | 'getSecretStatus'
   | 'saveSetting'
   | 'openChat'
+  | 'openUserManual'
   | 'openSettingsJson'
   | 'openExtensionSettings'
   | 'initWorkspace'

@@ -1,0 +1,203 @@
+/** Shared user-manual markup for the dedicated manual panel and setup wizard. */
+
+export interface ManualImageUrls {
+  welcome: string;
+  chatContext: string;
+  configAgents: string;
+  configApi: string;
+}
+
+export function renderManualBody(images: ManualImageUrls): string {
+  return /* html */`
+    <article class="manual-doc">
+      <header class="manual-doc__hero">
+        <h1>Harness of AI — User Manual</h1>
+        <p class="manual-doc__lead">
+          One VS Code sidebar for Copilot, Claude, Cursor, Devin, and Kiro — shared file context,
+          Spec-Driven Development, and a single conversation flow. No IDE hopping per provider.
+        </p>
+      </header>
+
+      <section class="manual-section">
+        <h2>1. Install</h2>
+        <ol>
+          <li>Download <code>harness-vscode-*.vsix</code> from
+            <a href="https://github.com/nbsjunior/harness/releases">Releases</a>.</li>
+          <li><code>Ctrl+Shift+P</code> → <strong>Extensions: Install from VSIX...</strong></li>
+          <li><strong>Developer: Reload Window</strong></li>
+          <li>Click the <strong>Harness of AI</strong> icon (fox) in the Activity Bar.</li>
+        </ol>
+      </section>
+
+      <section class="manual-section">
+        <h2>2. Welcome &amp; setup wizard</h2>
+        <p>On first run, open configuration to see the welcome screen and feature overview:</p>
+        <figure class="manual-figure">
+          <img src="${images.welcome}" alt="Welcome to Harness of AI" loading="lazy" />
+          <figcaption>Welcome screen — unified chat, context, specs, and MCP</figcaption>
+        </figure>
+        <p>Click <strong>Get started →</strong> to configure agents, or <strong>Skip</strong> and configure later.</p>
+      </section>
+
+      <section class="manual-section">
+        <h2>3. Chat &amp; shared context</h2>
+        <p>All providers share the same context chips and conversation panel:</p>
+        <figure class="manual-figure">
+          <img src="${images.chatContext}" alt="Chat with file context chips" loading="lazy" />
+          <figcaption>Chat sidebar with files and folders in context</figcaption>
+        </figure>
+        <ul>
+          <li>Right-click in Explorer → <strong>Add to Harness of AI Context</strong></li>
+          <li><strong>+ New chat</strong> — new thread, keeps context</li>
+          <li><strong>Clear context</strong> — removes file chips only</li>
+          <li>View title → <strong>Clear Chat &amp; Context</strong> — full reset</li>
+        </ul>
+        <p>Provider pills: <strong>Auto</strong>, Copilot, Claude, Cursor, Devin, Kiro.
+           Copilot modes: <strong>Ask</strong> | <strong>Agent</strong> | <strong>Spec+Agent</strong>.</p>
+      </section>
+
+      <section class="manual-section">
+        <h2>4. Configure agents</h2>
+        <figure class="manual-figure">
+          <img src="${images.configAgents}" alt="Agents configuration tab" loading="lazy" />
+          <figcaption>Agents tab — connect each provider with Configure</figcaption>
+        </figure>
+        <p>Use <strong>Test Connection</strong> after saving API keys. Tokens live in VS Code Secret Storage.</p>
+      </section>
+
+      <section class="manual-section">
+        <h2>5. API servers</h2>
+        <figure class="manual-figure">
+          <img src="${images.configApi}" alt="API Servers tab" loading="lazy" />
+          <figcaption>Built-in endpoints and custom OpenAI-compatible servers</figcaption>
+        </figure>
+      </section>
+
+      <section class="manual-section">
+        <h2>6. Commands</h2>
+        <table class="manual-table">
+          <thead><tr><th>Command</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>Harness of AI: Open User Manual</code></td><td>This guide</td></tr>
+            <tr><td><code>Harness of AI: Open Configuration</code></td><td>Agents, MCP, workspace, spending</td></tr>
+            <tr><td><code>Harness of AI: Initialize Workspace</code></td><td>Create <code>.harness/</code></td></tr>
+            <tr><td><code>Harness of AI: Check getGoat</code></td><td>Agent readiness diagnostics</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="manual-section">
+        <h2>7. Help</h2>
+        <ul>
+          <li><a href="https://github.com/nbsjunior/harness/wiki/Troubleshooting">Wiki: Troubleshooting</a></li>
+          <li><a href="https://github.com/nbsjunior/harness/wiki/Auto-Routing">Wiki: Auto Routing</a></li>
+          <li><a href="https://github.com/nbsjunior/harness/blob/main/docs/user-manual.md">docs/user-manual.md</a></li>
+        </ul>
+      </section>
+    </article>`;
+}
+
+export const MANUAL_STYLES = /* css */`
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    color: var(--vscode-foreground);
+    background: var(--vscode-editor-background);
+    line-height: 1.55;
+  }
+  .manual-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+  .manual-toolbar {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    background: var(--vscode-sideBar-background);
+  }
+  .manual-toolbar h1 { font-size: 14px; font-weight: 600; }
+  .manual-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 48px;
+    max-width: 820px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .manual-doc__hero { margin-bottom: 28px; }
+  .manual-doc__hero h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .manual-doc__lead { color: var(--vscode-descriptionForeground); font-size: 13px; }
+  .manual-section { margin-bottom: 28px; }
+  .manual-section h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+  }
+  .manual-section p, .manual-section li { font-size: 13px; margin-bottom: 8px; }
+  .manual-section ul, .manual-section ol { padding-left: 20px; margin-bottom: 10px; }
+  .manual-figure { margin: 12px 0 16px; }
+  .manual-figure img {
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid var(--vscode-panel-border);
+    display: block;
+  }
+  .manual-figure figcaption {
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground);
+    margin-top: 6px;
+    text-align: center;
+  }
+  .manual-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .manual-table th, .manual-table td {
+    border: 1px solid var(--vscode-panel-border);
+    padding: 8px 10px;
+    text-align: left;
+  }
+  .manual-table th { background: var(--vscode-sideBar-background); }
+  a { color: var(--vscode-textLink-foreground); }
+  code {
+    font-family: var(--vscode-editor-font-family);
+    background: var(--vscode-textCodeBlock-background);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+  .btn-primary {
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .btn-primary:hover { background: var(--vscode-button-hoverBackground); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--vscode-foreground);
+    border: 1px solid var(--vscode-panel-border);
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .screen-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--vscode-panel-border);
+  }
+`;

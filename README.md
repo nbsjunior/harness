@@ -1,42 +1,54 @@
 # Harness of AI — Meta-Agent Orchestrator for VSCode
 
-> **One IDE. Every AI agent. One workflow.**
-> Use GitHub Copilot, Claude Code, Cursor, Devin, and Kiro from a **single VS Code sidebar** — with **Spec-Driven Development** and **context engineering** in the same place. No switching IDEs per provider.
-
----
-
-## Manual de uso (com capturas de tela)
-
-Guia ilustrado com prints reais da interface:
-
-| Idioma | Onde ler |
-|--------|----------|
-| **Português (Wiki)** | [User-Manual](https://github.com/nbsjunior/harness/wiki/User-Manual) |
-| **Repositório** | [docs/user-manual.md](docs/user-manual.md) |
-
-| Tela | Preview |
-|------|---------|
-| Boas-vindas | ![Welcome](docs/images/manual/03-welcome.png) |
-| Chat + contexto | ![Chat](docs/images/manual/04-chat-context.png) |
-| Config → Agents | ![Agents](docs/images/manual/01-chat-and-config-agents.png) |
-| Config → API Servers | ![API Servers](docs/images/manual/02-config-api-servers.png) |
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-green)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org)
 [![VSCode](https://img.shields.io/badge/VSCode-%3E%3D1.85-007ACC)](https://code.visualstudio.com)
 
+> **One sidebar. Every agent. One conversation.**
+> Stop juggling Copilot in VS Code, Cursor in another IDE, Claude in a browser tab, and Devin in yet another panel. **Harness of AI** keeps chat, file context, specs, and provider routing in a **single interaction** — so you stay in flow.
+
 ---
 
-## Why Harness of AI?
+## Why one interaction matters
 
-| Advantage | What it means for you |
-|-----------|------------------------|
-| **One IDE, many providers** | Stay in **VS Code**. Pick Copilot, Claude, Cursor, Devin, or Kiro from the chat bar — or let **Auto** choose. You do not open Cursor IDE, a separate Claude app, and Copilot in parallel. |
-| **Spec-Driven Development (SDD)** | Define skills and workflows in `.harness/specs/`. Use **Spec+Agent** mode to inject specs as authoritative context. Specs live in git beside your code. |
-| **Context engineering** | Attach files and folders once (**Add to Harness of AI Context**). The same context goes to **any** provider on the next message — no copy-paste between tools. |
+Today most teams use several AI tools. Each has its own window, login, and context. You re-attach the same files, re-explain the repo, and lose thread when you switch vendors.
 
-**[→ Full explanation: docs/why-harness.md](docs/why-harness.md)** · [Wiki](https://github.com/nbsjunior/harness/wiki/Why-Harness)
+**Harness of AI** fixes that with one unified surface:
+
+| Benefit | What you get |
+|---------|----------------|
+| **Single chat panel** | Copilot, Claude, Cursor, Devin, and Kiro from one composer — switch with a pill or **Auto** routing. |
+| **Shared context** | Attach files once (**Add to Harness of AI Context**). The same chips go to **every** provider on the next message. |
+| **One setup flow** | API keys, MCP servers, workspace defaults, and spending — one configuration panel (plus a dedicated **User Manual** tab in the app). |
+| **Spec-Driven Development** | Skills and workflows in `.harness/specs/`; **Spec+Agent** injects them before the agent runs. |
+| **Same CLI under the hood** | Extension and standalone CLI share routing, auth, and file I/O — no duplicate logic. |
+
+**[→ User Manual (screenshots)](docs/user-manual.md)** · [Wiki](https://github.com/nbsjunior/harness/wiki/User-Manual) · [Why Harness of AI?](docs/why-harness.md)
+
+| Screen | Preview |
+|--------|---------|
+| Welcome | ![Welcome](docs/images/manual/03-welcome.png) |
+| Chat + context | ![Chat](docs/images/manual/04-chat-context.png) |
+| Agents | ![Agents](docs/images/manual/01-chat-and-config-agents.png) |
+| API servers | ![API Servers](docs/images/manual/02-config-api-servers.png) |
+
+---
+
+## Contribute — we want your help
+
+Harness of AI is **open source** ([MIT](LICENSE)). Whether you fix a connector, improve docs, add a locale, or share UX feedback — **contributions are welcome**.
+
+| How to help | Link |
+|-------------|------|
+| Report bugs & ideas | [GitHub Issues](https://github.com/nbsjunior/harness/issues) |
+| Submit code | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Read the architecture | [docs/architecture.md](docs/architecture.md) · [AGENTS.md](AGENTS.md) |
+| Improve the Wiki | Edit [`wiki/`](wiki/) and run `node scripts/publish-wiki.mjs` |
+
+**Quick dev setup:** `npm install` → `npm run build` → `npm run package:vsix` → install the `.vsix` locally. See [docs/getting-started.md](docs/getting-started.md).
+
+If Harness of AI saves you time switching between AI tools, consider **starring the repo** and telling others — it helps the project grow.
 
 ---
 
@@ -90,7 +102,7 @@ Harness of AI is a VSCode extension that acts as a **Meta-Agent Orchestrator**: 
 
 | Audience | Start here |
 |----------|------------|
-| **Manual (PT)** | [Wiki: User-Manual](https://github.com/nbsjunior/harness/wiki/User-Manual) · [docs/user-manual.md](docs/user-manual.md) |
+| **User Manual** | [docs/user-manual.md](docs/user-manual.md) · [Wiki: User-Manual](https://github.com/nbsjunior/harness/wiki/User-Manual) |
 | **Why Harness of AI?** | [docs/why-harness.md](docs/why-harness.md) · [Wiki: Why Harness](https://github.com/nbsjunior/harness/wiki/Why-Harness) |
 | **Wiki (users)** | **[GitHub Wiki](https://github.com/nbsjunior/harness/wiki)** · [Getting Started](https://github.com/nbsjunior/harness/wiki/Getting-Started) |
 | **AI assistants** | [AGENTS.md](AGENTS.md) → [docs/ai-reference.md](docs/ai-reference.md) → [docs/code-map.md](docs/code-map.md) |
@@ -115,7 +127,7 @@ The release `.vsix` includes the **compiled Harness CLI** (`cli/dist/index.js`) 
 
 ### Option A — Install from VSIX (end users)
 
-1. Download `harness-vscode-0.1.1.vsix` from the [**Releases**](https://github.com/nbsjunior/harness/releases) page.
+1. Download `harness-vscode-0.1.2.vsix` from the [**Releases**](https://github.com/nbsjunior/harness/releases) page.
 2. Open VSCode → `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
 3. Select the downloaded file and click **Reload**.
 4. Click the **Harness of AI** icon in the Activity Bar → follow [starter-kit.md](docs/starter-kit.md) or [user-manual.md](docs/user-manual.md).
@@ -123,7 +135,7 @@ The release `.vsix` includes the **compiled Harness CLI** (`cli/dist/index.js`) 
 Or from the terminal:.
 
 ```bash
-code --install-extension harness-vscode-0.1.0.vsix
+code --install-extension harness-vscode-0.1.2.vsix
 ```
 
 > The `.vsix` bundles the **Harness CLI** orchestrator (Copilot-first). Node.js 20+ must be on your `PATH`.
@@ -432,7 +444,7 @@ npm run clean
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines, commit conventions, and how to add a new agent connector.
+We welcome PRs, docs, tests, and new agent connectors. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, commit conventions, and the connector checklist. Join the discussion on [Issues](https://github.com/nbsjunior/harness/issues) — especially if you have ideas for keeping **everything in one interaction**.
 
 ---
 

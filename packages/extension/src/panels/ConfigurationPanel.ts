@@ -11,6 +11,7 @@ import type {
 import { resolveHarnessWorkspacePath } from '../workspacePath.js';
 import { buildCopilotAuthHeaders, validateCopilotToken } from '../copilotAuth';
 import type { CliService } from '../services/CliService';
+import { UserManualPanel } from './UserManualPanel.js';
 
 /**
  * Secret storage keys — API credentials are stored in VSCode's encrypted
@@ -50,7 +51,10 @@ export class ConfigurationPanel {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [extensionUri],
+        localResourceRoots: [
+          extensionUri,
+          vscode.Uri.joinPath(extensionUri, 'resources'),
+        ],
       },
     );
 
@@ -88,6 +92,11 @@ export class ConfigurationPanel {
       case 'ready': {
         await this.sendCurrentConfig();
         await this.sendSecretStatus();
+        break;
+      }
+
+      case 'openUserManual': {
+        UserManualPanel.createOrShow(this.extensionUri);
         break;
       }
 
@@ -282,6 +291,19 @@ export class ConfigurationPanel {
   // Send helpers
   // ---------------------------------------------------------------------------
 
+  private manualImageUrls(): Record<string, string> {
+    const webview = this.panel.webview;
+    const base = vscode.Uri.joinPath(this.extensionUri, 'resources', 'manual');
+    const uri = (name: string) =>
+      webview.asWebviewUri(vscode.Uri.joinPath(base, name)).toString();
+    return {
+      welcome: uri('03-welcome.png'),
+      chatContext: uri('04-chat-context.png'),
+      configAgents: uri('01-chat-and-config-agents.png'),
+      configApi: uri('02-config-api-servers.png'),
+    };
+  }
+
   private async sendCurrentConfig(): Promise<void> {
     const config = vscode.workspace.getConfiguration('harness');
     const cfg = {
@@ -304,6 +326,7 @@ export class ConfigurationPanel {
         cursor: config.get<string>('connectors.cursor.endpoint', ''),
         kiro: config.get<string>('connectors.kiro.endpoint', ''),
       },
+      manualImages: this.manualImageUrls(),
     };
     await this.panel.webview.postMessage({ command: 'configLoaded', payload: cfg });
     await this.sendUsageStats();
