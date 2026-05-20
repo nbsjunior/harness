@@ -19,17 +19,22 @@ import type {
   AgentSelectionId,
   ChatAutoRoutedPayload,
   ChatMessage,
+  ChatToolEventPayload,
   ContextItem,
   CopilotMode,
   ExtensionMessage,
+  LiveEditEntry,
   WebviewMessage,
   InitializePayload,
   AGENT_DESCRIPTORS,
 } from '../types';
 import { AGENT_DESCRIPTORS as AGENTS } from '../types';
+import { PROVIDER_MODEL_OPTIONS } from '../models/providerModels';
 import type { CliService } from '../services/CliService';
 import type { ContextProvider } from './ContextProvider';
 import { AgentService } from '../services/AgentService';
+import type { AgentEditTracker } from '../services/AgentEditTracker';
+import type { AgentTerminalService } from '../services/AgentTerminalService';
 import { traceLog } from '../trace';
 
 export class ChatViewProvider implements vscode.WebviewViewProvider {
@@ -43,17 +48,40 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private selectedMode: CopilotMode = 'ask';
   private lastAutoRoute?: ChatAutoRoutedPayload;
   private sessionTokens = 0;
+  private readonly modelByAgent = new Map<AgentSelectionId, string>();
+  private liveEdits: LiveEditEntry[] = [];
 
   constructor(
     private readonly extensionUri: vscode.Uri,
     private readonly cliService: CliService,
     private readonly contextProvider: ContextProvider,
     private readonly output: vscode.LogOutputChannel,
+    private readonly editTracker: AgentEditTracker,
+    private readonly terminalService: AgentTerminalService,
   ) {
     this.agentService = new AgentService(cliService, output);
     this.selectedAgent = vscode.workspace
       .getConfiguration('harness')
       .get<AgentSelectionId>('defaultAgent', 'auto');
+    this.modelByAgent.set(this.selectedAgent, 'auto');
+  }
+
+  private getSelectedModel(): string {
+    return this.modelByAgent.get(this.selectedAgent) ?? 'auto';
+  }
+
+  private modelAgentKey(): AgentId | 'auto' {
+    if (this.selectedAgent !== 'auto') {
+      return this.selectedAgent;
+    }
+    return this.lastAutoRoute?.agent ?? 'copilot';
+  }
+
+  private postRevertState(): void {
+    this.post({
+      command: 'revertAvailable',
+      payload: { canRevert: this.editTracker.hasPendingRevert(this.activeSessionId) },
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -126,8 +154,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     this.activeSessionId = crypto.randomUUID();
     this.lastAutoRoute = undefined;
     this.sessionTokens = 0;
+    this.liveEdits = [];
 
     this.post({ command: 'chatCleared' });
+    this.post({ command: 'liveEditsUpdated', payload: { edits: [] } });
+    this.postRevertState();
     this.postTokenUsage();
     if (options.clearContext) {
       this.post({
@@ -184,6 +215,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       ? this.resolveSpecPaths()
       : [];
 
+    this.editTracker.beginSession(this.activeSessionId);
+    this.liveEdits = [];
+    this.post({ command: 'liveEditsUpdated', payload: { edits: [] } });
+    this.postRevertState();
+
     await this.agentService.chat({
       sessionId: this.activeSessionId,
       messages: this.history.slice(0, -1), // exclude the empty assistant placeholder
@@ -191,6 +227,13 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       agent: this.selectedAgent,
       mode: this.selectedMode,
       specPaths,
+      model: this.getSelectedModel(),
+      onToolEvent: (event: ChatToolEventPayload) => {
+        if (event.phase === 'terminal' && event.command) {
+          this.terminalService.show(event.command);
+        }
+        void this.editTracker.handleToolEvent(event);
+      },
       onAutoRouted: (route: ChatAutoRoutedPayload) => {
         this.lastAutoRoute = route;
         const msg = this.history.find((m) => m.id === assistantMessage.id);
@@ -219,6 +262,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         if (msg) {
           msg.streaming = false;
         }
+        this.editTracker.endSession(this.activeSessionId, true);
+        this.postRevertState();
         this.post({
           command: 'messageComplete',
           payload: { messageId: assistantMessage.id },
@@ -230,6 +275,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           msg.streaming = false;
           msg.error = error;
         }
+        this.editTracker.endSession(this.activeSessionId, true);
+        this.postRevertState();
         this.post({
           command: 'messageError',
           payload: { messageId: assistantMessage.id, error },
@@ -240,6 +287,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         if (msg) {
           msg.streaming = false;
         }
+        this.editTracker.endSession(this.activeSessionId, true);
+        this.postRevertState();
         this.post({ command: 'streamStopped' });
       },
     });
@@ -268,12 +317,49 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       case 'selectAgent': {
         const payload = msg.payload as { agent: AgentSelectionId };
         this.selectedAgent = payload.agent;
+        if (!this.modelByAgent.has(payload.agent)) {
+          this.modelByAgent.set(payload.agent, 'auto');
+        }
         this.post({
           command: 'agentChanged',
           payload: { agent: this.selectedAgent },
         });
+        this.post({
+          command: 'modelChanged',
+          payload: {
+            selectedModel: this.getSelectedModel(),
+            agent: this.modelAgentKey(),
+            providerModels: PROVIDER_MODEL_OPTIONS,
+          },
+        });
         break;
       }
+
+      case 'selectModel': {
+        const payload = msg.payload as { model: string };
+        this.modelByAgent.set(this.selectedAgent, payload.model);
+        this.post({
+          command: 'modelChanged',
+          payload: {
+            selectedModel: payload.model,
+            agent: this.modelAgentKey(),
+            providerModels: PROVIDER_MODEL_OPTIONS,
+          },
+        });
+        break;
+      }
+
+      case 'revertAgentChanges': {
+        void this.editTracker.revertSession(this.activeSessionId).then(() => {
+          this.postRevertState();
+          this.post({ command: 'liveEditsUpdated', payload: { edits: [] } });
+        });
+        break;
+      }
+
+      case 'focusAgentTerminal':
+        this.terminalService.focus();
+        break;
 
       case 'selectMode': {
         const payload = msg.payload as { mode: CopilotMode };
@@ -325,6 +411,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           if (streaming) {
             streaming.streaming = false;
           }
+          this.editTracker.endSession(this.activeSessionId, true);
+          this.postRevertState();
           this.post({ command: 'streamStopped' });
         });
         break;
@@ -335,6 +423,16 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  /** Called by extension when live edits change (diff UI). */
+  notifyLiveEdits(sessionId: string, edits: LiveEditEntry[]): void {
+    if (sessionId !== this.activeSessionId) {
+      return;
+    }
+    this.liveEdits = edits;
+    this.post({ command: 'liveEditsUpdated', payload: { edits } });
+    this.postRevertState();
+  }
+
   private sendInitialize(): void {
     const initPayload: InitializePayload = {
       agent: this.selectedAgent,
@@ -342,6 +440,10 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       context: this.contextProvider.getItems(),
       history: this.history,
       agents: Object.values(AGENTS),
+      selectedModel: this.getSelectedModel(),
+      providerModels: PROVIDER_MODEL_OPTIONS,
+      liveEdits: this.liveEdits,
+      canRevert: this.editTracker.hasPendingRevert(this.activeSessionId),
       ...(this.lastAutoRoute ? { lastAutoRoute: this.lastAutoRoute } : {}),
     };
     this.post({ command: 'initialize', payload: initPayload });

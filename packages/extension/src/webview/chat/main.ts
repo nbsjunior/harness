@@ -13,9 +13,12 @@ import type {
   CopilotMode,
   ExtensionMessage,
   InitializePayload,
+  LiveEditEntry,
+  ProviderModelOption,
   TokenUsagePayload,
   WebviewMessage,
 } from '../../types';
+import { PROVIDER_MODEL_OPTIONS } from '../../models/providerModels';
 
 marked.setOptions({ breaks: true, gfm: true });
 
@@ -48,6 +51,10 @@ interface State {
   selectedMode: CopilotMode;
   isStreaming: boolean;
   sessionTokens: number;
+  selectedModel: string;
+  providerModels: Record<AgentId, ProviderModelOption[]>;
+  liveEdits: LiveEditEntry[];
+  canRevert: boolean;
 }
 
 const state: State = {
@@ -58,12 +65,20 @@ const state: State = {
   selectedMode: 'ask',
   isStreaming: false,
   sessionTokens: 0,
+  selectedModel: 'auto',
+  providerModels: PROVIDER_MODEL_OPTIONS,
+  liveEdits: [],
+  canRevert: false,
 };
 
 let messagesEl!: HTMLDivElement;
 let inputEl!: HTMLTextAreaElement;
 let sendBtn!: HTMLButtonElement;
 let providerPills!: HTMLDivElement;
+let modelPills!: HTMLDivElement;
+let liveEditsEl!: HTMLDivElement;
+let revertBtn!: HTMLButtonElement;
+let terminalBtn!: HTMLButtonElement;
 let clearCtxBtn!: HTMLButtonElement;
 let newChatBtn!: HTMLButtonElement;
 let contextList!: HTMLDivElement;
@@ -86,6 +101,7 @@ function injectShell(): void {
       <button id="new-chat-btn" class="toolbar-btn" type="button" title="New chat">+ New chat</button>
       <button id="clear-ctx-btn" class="toolbar-btn" type="button" title="Clear conversation, context files, and input">Clear all</button>
     </div>
+    <div id="live-edits" class="live-edits" style="display:none;"></div>
     <div id="context-bar">
       <div id="context-list"></div>
     </div>
@@ -104,6 +120,13 @@ function injectShell(): void {
       <div id="provider-pills" class="pill-row"></div>
       <button id="config-btn" class="icon-btn" type="button" title="Settings">&#9881;</button>
     </div>
+    <div id="model-bar">
+      <div id="model-pills" class="pill-row"></div>
+      <div id="agent-actions">
+        <button id="revert-btn" class="toolbar-btn" type="button" title="Revert agent file changes" disabled>Revert</button>
+        <button id="terminal-btn" class="toolbar-btn" type="button" title="Open Harness terminal">Terminal</button>
+      </div>
+    </div>
     <span id="token-footer" class="token-footer"></span>
   </div>
 </div>`;
@@ -114,6 +137,10 @@ function bindRefs(): void {
   inputEl = document.getElementById('prompt-input') as HTMLTextAreaElement;
   sendBtn = document.getElementById('send-btn') as HTMLButtonElement;
   providerPills = document.getElementById('provider-pills') as HTMLDivElement;
+  modelPills = document.getElementById('model-pills') as HTMLDivElement;
+  liveEditsEl = document.getElementById('live-edits') as HTMLDivElement;
+  revertBtn = document.getElementById('revert-btn') as HTMLButtonElement;
+  terminalBtn = document.getElementById('terminal-btn') as HTMLButtonElement;
   clearCtxBtn = document.getElementById('clear-ctx-btn') as HTMLButtonElement;
   newChatBtn = document.getElementById('new-chat-btn') as HTMLButtonElement;
   contextList = document.getElementById('context-list') as HTMLDivElement;
@@ -324,6 +351,72 @@ function renderContext(): void {
   bar.style.display = state.context.length > 0 ? 'flex' : 'none';
 }
 
+function modelAgentKey(): AgentId {
+  if (state.selectedAgent !== 'auto') {
+    return state.selectedAgent;
+  }
+  return state.lastAutoRoute?.agent ?? 'copilot';
+}
+
+function renderModelPills(): void {
+  modelPills.innerHTML = '';
+  const agent = modelAgentKey();
+  const options = state.providerModels[agent] ?? [{ id: 'auto', label: 'LLM Auto' }];
+
+  for (const opt of options) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className =
+      'pill pill--model' + (opt.id === state.selectedModel ? ' pill--active' : '');
+    btn.dataset['model'] = opt.id;
+    btn.textContent = opt.label;
+    btn.addEventListener('click', () => selectModel(opt.id));
+    modelPills.appendChild(btn);
+  }
+}
+
+function selectModel(modelId: string): void {
+  if (state.selectedModel === modelId) return;
+  state.selectedModel = modelId;
+  renderModelPills();
+  postMessage({ command: 'selectModel', payload: { model: modelId } });
+}
+
+function renderLiveEdits(): void {
+  if (state.liveEdits.length === 0) {
+    liveEditsEl.style.display = 'none';
+    liveEditsEl.innerHTML = '';
+    return;
+  }
+  liveEditsEl.style.display = 'block';
+  const items = state.liveEdits
+    .filter((e) => e.phase === 'after' || e.phase === 'before')
+    .slice(-8)
+    .map((e) => {
+      const name = e.path ? basename(e.path) : e.tool;
+      const verb = e.phase === 'before' ? 'Editing' : 'Edited';
+      const preview = e.preview
+        ? `<pre class="live-edits__preview">${escapeHtml(e.preview)}</pre>`
+        : '';
+      return `<div class="live-edits__item" data-path="${escapeAttr(e.path)}">
+        <span class="live-edits__label">${verb} <strong>${escapeHtml(name)}</strong></span>
+        ${preview}
+      </div>`;
+    })
+    .join('');
+  liveEditsEl.innerHTML = `<div class="live-edits__title">Live edits</div>${items}`;
+  liveEditsEl.querySelectorAll('.live-edits__item').forEach((el) => {
+    el.addEventListener('click', () => {
+      const p = (el as HTMLElement).dataset['path'];
+      if (p) postMessage({ command: 'openFile', payload: { path: p } });
+    });
+  });
+}
+
+function updateRevertButton(): void {
+  revertBtn.disabled = !state.canRevert;
+}
+
 function renderProviderPills(): void {
   providerPills.innerHTML = '';
 
@@ -359,6 +452,7 @@ function selectAgent(agentId: AgentSelectionId): void {
   if (state.selectedAgent === agentId) return;
   state.selectedAgent = agentId;
   renderProviderPills();
+  renderModelPills();
   postMessage({ command: 'selectAgent', payload: { agent: agentId } });
 }
 
@@ -516,6 +610,8 @@ function bindEvents(): void {
   clearCtxBtn.addEventListener('click', () => clearAll());
   newChatBtn.addEventListener('click', () => startNewChat());
   configBtn.addEventListener('click', () => postMessage({ command: 'openConfig' }));
+  revertBtn.addEventListener('click', () => postMessage({ command: 'revertAgentChanges' }));
+  terminalBtn.addEventListener('click', () => postMessage({ command: 'focusAgentTerminal' }));
 
   messagesEl.addEventListener('click', (e) => {
     const ref = (e.target as HTMLElement).closest('.file-ref') as HTMLElement | null;
@@ -550,7 +646,14 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       state.history = p.history;
       state.context = p.context;
       state.lastAutoRoute = p.lastAutoRoute;
+      state.selectedModel = p.selectedModel ?? 'auto';
+      state.providerModels = p.providerModels ?? PROVIDER_MODEL_OPTIONS;
+      state.liveEdits = p.liveEdits ?? [];
+      state.canRevert = p.canRevert ?? false;
       renderProviderPills();
+      renderModelPills();
+      renderLiveEdits();
+      updateRevertButton();
       renderMessages();
       renderContext();
       updateModePills();
@@ -558,7 +661,32 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
     }
     case 'autoRouted': {
       const route = msg.payload as ChatAutoRoutedPayload;
+      state.lastAutoRoute = route;
       showAutoRouteNotice(route);
+      renderModelPills();
+      break;
+    }
+    case 'modelChanged': {
+      const p = msg.payload as {
+        selectedModel: string;
+        agent: AgentId;
+        providerModels: Record<AgentId, ProviderModelOption[]>;
+      };
+      state.selectedModel = p.selectedModel;
+      state.providerModels = p.providerModels;
+      renderModelPills();
+      break;
+    }
+    case 'liveEditsUpdated': {
+      const p = msg.payload as { edits: LiveEditEntry[] };
+      state.liveEdits = p.edits;
+      renderLiveEdits();
+      break;
+    }
+    case 'revertAvailable': {
+      const p = msg.payload as { canRevert: boolean };
+      state.canRevert = p.canRevert;
+      updateRevertButton();
       break;
     }
     case 'appendChunk': {
@@ -615,14 +743,19 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       state.sessionTokens = 0;
       state.isStreaming = false;
       state.lastAutoRoute = undefined;
+      state.liveEdits = [];
+      state.canRevert = false;
       setStreaming(false);
       updateTokenFooter();
+      renderLiveEdits();
+      updateRevertButton();
       renderMessages();
       break;
     case 'agentChanged': {
       const p = msg.payload as { agent: AgentSelectionId };
       state.selectedAgent = p.agent;
       renderProviderPills();
+      renderModelPills();
       break;
     }
     case 'modeChanged': {
@@ -934,6 +1067,49 @@ body {
 }
 .pill-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 #provider-pills { flex: 1; min-width: 0; }
+
+#model-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 4px 2px 0;
+}
+#model-pills { flex: 1; min-width: 0; }
+#agent-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.pill--model { font-size: 10px; padding: 2px 6px; }
+
+.live-edits {
+  max-height: 120px;
+  overflow-y: auto;
+  margin: 0 2px 6px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--vscode-editor-inactiveSelectionBackground);
+  border: 1px solid var(--vscode-widget-border, transparent);
+  font-size: 11px;
+}
+.live-edits__title {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--vscode-foreground);
+}
+.live-edits__item {
+  cursor: pointer;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--vscode-widget-border, transparent);
+}
+.live-edits__item:last-child { border-bottom: none; }
+.live-edits__item:hover { opacity: 0.9; }
+.live-edits__preview {
+  margin-top: 2px;
+  max-height: 48px;
+  overflow: hidden;
+  font-size: 10px;
+  opacity: 0.85;
+  white-space: pre-wrap;
+  font-family: var(--vscode-editor-font-family);
+}
 
 .pill {
   display: inline-flex;

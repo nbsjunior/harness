@@ -18,7 +18,15 @@ import https from 'https';
 import http from 'http';
 import { URL } from 'url';
 import { execa } from 'execa';
-import type { ChatMessage, ContextItem, AgentId, AgentSelectionId, CopilotMode } from '../types.js';
+import type {
+  ChatMessage,
+  ChatToolEventPayload,
+  ContextItem,
+  AgentId,
+  AgentSelectionId,
+  CopilotMode,
+} from '../types.js';
+import { resolveProviderModel } from '../models/providerModels.js';
 import type { AgentConnectorConfig } from '../config.js';
 import { buildCopilotAuthHeaders, validateCopilotToken, getCopilotApiToken } from '../connectors/copilotAuth.js';
 import { runKiroCli } from '../connectors/kiroCli.js';
@@ -45,11 +53,15 @@ export interface AgentRequest {
   /** Active spec files (for Auto scoring in spec+agent mode). */
   specCount?: number;
   config: AgentConnectorConfig;
+  /** Provider model id from UI (`auto` = default). */
+  model?: string;
   onChunk: (chunk: string) => void;
   onDone: () => void;
   onError: (error: string) => void;
   /** Called when `agent` is `auto` and a concrete provider was chosen. */
   onAutoRouted?: (result: AutoRouteResult) => void;
+  /** File/tool events for live diff + integrated terminal in the extension. */
+  onToolEvent?: (event: Omit<ChatToolEventPayload, 'sessionId'>) => void;
 }
 
 /**
@@ -91,21 +103,23 @@ export class AgentRouter {
       return;
     }
 
+    const routed = { ...request, model: request.model };
+
     switch (agent) {
       case 'copilot':
-        await this.routeCopilot(request);
+        await this.routeCopilot(routed, agent);
         break;
       case 'devin':
-        await this.routeDevin(request);
+        await this.routeDevin(routed);
         break;
       case 'cursor':
-        await this.routeCursor(request);
+        await this.routeCursor(routed, agent);
         break;
       case 'claude':
-        await this.routeClaude(request);
+        await this.routeClaude(routed, agent);
         break;
       case 'kiro':
-        await this.routeKiro(request);
+        await this.routeKiro(routed);
         break;
       default: {
         const _exhaustive: never = agent;
@@ -151,10 +165,15 @@ export class AgentRouter {
     const mode = req.mode ?? 'agent';
     const messages = this.buildOpenAiMessages(req.messages, mode);
     const url = new URL('/chat/completions', cfg.endpoint);
-    await this.routeCopilotAgent(url, copilotToken, messages, req);
+    const model = this.copilotModel(req, 'copilot');
+    await this.routeCopilotAgent(url, copilotToken, messages, req, model);
   }
 
-  private async routeCopilot(req: AgentRequest): Promise<void> {
+  private copilotModel(req: AgentRequest, agent: AgentId): string | undefined {
+    return resolveProviderModel(agent, req.model);
+  }
+
+  private async routeCopilot(req: AgentRequest, agent: AgentId): Promise<void> {
     const cfg = req.config.copilot;
     if (!cfg.token) {
       req.onError(
@@ -174,11 +193,16 @@ export class AgentRouter {
     const messages = this.buildOpenAiMessages(req.messages, mode);
     const url = new URL('/chat/completions', cfg.endpoint);
 
+    const model = this.copilotModel(req, agent);
+
     if (mode === 'agent' || mode === 'spec+agent') {
-      await this.routeCopilotAgent(url, copilotToken, messages, req);
+      await this.routeCopilotAgent(url, copilotToken, messages, req, model);
     } else {
-      // Ask mode — simple streaming chat completions
-      const body = JSON.stringify({ model: 'gpt-4o', stream: true, messages });
+      const body = JSON.stringify({
+        model: model ?? 'gpt-4o',
+        stream: true,
+        messages,
+      });
       await this.streamSseRequest(
         url,
         { ...buildCopilotAuthHeaders(copilotToken), 'Content-Type': 'application/json' },
@@ -200,6 +224,7 @@ export class AgentRouter {
     copilotToken: string,
     messages: Array<Record<string, unknown>>,
     req: AgentRequest,
+    model?: string,
   ): Promise<void> {
     const tools = buildCopilotTools();
     const maxIterations = 10;
@@ -218,7 +243,7 @@ export class AgentRouter {
       harnessLog(`[copilot-agent] session=${req.sessionId} iteration=${iteration + 1}`);
 
       const bodyObj: Record<string, unknown> = {
-        model: 'gpt-4o',
+        model: model ?? 'gpt-4o',
         stream: false,
         messages,
         tools,
@@ -284,6 +309,10 @@ export class AgentRouter {
           toolCall.function.name,
           toolCall.function.arguments,
           req.context,
+          {
+            sessionId: req.sessionId,
+            onToolEvent: req.onToolEvent,
+          },
         );
         messages.push({
           role: 'tool',
@@ -332,7 +361,7 @@ export class AgentRouter {
   // Cursor AI — Cloud Agents API v1 (https://api.cursor.com)
   // ---------------------------------------------------------------------------
 
-  private async routeCursor(req: AgentRequest): Promise<void> {
+  private async routeCursor(req: AgentRequest, agent: AgentId): Promise<void> {
     const cfg = req.config.cursor;
     const mode = req.mode ?? 'ask';
 
@@ -364,7 +393,7 @@ export class AgentRouter {
   // Claude Code — CLI subprocess with stream-json output
   // ---------------------------------------------------------------------------
 
-  private async routeClaude(req: AgentRequest): Promise<void> {
+  private async routeClaude(req: AgentRequest, agent: AgentId): Promise<void> {
     const cfg = req.config.claude;
     const claudeBin = cfg.path;
 
@@ -375,6 +404,10 @@ export class AgentRouter {
     }
 
     const args = ['-p', lastUser.content, '--output-format', 'stream-json', '--verbose'];
+    const claudeModel = resolveProviderModel(agent, req.model);
+    if (claudeModel) {
+      args.push('--model', claudeModel);
+    }
 
     if (cfg.apiKey) {
       process.env['ANTHROPIC_API_KEY'] = cfg.apiKey;
@@ -839,7 +872,11 @@ function toWorkspaceRelPath(abs: string, workspace: string): string {
 async function executeCopilotTool(
   name: string,
   argsJson: string,
-  context: ContextItem[],
+  _context: ContextItem[],
+  opts: {
+    sessionId: string;
+    onToolEvent?: (event: Omit<ChatToolEventPayload, 'sessionId'>) => void;
+  },
 ): Promise<string> {
   const workspace = process.env['HARNESS_WORKSPACE'] ?? process.cwd();
 
@@ -875,9 +912,23 @@ async function executeCopilotTool(
 
       case 'write_file': {
         const abs = resolvePath(args['path'] ?? '');
+        const oldContent = fs.existsSync(abs) ? fs.readFileSync(abs, 'utf-8') : null;
+        const newContent = args['content'] ?? '';
+        opts.onToolEvent?.({
+          tool: 'write_file',
+          phase: 'before',
+          path: abs,
+          oldContent,
+        });
         fs.mkdirSync(fsPath.dirname(abs), { recursive: true });
-        fs.writeFileSync(abs, args['content'] ?? '', 'utf-8');
-        return `Written ${abs} (${(args['content'] ?? '').length} bytes)`;
+        fs.writeFileSync(abs, newContent, 'utf-8');
+        opts.onToolEvent?.({
+          tool: 'write_file',
+          phase: 'after',
+          path: abs,
+          preview: newContent.length > 400 ? `${newContent.slice(0, 400)}…` : newContent,
+        });
+        return `Written ${abs} (${newContent.length} bytes)`;
       }
 
       case 'list_files': {
@@ -932,6 +983,11 @@ async function executeCopilotTool(
         if (!allowed.test(raw)) {
           return `Error: git subcommand not allowed. Use: status, diff, log, branch, add, commit, push, pull, fetch, checkout, stash, remote, show, rev-parse, merge, rebase. Got: ${raw}`;
         }
+        opts.onToolEvent?.({
+          tool: 'run_git',
+          phase: 'terminal',
+          command: `git ${raw}`,
+        });
         try {
           return runShellCommand('git', raw);
         } catch (err) {
@@ -946,6 +1002,11 @@ async function executeCopilotTool(
         if (/[;&|`$]/.test(raw)) {
           return 'Error: invalid characters in gh args';
         }
+        opts.onToolEvent?.({
+          tool: 'run_gh',
+          phase: 'terminal',
+          command: `gh ${raw}`,
+        });
         try {
           return runShellCommand('gh', raw);
         } catch (err) {

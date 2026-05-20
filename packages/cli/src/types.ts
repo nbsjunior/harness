@@ -52,7 +52,8 @@ export type IpcAction =
   | 'usage:stats'
   | 'usage:reset'
   | 'usage:reset:result'
-  | 'chat:usage';
+  | 'chat:usage'
+  | 'chat:tool';
 
 /**
  * Base IPC message envelope used for all stdin/stdout newline-delimited JSON
@@ -99,6 +100,19 @@ export interface ChatSendPayload {
   mode?: CopilotMode;
   /** Absolute paths to spec YAML files, pre-resolved by the extension for spec+agent mode. */
   specPaths?: string[];
+  /** Provider model id (`auto` = provider default). */
+  model?: string;
+}
+
+/** Live tool/file events during agent runs (extension opens diffs + terminal). */
+export interface ChatToolEventPayload {
+  sessionId: string;
+  tool: string;
+  phase: 'before' | 'after' | 'terminal';
+  path?: string;
+  oldContent?: string | null;
+  preview?: string;
+  command?: string;
 }
 
 export interface ChatChunkPayload {

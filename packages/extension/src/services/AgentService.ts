@@ -6,6 +6,7 @@ import type {
   ChatSendPayload,
   ChatChunkPayload,
   ChatUsagePayload,
+  ChatToolEventPayload,
   CopilotMode,
   IPCMessage,
 } from '../types';
@@ -36,7 +37,9 @@ export class AgentService {
     agent: AgentSelectionId;
     mode?: CopilotMode;
     specPaths?: string[];
+    model?: string;
     onChunk: (chunk: string, messageId: string) => void;
+    onToolEvent?: (event: ChatToolEventPayload) => void;
     onComplete: (messageId: string) => void;
     onError: (error: string, messageId: string) => void;
     onAutoRouted?: (route: ChatAutoRoutedPayload) => void;
@@ -50,7 +53,9 @@ export class AgentService {
       agent,
       mode,
       specPaths,
+      model,
       onChunk,
+      onToolEvent,
       onComplete,
       onError,
       onAutoRouted,
@@ -118,6 +123,14 @@ export class AgentService {
       onUsage?.(p);
     });
 
+    const toolDisposable = this.cliService.onCliMessage('chat:tool', (msg: IPCMessage) => {
+      const p = msg.payload as ChatToolEventPayload;
+      if (p.sessionId !== sessionId) {
+        return;
+      }
+      onToolEvent?.(p);
+    });
+
     const errorDisposable = this.cliService.onCliMessage('chat:error', (msg: IPCMessage) => {
       const payload = msg.payload as { sessionId?: string; error?: string };
       if (payload.sessionId !== sessionId && msg.id !== requestId) {
@@ -131,7 +144,7 @@ export class AgentService {
 
     this.activeChats.set(sessionId, {
       sessionId,
-      disposables: [chunkDisposable, autoDisposable, usageDisposable, errorDisposable],
+      disposables: [chunkDisposable, autoDisposable, usageDisposable, toolDisposable, errorDisposable],
     });
 
     try {
@@ -147,6 +160,7 @@ export class AgentService {
         specsDir,
         mode: mode ?? 'ask',
         specPaths: specPaths ?? [],
+        model,
       };
 
       await this.cliService.send<ChatSendPayload>(
