@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Harness of AI — Dashboard</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; background: #0f1117; color: #e6edf3; }
+    body { margin: 0; padding: 1.5rem; max-width: 960px; }
+    h1 { font-size: 1.25rem; margin: 0 0 1rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1.5rem; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 0.75rem; }
+    .card label { font-size: 0.7rem; color: #8b949e; display: block; }
+    .card strong { font-size: 1.1rem; }
+    .alert { padding: 0.5rem 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; font-size: 0.85rem; }
+    .alert.warn { background: #3d2e00; border: 1px solid #9e6a03; }
+    .alert.exceeded { background: #3d1418; border: 1px solid #da3633; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid #30363d; }
+    pre { background: #161b22; padding: 0.75rem; border-radius: 8px; overflow: auto; font-size: 0.75rem; max-height: 240px; }
+    .muted { color: #8b949e; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <h1>Harness of AI — Remote dashboard</h1>
+  <p class="muted">Read-only view of workspace usage and persisted chat. Start with <code>harness web:serve</code>.</p>
+  <div id="alerts"></div>
+  <div class="cards" id="summary"></div>
+  <h2>By provider</h2>
+  <table><thead><tr><th>Provider</th><th>Requests</th><th>Tokens</th></tr></thead><tbody id="by-agent"></tbody></table>
+  <h2>Persisted session</h2>
+  <pre id="session">Loading…</pre>
+  <script>
+    async function load() {
+      const [usage, session] = await Promise.all([
+        fetch('/api/usage').then((r) => r.json()),
+        fetch('/api/session').then((r) => r.json()),
+      ]);
+      const t = usage.stats?.total ?? {};
+      document.getElementById('summary').innerHTML = `
+        <div class="card"><label>Total tokens</label><strong>${(t.tokensTotal ?? 0).toLocaleString()}</strong></div>
+        <div class="card"><label>Requests</label><strong>${(t.requests ?? 0).toLocaleString()}</strong></div>
+        <div class="card"><label>Messages saved</label><strong>${(session.session?.messages?.length ?? 0)}</strong></div>
+      `;
+      const agents = ['copilot','cursor','claude','devin','kiro'];
+      document.getElementById('by-agent').innerHTML = agents.map((a) => {
+        const row = usage.stats?.byAgent?.[a] ?? {};
+        return `<tr><td>${a}</td><td>${row.requests ?? 0}</td><td>${(row.tokensTotal ?? 0).toLocaleString()}</td></tr>`;
+      }).join('');
+      document.getElementById('alerts').innerHTML = (usage.alerts ?? []).map((a) =>
+        `<div class="alert ${a.level}">${a.message}</div>`).join('');
+      document.getElementById('session').textContent = session.session
+        ? JSON.stringify(session.session, null, 2)
+        : '(no persisted session)';
+    }
+    load().catch((e) => { document.body.innerHTML += `<p>Error: ${e}</p>`; });
+  </script>
+</body>
+</html>

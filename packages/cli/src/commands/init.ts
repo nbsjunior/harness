@@ -97,6 +97,16 @@ export async function initCommand(dir: string = process.cwd()): Promise<void> {
     harnessLog(`  exists   .harness/specs/ (default SDD specs already present)`);
   }
 
+  const pluginsTarget = path.join(harnessDir, 'plugins.json');
+  if (!fs.existsSync(pluginsTarget)) {
+    fs.writeFileSync(
+      pluginsTarget,
+      JSON.stringify({ version: 1, plugins: [] }, null, 2) + '\n',
+      'utf-8',
+    );
+    harnessLog(`  created  .harness/plugins.json`);
+  }
+
   // Update .gitignore if present
   const gitignorePath = path.join(targetDir, '.gitignore');
   if (fs.existsSync(gitignorePath)) {

@@ -517,14 +517,14 @@ We welcome PRs, docs, tests, and new agent connectors. See [CONTRIBUTING.md](CON
 
 ## Roadmap
 
-- [ ] Session persistence across VSCode restarts
+- [x] Session persistence across VSCode restarts — `.harness/chat-session.json` ([backlog-features.md](docs/backlog-features.md))
 - [x] Token and request usage tracking (Spending tab + `.harness/usage-stats.json`)
-- [ ] Budget alerts and spending limits per provider
-- [ ] Spec auto-discovery from repository structure
-- [ ] Multi-agent parallel execution (fan-out)
-- [ ] GitHub Actions integration for CI agent runs
-- [ ] Plugin marketplace for community connectors
-- [ ] Web UI for remote Harness instances
+- [x] Budget alerts and spending limits per provider — `harness.spending.*` settings
+- [x] Spec auto-discovery — `harness spec:discover`
+- [x] Multi-agent parallel execution — `harness agent:fanout`
+- [x] GitHub Actions integration — [docs/github-actions.md](docs/github-actions.md)
+- [x] Plugin marketplace (manifest preview) — [docs/plugins.md](docs/plugins.md)
+- [x] Web UI for remote instances (MVP) — `harness web:serve`
 
 ---
 

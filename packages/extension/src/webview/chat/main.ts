@@ -299,6 +299,15 @@ function appendChunkToMessage(messageId: string, chunk: string): void {
   scrollToBottom();
 }
 
+function showSystemNotice(text: string, tone: 'info' | 'error' = 'info'): void {
+  const notice = document.createElement('div');
+  notice.className = tone === 'error' ? 'budget-alert budget-alert--exceeded' : 'budget-alert budget-alert--warn';
+  notice.setAttribute('aria-live', 'polite');
+  notice.textContent = text;
+  messagesEl.appendChild(notice);
+  scrollToBottom();
+}
+
 function showAutoRouteNotice(route: ChatAutoRoutedPayload): void {
   state.lastAutoRoute = route;
   const meta = AGENT_META[route.agent];
@@ -723,6 +732,13 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       syncControlDropdowns();
       break;
     }
+    case 'budgetAlert': {
+      const p = msg.payload as { alerts: Array<{ level: string; message: string }> };
+      for (const a of p.alerts ?? []) {
+        showSystemNotice(a.message, a.level === 'exceeded' ? 'error' : 'info');
+      }
+      break;
+    }
     case 'tokenUsage': {
       const p = msg.payload as TokenUsagePayload;
       state.sessionTokens = p.sessionTokens;
@@ -894,6 +910,21 @@ body {
   color: var(--vscode-descriptionForeground);
   flex: 1;
   min-width: 120px;
+}
+
+.budget-alert {
+  margin: 8px 12px;
+  padding: 8px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--vscode-panel-border);
+}
+.budget-alert--warn {
+  background: color-mix(in srgb, var(--vscode-editorWarning-foreground) 12%, transparent);
+}
+.budget-alert--exceeded {
+  background: color-mix(in srgb, var(--vscode-errorForeground) 12%, transparent);
+  color: var(--vscode-errorForeground);
 }
 
 .msg__error {

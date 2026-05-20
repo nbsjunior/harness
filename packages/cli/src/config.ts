@@ -18,6 +18,10 @@ import yaml from 'js-yaml';
 import type { AgentId, AgentSelectionId } from './types.js';
 import { resolveKiroCliPathSync } from './kiro/bootstrap.js';
 import { getGhCliToken } from './connectors/ghToken.js';
+import {
+  DEFAULT_SPENDING_BUDGET,
+  type SpendingBudgetSettings,
+} from './usage/budget.js';
 
 export interface AgentConnectorConfig {
   copilot: { token: string; endpoint: string };
@@ -77,6 +81,12 @@ interface HarnessSettingsBridge {
     maxContextCharsPerFile?: number;
     maxHistoryMessages?: number;
   };
+  spending?: {
+    budgetEnabled?: boolean;
+    budgetTotalTokens?: number;
+    budgetWarnPercent?: number;
+    budgetTokensByAgent?: Partial<Record<AgentId, number>>;
+  };
 }
 
 export interface HarnessPromptSettings {
@@ -92,6 +102,20 @@ export function getWorkspaceRoot(): string {
     return fromEnv;
   }
   return process.cwd();
+}
+
+export function loadSpendingBudgetSettings(): SpendingBudgetSettings {
+  const bridge = loadSettingsBridge();
+  const s = bridge.spending ?? {};
+  if (!s.budgetEnabled) {
+    return { ...DEFAULT_SPENDING_BUDGET };
+  }
+  return {
+    enabled: true,
+    totalTokens: Math.max(0, s.budgetTotalTokens ?? 0),
+    warnPercent: Math.min(100, Math.max(1, s.budgetWarnPercent ?? 80)),
+    byAgent: s.budgetTokensByAgent ?? {},
+  };
 }
 
 export function loadPromptSettings(): HarnessPromptSettings {

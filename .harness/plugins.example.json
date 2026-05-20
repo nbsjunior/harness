@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "plugins": [
+    {
+      "id": "example-connector",
+      "label": "Example Community Connector",
+      "description": "Placeholder — dynamic plugin loading ships in a future marketplace release.",
+      "module": "./plugins/example-connector.js",
+      "agentId": "copilot",
+      "enabled": false
+    }
+  ]
+}

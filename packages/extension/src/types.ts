@@ -196,8 +196,21 @@ export type IpcAction =
   | 'usage:stats'
   | 'usage:reset'
   | 'usage:reset:result'
+  | 'usage:alerts'
   | 'chat:usage'
-  | 'chat:tool';
+  | 'chat:tool'
+  | 'session:load'
+  | 'session:loaded'
+  | 'session:save'
+  | 'session:saved'
+  | 'session:clear'
+  | 'session:cleared'
+  | 'spec:discover'
+  | 'spec:discover:result'
+  | 'chat:fanout'
+  | 'chat:fanout:result'
+  | 'plugins:list'
+  | 'plugins:list:result';
 
 /**
  * Base IPC message envelope. All extension ↔ CLI communication uses this shape.
@@ -373,7 +386,8 @@ export type ExtensionCommand =
   | 'configLoaded'
   | 'connectionResult'
   | 'secretStatus'
-  | 'usageStats';
+  | 'usageStats'
+  | 'budgetAlert';
 
 export interface ExtensionMessage<T = unknown> {
   command: ExtensionCommand;
@@ -413,12 +427,22 @@ export interface AgentUsageTotals {
   totalDurationMs: number;
 }
 
+export interface BudgetAlertPayload {
+  level: 'warn' | 'exceeded';
+  scope: 'total' | AgentId;
+  message: string;
+  current: number;
+  limit: number;
+  percent: number;
+}
+
 export interface UsageStatsPayload {
   updatedAt: string;
   firstRequestAt?: string;
   lastRequestAt?: string;
   total: AgentUsageTotals;
   byAgent: Record<AgentId, AgentUsageTotals>;
+  alerts?: BudgetAlertPayload[];
   recent?: Array<{
     sessionId: string;
     agent: AgentId;
@@ -439,6 +463,7 @@ export interface ChatUsagePayload {
   tokensTotal: number;
   durationMs: number;
   stats: UsageStatsPayload;
+  alerts?: BudgetAlertPayload[];
 }
 
 export interface ConnectionResultPayload {

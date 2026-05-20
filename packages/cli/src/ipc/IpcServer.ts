@@ -21,7 +21,7 @@ import * as fs from 'fs';
 import { AgentRouter } from '../router/AgentRouter.js';
 import { parseSpecDirectory } from '../parsers/specParser.js';
 import { contextBuildCommand } from '../commands/contextBuild.js';
-import { getWorkspaceRoot, loadAgentConfig, loadPromptSettings } from '../config.js';
+import { getWorkspaceRoot, loadAgentConfig, loadPromptSettings, loadSpendingBudgetSettings } from '../config.js';
 import {
   applyContextTruncation,
   optimizeMessagesForRouting,
@@ -38,12 +38,22 @@ import {
 import { harnessLog } from '../log.js';
 import { cancelCursorCloudSession } from '../connectors/cursorCloud.js';
 import { cancelCursorLocalSession } from '../connectors/cursorLocal.js';
+import {
+  clearChatSession,
+  loadChatSession,
+  saveChatSession,
+} from '../session/persistence.js';
+import { evaluateBudgetAlerts } from '../usage/budget.js';
+import { discoverSpecsFromRepo } from '../specs/discover.js';
+import { formatFanoutMarkdown, runAgentFanout } from '../router/fanout.js';
+import { loadPluginRegistry } from '../plugins/registry.js';
 import type {
   IPCMessage,
   ChatSendPayload,
-  ChatChunkPayload,
+  ChatFanoutPayload,
   ContextBuildPayload,
   ContextResultPayload,
+  SessionSavePayload,
   SpecParsePayload,
   SpecResultPayload,
 } from '../types.js';
@@ -201,14 +211,79 @@ async function dispatchMessage(msg: IPCMessage, router: AgentRouter): Promise<vo
     case 'usage:get': {
       const workspaceRoot = getWorkspaceRoot();
       const stats = loadUsageStats(workspaceRoot);
-      writeFrame({ id: msg.id, action: 'usage:stats', payload: stats });
+      const alerts = evaluateBudgetAlerts(stats, loadSpendingBudgetSettings());
+      writeFrame({ id: msg.id, action: 'usage:stats', payload: { ...stats, alerts } });
       break;
     }
 
     case 'usage:reset': {
       const workspaceRoot = getWorkspaceRoot();
       const stats = resetUsageStats(workspaceRoot);
-      writeFrame({ id: msg.id, action: 'usage:reset:result', payload: stats });
+      const alerts = evaluateBudgetAlerts(stats, loadSpendingBudgetSettings());
+      writeFrame({ id: msg.id, action: 'usage:reset:result', payload: { ...stats, alerts } });
+      break;
+    }
+
+    case 'session:load': {
+      const workspaceRoot = getWorkspaceRoot();
+      const stored = loadChatSession(workspaceRoot);
+      writeFrame({
+        id: msg.id,
+        action: 'session:loaded',
+        payload: {
+          session: stored
+            ? {
+                sessionId: stored.sessionId,
+                selectedAgent: stored.selectedAgent,
+                selectedMode: stored.selectedMode,
+                model: stored.model,
+                messages: stored.messages,
+                contextPaths: stored.contextPaths,
+                updatedAt: stored.updatedAt,
+              }
+            : null,
+        },
+      });
+      break;
+    }
+
+    case 'session:save': {
+      const p = msg.payload as SessionSavePayload;
+      const workspaceRoot = getWorkspaceRoot();
+      const saved = saveChatSession(
+        {
+          sessionId: p.sessionId,
+          selectedAgent: p.selectedAgent,
+          selectedMode: p.selectedMode,
+          model: p.model,
+          messages: p.messages,
+          contextPaths: p.contextPaths,
+        },
+        workspaceRoot,
+      );
+      writeFrame({ id: msg.id, action: 'session:saved', payload: { ok: true, updatedAt: saved.updatedAt } });
+      break;
+    }
+
+    case 'session:clear': {
+      clearChatSession(getWorkspaceRoot());
+      writeFrame({ id: msg.id, action: 'session:cleared', payload: { ok: true } });
+      break;
+    }
+
+    case 'spec:discover': {
+      const result = discoverSpecsFromRepo(getWorkspaceRoot());
+      writeFrame({ id: msg.id, action: 'spec:discover:result', payload: result });
+      break;
+    }
+
+    case 'chat:fanout':
+      await handleChatFanout(msg as IPCMessage<ChatFanoutPayload>, router);
+      break;
+
+    case 'plugins:list': {
+      const registry = loadPluginRegistry(getWorkspaceRoot());
+      writeFrame({ id: msg.id, action: 'plugins:list:result', payload: registry });
       break;
     }
 
@@ -517,6 +592,7 @@ function emitUsageAndFinish(
   });
   const tokensIn = estimateTokens(params.inputText);
   const tokensOut = estimateTokens(params.outputText);
+  const alerts = evaluateBudgetAlerts(stats, loadSpendingBudgetSettings());
   writeFrame({
     id: requestId,
     action: 'chat:usage',
@@ -533,8 +609,61 @@ function emitUsageAndFinish(
         lastRequestAt: stats.lastRequestAt,
         total: stats.total,
         byAgent: stats.byAgent,
+        alerts,
       },
+      alerts,
     },
+  });
+  if (alerts.length > 0) {
+    writeFrame({
+      id: requestId,
+      action: 'usage:alerts',
+      payload: { sessionId: params.sessionId, alerts },
+    });
+  }
+}
+
+async function handleChatFanout(
+  msg: IPCMessage<ChatFanoutPayload>,
+  router: AgentRouter,
+): Promise<void> {
+  const { sessionId, prompt, agents, contextPaths, mode, model } = msg.payload;
+  const agentConfig = loadAgentConfig();
+  const workspaceRoot = getWorkspaceRoot();
+
+  const results = await runAgentFanout(router, {
+    sessionId,
+    prompt,
+    agents,
+    baseRequest: {
+      sessionId,
+      context: contextPaths.map((p) => ({
+        absolutePath: p,
+        kind: 'file' as const,
+        label: p,
+      })),
+      config: agentConfig,
+      mode: mode ?? 'ask',
+      model,
+      specCount: 0,
+    },
+  });
+
+  const markdown = formatFanoutMarkdown(results);
+  writeFrame({
+    id: msg.id,
+    action: 'chat:fanout:result',
+    payload: { sessionId, markdown, results },
+  });
+
+  recordChatUsage({
+    workspaceRoot,
+    sessionId,
+    agent: agents[0] ?? 'copilot',
+    inputText: prompt,
+    outputText: markdown,
+    durationMs: results.reduce((s, r) => s + r.durationMs, 0),
+    mode: 'fanout',
   });
 }
 

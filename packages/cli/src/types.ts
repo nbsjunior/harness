@@ -52,8 +52,21 @@ export type IpcAction =
   | 'usage:stats'
   | 'usage:reset'
   | 'usage:reset:result'
+  | 'usage:alerts'
   | 'chat:usage'
-  | 'chat:tool';
+  | 'chat:tool'
+  | 'session:load'
+  | 'session:loaded'
+  | 'session:save'
+  | 'session:saved'
+  | 'session:clear'
+  | 'session:cleared'
+  | 'spec:discover'
+  | 'spec:discover:result'
+  | 'chat:fanout'
+  | 'chat:fanout:result'
+  | 'plugins:list'
+  | 'plugins:list:result';
 
 /**
  * Base IPC message envelope used for all stdin/stdout newline-delimited JSON
@@ -133,6 +146,15 @@ export interface ChatAutoRoutedPayload {
 }
 
 /** Emitted after a chat turn completes — token estimates + timing. */
+export interface BudgetAlertPayload {
+  level: 'warn' | 'exceeded';
+  scope: 'total' | AgentId;
+  message: string;
+  current: number;
+  limit: number;
+  percent: number;
+}
+
 export interface ChatUsagePayload {
   sessionId: string;
   agent: AgentId;
@@ -141,6 +163,7 @@ export interface ChatUsagePayload {
   tokensTotal: number;
   durationMs: number;
   stats: UsageStatsPayload;
+  alerts?: BudgetAlertPayload[];
 }
 
 export interface UsageStatsPayload {
@@ -164,6 +187,61 @@ export interface UsageStatsPayload {
       totalDurationMs: number;
     }
   >;
+  alerts?: BudgetAlertPayload[];
+}
+
+export interface SessionSavePayload {
+  sessionId: string;
+  selectedAgent: AgentSelectionId;
+  selectedMode: CopilotMode;
+  model?: string;
+  messages: ChatMessage[];
+  contextPaths: string[];
+}
+
+export interface SessionLoadedPayload {
+  session: {
+    sessionId: string;
+    selectedAgent: AgentSelectionId;
+    selectedMode: CopilotMode;
+    model?: string;
+    messages: ChatMessage[];
+    contextPaths: string[];
+    updatedAt: string;
+  } | null;
+}
+
+export interface SpecDiscoverResultPayload {
+  workspaceRoot: string;
+  suggestions: Array<{
+    id: string;
+    title: string;
+    kind: string;
+    reason: string;
+    suggestedFile: string;
+    template: string;
+  }>;
+}
+
+export interface ChatFanoutPayload {
+  sessionId: string;
+  prompt: string;
+  agents: AgentId[];
+  contextPaths: string[];
+  mode?: CopilotMode;
+  model?: string;
+}
+
+export interface ChatFanoutResultPayload {
+  sessionId: string;
+  markdown: string;
+  results: Array<{
+    agent: AgentId;
+    ok: boolean;
+    text: string;
+    error?: string;
+    durationMs: number;
+  }>;
 }
 
 export interface ContextBuildPayload {

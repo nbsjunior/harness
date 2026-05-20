@@ -304,6 +304,12 @@ export class ConfigurationPanel {
         maxContextCharsPerFile: config.get<number>('promptOptimization.maxContextCharsPerFile', 12_000),
         maxHistoryMessages: config.get<number>('promptOptimization.maxHistoryMessages', 24),
       },
+      spending: {
+        budgetEnabled: config.get<boolean>('spending.budgetEnabled', false),
+        budgetTotalTokens: config.get<number>('spending.budgetTotalTokens', 0),
+        budgetWarnPercent: config.get<number>('spending.budgetWarnPercent', 80),
+        budgetTokensByAgent: config.get<Record<string, number>>('spending.budgetTokensByAgent', {}),
+      },
       mcpEnabled: config.get<boolean>('mcp.enabled', true),
       mcpServers: config.get<unknown[]>('mcp.servers', []),
       apiServers: config.get<ApiServerEntry[]>('apiServers', []),
