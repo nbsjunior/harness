@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.8] — 2026-05-19
+
+### Fixed
+
+- Cursor SDK local agent: bundle full transitive `node_modules` (e.g. `@fastify/busboy` for `undici`) so `@cursor/sdk` loads inside the installed VSIX
+
 ## [0.1.7] — 2026-05-19
 
 ### Added
