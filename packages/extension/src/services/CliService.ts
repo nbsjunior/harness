@@ -76,7 +76,7 @@ export class CliService extends EventEmitter {
   private async doStart(): Promise<void> {
     try {
       const cliPath = this.resolveCliPath();
-      this.output.info(`Starting Harness CLI daemon: ${cliPath}`);
+      this.output.info(`Starting Harness of AI CLI daemon: ${cliPath}`);
 
       const env = await this.buildCliEnv();
       const cwd =
@@ -114,7 +114,7 @@ export class CliService extends EventEmitter {
 
       await this.ping();
       this.restartAttempts = 0;
-      this.output.info('Harness CLI daemon ready.');
+      this.output.info('Harness of AI CLI daemon ready.');
     } catch (err) {
       this.subprocess?.kill('SIGTERM');
       this.subprocess = null;
@@ -441,7 +441,7 @@ export class CliService extends EventEmitter {
     }
 
     throw new Error(
-      'Harness CLI not found. Run `npm run build:cli` in the monorepo root, ' +
+      'Harness of AI CLI not found. Run `npm run build:cli` in the monorepo root, ' +
         'or set `harness.cliPath` in VSCode settings.',
     );
   }

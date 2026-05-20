@@ -244,7 +244,7 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
              style-src ${webview.cspSource} 'unsafe-inline';
              font-src ${webview.cspSource};
              img-src ${webview.cspSource} data:;" />
-  <title>Harness Spec Manager</title>
+  <title>Harness of AI Spec Manager</title>
 </head>
 <body>
   <div id="root"></div>

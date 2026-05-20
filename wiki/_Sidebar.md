@@ -1,14 +1,15 @@
-### Harness Wiki
+### Harness of AI Wiki
 
 **[Home](Home)**
 
 **Getting started**
+- **[User Manual (PT)](User-Manual)**
 - [Why Harness](Why-Harness)
 - [Getting Started](Getting-Started)
 - [Installation](Installation)
 - [User Guide](User-Guide)
 
-**Using Harness**
+**Using Harness of AI**
 - [Chat Interface](Chat-Interface)
 - [Auto Routing](Auto-Routing)
 - [Configuration](Configuration)

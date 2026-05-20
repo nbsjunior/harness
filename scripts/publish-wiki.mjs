@@ -63,6 +63,21 @@ for (const file of files) {
   fs.copyFileSync(path.join(wikiSrc, file), path.join(workDir, file));
 }
 
+/** Copy wiki/images/ (manual screenshots, etc.) */
+const wikiImages = path.join(wikiSrc, 'images');
+if (fs.existsSync(wikiImages)) {
+  function copyDir(src, dest) {
+    fs.mkdirSync(dest, { recursive: true });
+    for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+      const s = path.join(src, entry.name);
+      const d = path.join(dest, entry.name);
+      if (entry.isDirectory()) copyDir(s, d);
+      else fs.copyFileSync(s, d);
+    }
+  }
+  copyDir(wikiImages, path.join(workDir, 'images'));
+}
+
 run('git add -A', { cwd: workDir });
 try {
   run('git diff --cached --quiet', { cwd: workDir });
