@@ -2,6 +2,7 @@ import { installAidlcRules } from '../aidlc/install.js';
 import { getAidlcStatus } from '../aidlc/status.js';
 import { ensureKiroCli } from '../kiro/bootstrap.js';
 import { initCommand } from './init.js';
+import { ensureDefaultSpecs } from '../specs/defaultSpecs.js';
 import { harnessLog, harnessWarn } from '../log.js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -31,6 +32,11 @@ export async function setupCommand(options: SetupOptions = {}): Promise<number> 
     await initCommand(dir);
   } else if (!options.skipInit) {
     log('\n→ Harness workspace already present.');
+    const specsDir = path.join(dir, '.harness', 'specs');
+    const added = ensureDefaultSpecs(specsDir);
+    for (const rel of added) {
+      log(`  created  .harness/${rel}`);
+    }
   }
 
   if (!options.skipKiro) {

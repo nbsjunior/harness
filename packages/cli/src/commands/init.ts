@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { installAidlcRules } from '../aidlc/install.js';
 import { ensureKiroCli } from '../kiro/bootstrap.js';
+import { ensureDefaultSpecs } from '../specs/defaultSpecs.js';
 import { harnessLog, harnessWarn } from '../log.js';
 
 const HARNESS_DIR = '.harness';
@@ -47,32 +48,6 @@ mcp:
     #   args: [./mcp-server/index.js]
 `;
 
-const EXAMPLE_SKILL = `kind: Skill
-name: code-review
-description: "Performs a thorough code review focused on correctness, security and SOLID principles"
-tools:
-  - name: read_file
-    description: "Reads a file from the workspace"
-  - name: suggest_fix
-    description: "Suggests a code fix for a flagged issue"
-agents:
-  preferred: copilot
-  fallback: claude
-`;
-
-const EXAMPLE_WORKFLOW = `kind: Workflow
-name: refactor-to-solid
-description: "Refactors a module to comply with SOLID design principles"
-tools:
-  - name: read_file
-    description: "Reads the target file"
-  - name: apply_patch
-    description: "Applies a refactoring patch to the file"
-agents:
-  preferred: cursor
-  fallback: claude
-`;
-
 const GITIGNORE_ADDITIONS = `
 # Harness runtime
 .harness/context/
@@ -114,17 +89,12 @@ export async function initCommand(dir: string = process.cwd()): Promise<void> {
     harnessLog(`  exists   .harness/config.yaml`);
   }
 
-  // Write example specs
-  const exampleSkillPath = path.join(specsDir, 'skill-code-review.yaml');
-  if (!fs.existsSync(exampleSkillPath)) {
-    fs.writeFileSync(exampleSkillPath, EXAMPLE_SKILL, 'utf-8');
-    harnessLog(`  created  .harness/specs/skill-code-review.yaml`);
+  const createdSpecs = ensureDefaultSpecs(specsDir);
+  for (const rel of createdSpecs) {
+    harnessLog(`  created  .harness/${rel}`);
   }
-
-  const exampleWorkflowPath = path.join(specsDir, 'workflow-refactor-solid.yaml');
-  if (!fs.existsSync(exampleWorkflowPath)) {
-    fs.writeFileSync(exampleWorkflowPath, EXAMPLE_WORKFLOW, 'utf-8');
-    harnessLog(`  created  .harness/specs/workflow-refactor-solid.yaml`);
+  if (createdSpecs.length === 0) {
+    harnessLog(`  exists   .harness/specs/ (default SDD specs already present)`);
   }
 
   // Update .gitignore if present
