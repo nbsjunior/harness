@@ -35,8 +35,12 @@ import { ensureKiroCli } from '../kiro/bootstrap.js';
 import { buildKiroPrompt } from '../aidlc/prompt.js';
 import { checkAgentReadiness } from './agentReadiness.js';
 import { isChatSessionCancelled } from '../session/cancel.js';
-import { harnessLog } from '../log.js';
+import { harnessLog, harnessWarn } from '../log.js';
 import { routeCursorCloud } from '../connectors/cursorCloud.js';
+import {
+  CursorLocalUnavailableError,
+  routeCursorLocal,
+} from '../connectors/cursorLocal.js';
 import {
   isAutoSelection,
   resolveAutoAgent,
@@ -262,8 +266,8 @@ export class AgentRouter {
         if (/429|quota exceeded/i.test(msg)) {
           req.onError(
             'GitHub Copilot quota exceeded (HTTP 429). Wait and retry, pick another model, ' +
-              'or use provider **Cursor** / **Claude** for Ask mode. ' +
-              'Local workspace Agent mode requires Copilot when provider is **Copilot**.',
+              'or use provider **Cursor** with a **Cursor API key** for local Agent edits (no Copilot quota). ' +
+              'Copilot provider Agent mode uses Copilot for local file tools.',
           );
         } else {
           req.onError(`Copilot agent request failed: ${msg}`);
@@ -376,33 +380,81 @@ export class AgentRouter {
 
     if (mode === 'agent' || mode === 'spec+agent') {
       const execution = readCursorAgentExecution();
+      const cursorKey = cfg.apiKey?.trim() ?? '';
       const copilotReady = checkAgentReadiness('copilot', req.config).ready;
+      const wantLocal = execution !== 'cloud';
 
-      const useLocal =
-        execution === 'local' || (execution === 'auto' && copilotReady);
-
-      if (useLocal) {
-        if (!copilotReady) {
-          req.onError(
-            'Cursor Agent (local workspace) needs GitHub Copilot configured. ' +
-              'Run `gh auth login` with the copilot scope, or set harness.cursor.agentExecution to "cloud" in settings.',
-          );
-          return;
-        }
+      if (wantLocal && cursorKey) {
         req.onChunk(
-          '**[Harness of AI]** Cursor + Agent: editing **your VS Code workspace** locally ' +
-            '(read/write/search). **Live Edits** will show each file change.\n\n',
+          '**[Harness of AI]** Cursor + Agent: editing **your VS Code workspace** locally via **Cursor SDK**. ' +
+            '**Live Edits** shows each file change. No GitHub Copilot quota is used.\n\n',
+        );
+        try {
+          await routeCursorLocal({
+            sessionId: req.sessionId,
+            messages: req.messages,
+            context: req.context,
+            mode: req.mode,
+            apiKey: cursorKey,
+            model: req.model,
+            onChunk: req.onChunk,
+            onDone: req.onDone,
+            onError: req.onError,
+            onToolEvent: req.onToolEvent,
+          });
+          return;
+        } catch (err) {
+          if (!(err instanceof CursorLocalUnavailableError)) {
+            throw err;
+          }
+          harnessWarn(`[cursor] SDK local unavailable: ${err.message}`);
+          if (execution === 'local') {
+            req.onError(
+              `Cursor local agent unavailable: ${err.message}. ` +
+                'Install/update the extension CLI bundle or set harness.cursor.agentExecution to "cloud".',
+            );
+            return;
+          }
+          req.onChunk(
+            `**[Harness]** Cursor SDK local failed (${err.message}). Trying fallback…\n\n`,
+          );
+        }
+      }
+
+      const useCopilotLocal =
+        wantLocal &&
+        copilotReady &&
+        (execution === 'local' || (execution === 'auto' && !cursorKey));
+
+      if (useCopilotLocal) {
+        req.onChunk(
+          '**[Harness of AI]** Cursor + Agent: local workspace via **GitHub Copilot** tool loop. ' +
+            'Set a **Cursor API key** to edit locally without Copilot.\n\n',
         );
         await this.routeLocalWorkspaceAgent(req);
         return;
       }
 
-      req.onChunk(
-        '**[Harness of AI]** Cursor Agent is using **Cursor Cloud** (remote). ' +
-          'It cannot change files in your open VS Code folder — **Live Edits stays empty**. ' +
-          'For local `helloworld.html` edits: set **harness.cursor.agentExecution** to `auto` or `local` ' +
-          'and configure Copilot (`gh auth login`), or pick provider **Copilot** + Agent.\n\n',
-      );
+      if (wantLocal && !cursorKey && execution === 'local') {
+        req.onError(
+          'Cursor Agent (local) needs a Cursor API key (CURSOR_API_KEY or harness.connectors.cursor.apiKey) ' +
+            'or GitHub Copilot (`gh auth login` with copilot scope).',
+        );
+        return;
+      }
+
+      if (wantLocal && !cursorKey && !copilotReady) {
+        req.onChunk(
+          '**[Harness of AI]** Cursor Agent is using **Cursor Cloud** (remote). ' +
+            'Add a **Cursor API key** for local file edits without Copilot, or configure Copilot for the legacy local path.\n\n',
+        );
+      } else if (execution === 'cloud' || (execution === 'auto' && cursorKey)) {
+        req.onChunk(
+          '**[Harness of AI]** Cursor Agent is using **Cursor Cloud** (remote). ' +
+            'It cannot change files in your open VS Code folder — **Live Edits stays empty**. ' +
+            'For local edits: set **harness.cursor.agentExecution** to `auto` or `local` and add a Cursor API key.\n\n',
+        );
+      }
     }
 
     await routeCursorCloud({

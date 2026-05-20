@@ -21,6 +21,10 @@ export default defineConfig({
     'events', 'assert', 'net', 'http', 'https', 'crypto', 'zlib',
     'readline', 'tty', 'buffer', 'string_decoder', 'querystring',
     'timers', 'process', 'module', 'vm', 'worker_threads',
+    // Cursor SDK ships native platform packages — keep external and copy into extension/cli/node_modules
+    '@cursor/sdk',
+    /^@cursor\//,
+    /^@anysphere\//,
   ],
   esbuildOptions(options) {
     options.platform = 'node';

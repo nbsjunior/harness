@@ -54,13 +54,17 @@ Manual chips are still useful to focus on a subdirectory or specific files.
 
 | Mode | Copilot | Cursor |
 |------|---------|--------|
-| **Ask** | Chat only | Cloud agent (plan) — remote; uses full context in prompt |
-| **Agent** | Reads/writes files **in your VS Code workspace** | Same local tools as Copilot Agent (not Cursor Cloud) |
+| **Ask** | Chat only (Copilot API) | **Cloud** agent (plan) — remote |
+| **Agent** | Local workspace via Copilot tool loop | **Local** via **Cursor SDK** when API key is set (default `auto`) |
 | **Spec+Agent** | Like Agent + active specs | Like Agent + specs |
 
-**Agent** and **Spec+Agent** use Harness **local workspace tools** (`read_file`, `write_file`, `list_files`, `search_in_files`, `run_git`, `run_gh`) against `HARNESS_WORKSPACE`. Changes appear in the IDE. Cursor Cloud API does not write to your disk — that is why Cursor + Agent routes through local tools (requires GitHub Copilot configured).
+**Copilot Agent** uses Harness tools (`read_file`, `write_file`, …) against `HARNESS_WORKSPACE` through the GitHub Copilot API (requires `gh auth login` with `copilot` scope).
 
-For GitHub: use Agent mode and the model can call `run_git` / `run_gh` (needs `gh auth login` for `gh`).
+**Cursor Agent** (with a **Cursor API key**) uses `@cursor/sdk` **local runtime** to edit files in your open VS Code folder — **no Copilot quota**. **Live Edits** shows each change. See [cursor-agent.md](cursor-agent.md).
+
+Setting **`harness.cursor.agentExecution`**: `auto` | `local` | `cloud`. Use `cloud` only if you want remote Cursor Cloud (no local file edits).
+
+For GitHub with Copilot Agent: `run_git` / `run_gh` tools (needs `gh auth login` for `gh`).
 
 ---
 

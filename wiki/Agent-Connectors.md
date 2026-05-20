@@ -39,7 +39,13 @@ Devin runs asynchronously — Harness shows the session URL.
 
 ---
 
-## Cursor AI (Cloud Agents API)
+## Cursor AI
+
+Harness uses **Cursor SDK local** for **Agent** / **Spec+Agent** when you have a Cursor API key (`auto` or `local` execution). **Ask** and **`cloud`** use the Cloud Agents API.
+
+See [cursor-agent.md](../docs/cursor-agent.md) in the repo docs.
+
+### Cloud Agents API
 
 > **Do not use `api2.cursor.sh`** — that is the IDE internal API (gRPC), not REST. You will get **HTTP 404**.
 

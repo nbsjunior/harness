@@ -37,6 +37,7 @@ import {
 } from '../session/cancel.js';
 import { harnessLog } from '../log.js';
 import { cancelCursorCloudSession } from '../connectors/cursorCloud.js';
+import { cancelCursorLocalSession } from '../connectors/cursorLocal.js';
 import type {
   IPCMessage,
   ChatSendPayload,
@@ -157,6 +158,7 @@ async function dispatchMessage(msg: IPCMessage, router: AgentRouter): Promise<vo
       if (sessionId) {
         cancelChatSession(sessionId);
         const cursorCfg = loadAgentConfig().cursor;
+        void cancelCursorLocalSession(sessionId);
         void cancelCursorCloudSession(
           sessionId,
           cursorCfg.apiKey,

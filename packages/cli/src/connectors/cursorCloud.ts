@@ -130,7 +130,8 @@ function extractHarnessContextBlocks(messages: ChatMessage[]): string {
   return blocks.join('\n\n');
 }
 
-function buildPrompt(
+/** Shared prompt builder for Cursor Cloud and Cursor SDK local agents. */
+export function buildCursorPrompt(
   messages: ChatMessage[],
   context: ContextItem[],
 ): string {
@@ -841,7 +842,7 @@ export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
   const baseUrl = normalizeCursorBaseUrl(req.endpoint);
   const mode = cursorMode(req.mode);
   const existing = getSession(req.sessionId);
-  const promptText = buildPrompt(req.messages, req.context);
+  const promptText = buildCursorPrompt(req.messages, req.context);
 
   if (!promptText) {
     req.onError('No user message to send to Cursor.');

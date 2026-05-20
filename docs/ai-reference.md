@@ -113,6 +113,23 @@ from [awslabs/aidlc-workflows](https://github.com/awslabs/aidlc-workflows) insta
 
 ---
 
+## Cursor Agent — local vs Cloud
+
+| User choice | Implementation |
+|-------------|----------------|
+| **Cursor + Ask** | `routeCursorCloud()` — remote Cloud Agents API |
+| **Cursor + Agent** (default `auto`, API key set) | `routeCursorLocal()` — `@cursor/sdk` with `local: { cwd: HARNESS_WORKSPACE }` |
+| **`harness.cursor.agentExecution: cloud`** | Always Cloud — no local file edits; Live Edits empty |
+| **Fallback** | If SDK unavailable and Copilot configured, Copilot tool loop (uses Copilot quota) |
+
+**Why two paths:** Cursor Cloud cannot write to the user's open VS Code tree. Local edits need either the Cursor SDK on disk or Harness's Copilot tool loop.
+
+**Auth:** Cursor local needs `CURSOR_API_KEY` only — not `gh auth` / Copilot scope.
+
+Details: [cursor-agent.md](cursor-agent.md).
+
+---
+
 ## Specs (SDD) — why YAML in `.harness/specs/`?
 
 Specs describe **Skills**, **Tools**, or **Workflows** with preferred agent and optional tool schemas.
@@ -137,8 +154,9 @@ See [ipc-protocol.md](ipc-protocol.md) for the full action table.
 
 ## Bundling — why `noExternal` + `createRequire` banner?
 
-The extension runs `node cli/dist/index.js` without `node_modules` beside it. tsup bundles all npm deps
-into one ESM file. CJS packages (e.g. commander) need:
+The extension runs `node cli/dist/index.js`. Most npm deps are bundled into one ESM file; **`@cursor/sdk`**
+and platform packages stay **external** under `extension/cli/node_modules/@cursor/` (copied by `scripts/bundle-cli.mjs`).
+CJS packages (e.g. commander) need:
 
 ```js
 import { createRequire } from 'module';

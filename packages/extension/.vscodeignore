@@ -17,6 +17,13 @@ test/**
 
 # Dev artifacts
 node_modules/**
+# Ship Cursor SDK next to bundled CLI (see scripts/bundle-cli.mjs)
+!cli/node_modules/**
+!cli/node_modules/@cursor/**
+!cli/node_modules/@bufbuild/**
+!cli/node_modules/@connectrpc/**
+!cli/node_modules/sqlite3/**
+!cli/node_modules/zod/**
 .eslintrc*
 .prettierrc*
 *.log
