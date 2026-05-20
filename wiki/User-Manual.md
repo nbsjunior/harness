@@ -1,142 +1,85 @@
-# Manual de uso — Harness of AI
+# User Manual — Harness of AI
 
-**Harness of AI** é um orquestrador de agentes de IA para VS Code: um único painel para **Copilot**, **Claude**, **Cursor**, **Devin** e **Kiro**, com contexto de arquivos compartilhado e desenvolvimento orientado a specs (SDD).
+**Harness of AI** is a meta-agent orchestrator for VS Code: one sidebar for **Copilot**, **Claude**, **Cursor**, **Devin**, and **Kiro**, with shared file context and Spec-Driven Development (SDD).
+
+> **In the app:** `Ctrl+Shift+P` → **Harness of AI: Open User Manual** (dedicated editor tab with screenshots).
 
 ---
 
-## 1. Instalação
+## 1. Install
 
-1. Baixe `harness-vscode-0.1.0.vsix` em [Releases](https://github.com/nbsjunior/harness/releases).
-2. No VS Code / Cursor: `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
+1. Download `harness-vscode-*.vsix` from [Releases](https://github.com/nbsjunior/harness/releases).
+2. `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
 3. **Developer: Reload Window**
-4. Clique no ícone **Harness of AI** na barra de atividades (rosto estilizado).
+4. Click the **Harness of AI** icon (fox) in the Activity Bar.
 
 ---
 
-## 2. Primeira execução (Welcome)
+## 2. Welcome & setup wizard
 
-Na primeira abertura da configuração, o assistente de boas-vindas apresenta os recursos principais:
+On first configuration, the welcome screen summarizes what you get in **one place**:
 
-![Tela de boas-vindas](images/manual/03-welcome.png)
+![Welcome screen](images/manual/03-welcome.png)
 
-| Recurso | Descrição |
-|---------|-----------|
-| Chat unificado | Copilot, Claude, Devin, Cursor e Kiro no mesmo painel |
-| Contexto | Clique direito → **Add to Harness of AI Context** |
-| Specs (SDD) | Skills, Tools e Workflows em `.harness/specs/` |
-| MCP | Servidores externos de ferramentas |
+| Feature | Description |
+|---------|-------------|
+| Unified chat | Copilot, Claude, Devin, Cursor, and Kiro in the same panel |
+| Shared context | Right-click → **Add to Harness of AI Context** |
+| Specs (SDD) | Skills, Tools, and Workflows in `.harness/specs/` |
+| MCP | External tool servers |
 
-Clique em **Get started →** para configurar os agentes ou **Skip** para configurar depois.
-
----
-
-## 3. Chat e contexto
-
-O painel **Chat** fica na barra lateral **Harness of AI**:
-
-![Chat com arquivos em contexto](images/manual/04-chat-context.png)
-
-### Contexto de arquivos
-
-- **Explorer** ou editor → clique direito → **Add to Harness of AI Context**
-- Os arquivos aparecem como chips acima do compositor
-- O mesmo contexto vale para **qualquer** provedor na próxima mensagem
-
-### Ações do chat
-
-| Botão | Ação |
-|-------|------|
-| **+ New chat** | Nova conversa (mantém o contexto) |
-| **Clear context** | Remove apenas os arquivos do contexto |
-| Ícone na barra do painel | **Clear Chat & Context** — limpa tudo |
-| Engrenagem | Abre **Harness of AI Configuration** |
-
-### Provedores (pílulas na parte inferior)
-
-- **Auto** — Harness of AI escolhe o agente (ex.: Copilot para perguntas rápidas, Claude para código complexo)
-- **Copilot**, **Claude**, **Cursor**, **Devin**, **Kiro** — força um provedor
-
-### Modos (Copilot)
-
-| Modo | Uso |
-|------|-----|
-| **Ask** | Perguntas e respostas, sem ferramentas |
-| **Agent** | Loop com leitura/escrita de arquivos |
-| **Spec+Agent** | Como Agent, com specs ativas injetadas |
-
-Digite no campo *Describe what to build or change...* e pressione Enter.
+Click **Get started →** to configure agents, or **Skip** and configure later. The wizard ends with this **User Manual** step before you finish setup.
 
 ---
 
-## 4. Configuração — aba Agents
+## 3. Chat & shared context
 
-`Ctrl+Shift+P` → **Harness of AI: Open Configuration** (ou engrenagem no Chat).
+Everything happens in one interaction surface — no copy-paste between tools:
 
-![Configuração — Agents](images/manual/01-chat-and-config-agents.png)
+![Chat with context](images/manual/04-chat-context.png)
 
-Configure cada agente com **Configure**:
+- **Explorer** or editor → right-click → **Add to Harness of AI Context**
+- File chips appear above the composer; the **same context** is sent to whichever provider you pick next
+- **+ New chat** — new thread, keeps context
+- **Clear context** — removes file chips only
+- View title → **Clear Chat & Context** — full reset
 
-| Agente | Quando usar |
-|--------|-------------|
-| **GitHub Copilot** | Revisão e geração de código via GitHub |
-| **Claude Code** | Contexto longo e raciocínio complexo |
-| **Devin** | Tarefas autônomas de engenharia |
-| **Cursor AI** | Cloud Agents API (chave em cursor.com/dashboard) |
-| **Kiro (AI-DLC)** | CLI Kiro + regras em `.kiro/steering/` |
-
-Estado **Not configured** (laranja) = falta API key ou login. Use **Test Connection** após colar a chave.
+**Providers:** Auto, Copilot, Claude, Cursor, Devin, Kiro.  
+**Copilot modes:** Ask | Agent | Spec+Agent.
 
 ---
 
-## 5. Configuração — API Servers
+## 4. Configure agents
 
-![Configuração — API Servers](images/manual/02-config-api-servers.png)
+![Agents tab](images/manual/01-chat-and-config-agents.png)
 
-- **Built-in agents** — endpoints padrão (Copilot, Devin, Cursor)
-- **Custom API servers** — adicione servidores OpenAI-compatíveis com **+ Add API server**
-
----
-
-## 6. Outras abas
-
-| Aba | Função |
-|-----|--------|
-| **MCP** | Servidores Model Context Protocol (stdio ou HTTP) |
-| **Workspace** | Pasta padrão do workspace, agente padrão, otimização de prompt |
-| **Spending** | Tokens, requisições e tempo por provedor |
+Use **Configure** on each agent and **Test Connection** after saving keys. Tokens are stored in VS Code Secret Storage.
 
 ---
 
-## 7. Comandos úteis
+## 5. API servers
 
-| Comando | Atalho via paleta |
-|---------|-------------------|
-| Initialize Workspace | Cria `.harness/` e specs de exemplo |
-| Open Configuration | Painel de configuração |
-| Clear Chat & Context | Limpa chat e contexto |
-| Check getGoat | Diagnóstico de todos os agentes |
-| Run Setup | Kiro CLI + AI-DLC |
+![API Servers tab](images/manual/02-config-api-servers.png)
 
-Categoria na paleta: **Harness of AI**
+Built-in endpoints for Copilot, Devin, and Cursor. Add custom OpenAI-compatible servers with **+ Add API server**.
 
 ---
 
-## 8. Solução de problemas
+## 6. Commands
 
-| Problema | Solução |
-|----------|---------|
-| Agente errado no Auto | Configure só os agentes que usa; veja [Auto Routing](Auto-Routing) |
-| Cursor travado | Modo **Ask** primeiro; teste chave com `node scripts/test-cursor.mjs` |
-| Copilot sem token | `gh auth refresh --scopes copilot` |
-| CLI não encontrado | Reinstale o `.vsix` da release oficial |
-
-Mais detalhes: [Troubleshooting](Troubleshooting)
+| Command | Purpose |
+|---------|---------|
+| `Harness of AI: Open User Manual` | This guide (dedicated tab) |
+| `Harness of AI: Open Configuration` | Agents, MCP, workspace, spending |
+| `Harness of AI: Initialize Workspace` | Create `.harness/` |
+| `Harness of AI: Check getGoat` | Agent diagnostics |
 
 ---
 
-## Links
+## 7. Help
 
+- [Troubleshooting](Troubleshooting)
+- [Auto Routing](Auto-Routing)
 - [Getting Started](Getting-Started)
-- [Chat Interface](Chat-Interface)
-- [Configuration](Configuration)
-- [Repositório](https://github.com/nbsjunior/harness)
+
+Repository: [github.com/nbsjunior/harness](https://github.com/nbsjunior/harness)

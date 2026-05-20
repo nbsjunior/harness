@@ -3,7 +3,7 @@
 **[Home](Home)**
 
 **Getting started**
-- **[User Manual (PT)](User-Manual)**
+- **[User Manual](User-Manual)**
 - [Why Harness](Why-Harness)
 - [Getting Started](Getting-Started)
 - [Installation](Installation)
