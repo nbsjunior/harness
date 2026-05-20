@@ -29,7 +29,7 @@ import type {
   AGENT_DESCRIPTORS,
 } from '../types';
 import { AGENT_DESCRIPTORS as AGENTS } from '../types';
-import { PROVIDER_MODEL_OPTIONS } from '../models/providerModels';
+import { PROVIDER_MODEL_OPTIONS, modelsForSelection } from '../models/providerModels';
 import type { CliService } from '../services/CliService';
 import type { ContextProvider } from './ContextProvider';
 import { AgentService } from '../services/AgentService';
@@ -317,9 +317,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       case 'selectAgent': {
         const payload = msg.payload as { agent: AgentSelectionId };
         this.selectedAgent = payload.agent;
-        if (!this.modelByAgent.has(payload.agent)) {
-          this.modelByAgent.set(payload.agent, 'auto');
-        }
+        this.modelByAgent.set(payload.agent, 'auto');
         this.post({
           command: 'agentChanged',
           payload: { agent: this.selectedAgent },
@@ -327,9 +325,10 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         this.post({
           command: 'modelChanged',
           payload: {
-            selectedModel: this.getSelectedModel(),
-            agent: this.modelAgentKey(),
+            selectedModel: 'auto',
+            agent: payload.agent === 'auto' ? 'copilot' : payload.agent,
             providerModels: PROVIDER_MODEL_OPTIONS,
+            models: modelsForSelection(payload.agent),
           },
         });
         break;
@@ -344,6 +343,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
             selectedModel: payload.model,
             agent: this.modelAgentKey(),
             providerModels: PROVIDER_MODEL_OPTIONS,
+            models: modelsForSelection(this.selectedAgent),
           },
         });
         break;

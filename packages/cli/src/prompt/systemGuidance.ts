@@ -3,6 +3,10 @@
  * Injected as a system message when `promptOptimization` is enabled (default).
  */
 import type { ChatMessage, CopilotMode } from '../types.js';
+import {
+  applyPromptEngineeringPipeline,
+  augmentGuidanceForMode,
+} from './promptOptimizer.js';
 
 export interface PromptOptimizationSettings {
   enabled: boolean;
@@ -18,13 +22,19 @@ export const DEFAULT_PROMPT_OPTIMIZATION: PromptOptimizationSettings = {
 
 const EFFICIENCY_PREAMBLE = `You are assisting through Harness (multi-provider orchestrator).
 
-Response rules (all providers):
-- Be direct: answer the question first, then optional detail.
-- Prefer bullet lists over long paragraphs when listing items.
-- Do not repeat the user's question or restate obvious context.
-- For code: minimal diff or snippet; avoid dumping whole files unless asked.
-- If scope is unclear, ask one short clarifying question instead of guessing.
-- Do not narrate your process ("I will now…") unless the user asks for a plan.`;
+## Response contract
+- Answer the user’s goal first; supporting detail second.
+- Use bullets for lists; short paragraphs otherwise.
+- Do not repeat the question or restate attached context verbatim.
+- Code: minimal diff/snippet; cite paths; no full-file dumps unless requested.
+- One clarifying question if blocked — do not guess on security or data loss.
+- Skip process narration ("I will now…") unless the user asks for a plan.
+
+## Prompt engineering (internal)
+- Decompose complex work into verifiable steps.
+- State constraints and output format explicitly when ambiguous.
+- Prefer negative constraints ("do not change X") for fragile areas.
+- Self-check requirements, types, and tests before finishing.`;
 
 const MODE_HINTS: Record<CopilotMode, string> = {
   ask: 'Mode: Q&A — no file edits unless explicitly requested.',
@@ -48,7 +58,7 @@ export function loadPromptOptimizationFromBridge(
 
 export function buildHarnessSystemGuidance(mode?: CopilotMode): string {
   const m = mode ?? 'ask';
-  return `${EFFICIENCY_PREAMBLE}\n\n${MODE_HINTS[m]}`;
+  return augmentGuidanceForMode(`${EFFICIENCY_PREAMBLE}\n\n${MODE_HINTS[m]}`, m);
 }
 
 /** Trim history to recent turns to limit prompt size. */
@@ -100,6 +110,8 @@ export function optimizeMessagesForRouting(
   let out = [...messages];
 
   if (settings.enabled) {
+    out = applyPromptEngineeringPipeline(out, mode);
+
     const guidance = buildHarnessSystemGuidance(mode);
     const hasGuidance = out.some(
       (m) => m.role === 'system' && m.content.includes('assisting through Harness'),

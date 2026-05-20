@@ -1,4 +1,4 @@
-import type { AgentId } from '../types.js';
+import type { AgentId, AgentSelectionId } from '../types.js';
 
 export interface ProviderModelOption {
   id: string;
@@ -36,6 +36,14 @@ export const PROVIDER_MODEL_OPTIONS: Record<AgentId, ProviderModelOption[]> = {
 };
 
 const COPILOT_DEFAULT = 'gpt-4o';
+
+/** Models for UI dropdown — `auto` selection only shows LLM Auto. */
+export function modelsForSelection(selection: AgentSelectionId): ProviderModelOption[] {
+  if (selection === 'auto') {
+    return [{ id: 'auto', label: 'LLM Auto' }];
+  }
+  return PROVIDER_MODEL_OPTIONS[selection] ?? [{ id: 'auto', label: 'LLM Auto' }];
+}
 
 export function resolveProviderModel(agent: AgentId, model?: string): string | undefined {
   const pick = (model ?? 'auto').trim();

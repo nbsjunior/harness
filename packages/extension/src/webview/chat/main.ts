@@ -18,7 +18,7 @@ import type {
   TokenUsagePayload,
   WebviewMessage,
 } from '../../types';
-import { PROVIDER_MODEL_OPTIONS } from '../../models/providerModels';
+import { PROVIDER_MODEL_OPTIONS, modelsForSelection } from '../../models/providerModels';
 
 marked.setOptions({ breaks: true, gfm: true });
 
@@ -97,9 +97,11 @@ function injectShell(): void {
   <div id="messages"></div>
   <div id="slash-popover" class="slash-popover" style="display:none;"></div>
   <div id="composer">
-    <div id="composer-toolbar">
+    <div id="composer-toolbar" class="composer-toolbar">
       <button id="new-chat-btn" class="toolbar-btn" type="button" title="New chat">+ New chat</button>
       <button id="clear-ctx-btn" class="toolbar-btn" type="button" title="Clear conversation, context files, and input">Clear all</button>
+      <button id="revert-btn" class="toolbar-btn" type="button" title="Revert agent file changes" disabled>Revert</button>
+      <button id="terminal-btn" class="toolbar-btn" type="button" title="Open Harness terminal">Terminal</button>
     </div>
     <div id="context-bar">
       <div id="context-list"></div>
@@ -128,10 +130,6 @@ function injectShell(): void {
         <select id="model-select" class="ctrl-select" title="LLM model"></select>
       </label>
       <button id="config-btn" class="icon-btn" type="button" title="Settings">&#9881;</button>
-    </div>
-    <div id="agent-actions" class="agent-actions">
-      <button id="revert-btn" class="toolbar-btn" type="button" title="Revert agent file changes" disabled>Revert</button>
-      <button id="terminal-btn" class="toolbar-btn" type="button" title="Open Harness terminal">Terminal</button>
     </div>
     <span id="token-footer" class="token-footer"></span>
   </div>
@@ -382,13 +380,17 @@ function syncControlDropdowns(): void {
     providerSelect.appendChild(opt);
   }
   providerSelect.value = state.selectedAgent;
-  const models = state.providerModels[modelAgentKey()] ?? [{ id: 'auto', label: 'LLM Auto' }];
+  const models = modelsForSelection(state.selectedAgent);
   modelSelect.innerHTML = '';
   for (const m of models) {
     const opt = document.createElement('option');
     opt.value = m.id;
     opt.textContent = m.label;
     modelSelect.appendChild(opt);
+  }
+  const validIds = models.map((m) => m.id);
+  if (!validIds.includes(state.selectedModel)) {
+    state.selectedModel = 'auto';
   }
   modelSelect.value = state.selectedModel;
   updateModePlaceholder();
@@ -415,8 +417,10 @@ function onProviderSelectChange(): void {
   const agent = providerSelect.value as AgentSelectionId;
   if (agent === state.selectedAgent) return;
   state.selectedAgent = agent;
+  state.selectedModel = 'auto';
   syncControlDropdowns();
   postMessage({ command: 'selectAgent', payload: { agent } });
+  postMessage({ command: 'selectModel', payload: { model: 'auto' } });
 }
 
 function onModelSelectChange(): void {
@@ -926,7 +930,9 @@ body {
 
 #composer-toolbar {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
   padding: 0 2px 2px;
 }
 .toolbar-btn {
@@ -1043,11 +1049,11 @@ body {
   color: var(--vscode-input-foreground);
   font-family: var(--vscode-font-family);
 }
-.agent-actions {
+.composer-toolbar {
   display: flex;
-  gap: 4px;
   flex-wrap: wrap;
-  padding: 0 2px 4px;
+  gap: 4px;
+  align-items: center;
 }
 
 .pill {

@@ -1,4 +1,4 @@
-import type { AgentId } from '../types';
+import type { AgentId, AgentSelectionId } from '../types';
 
 export interface ProviderModelOption {
   id: string;
@@ -33,3 +33,10 @@ export const PROVIDER_MODEL_OPTIONS: Record<AgentId, ProviderModelOption[]> = {
     { id: 'kiro-default', label: 'Kiro default' },
   ],
 };
+
+export function modelsForSelection(selection: AgentSelectionId): ProviderModelOption[] {
+  if (selection === 'auto') {
+    return [{ id: 'auto', label: 'LLM Auto' }];
+  }
+  return PROVIDER_MODEL_OPTIONS[selection] ?? [{ id: 'auto', label: 'LLM Auto' }];
+}
