@@ -23,6 +23,8 @@
 | Set up Cursor AI | [Agent Connectors → Cursor](Agent-Connectors#cursor-ai-cloud-agents-api) |
 | Use Auto provider | [Auto Routing](Auto-Routing) |
 | Use Specs (SDD) | [SDD Specs](SDD-Specs) |
+| Understand prompt optimization | [Prompt Optimization](Prompt-Optimization) |
+| Track tokens and requests | [User Manual → Spending](User-Manual#6-other-configuration-tabs) |
 | Run without VS Code (CLI only) | [Dual Mode](Dual-Mode) |
 | Fix errors | [Troubleshooting](Troubleshooting) |
 
@@ -41,6 +43,7 @@ VS Code Extension (UI)  ←→  CLI daemon (IPC)  ←→  Agent connectors
 1. **One IDE, many providers** — use Copilot, Claude, Cursor, Devin, and Kiro from VS Code; no separate IDE per AI vendor.
 2. **Spec-Driven Development** — versioned specs in `.harness/specs/`; **Spec+Agent** injects them into the prompt.
 3. **Context engineering** — attach files once; the same context follows you when you switch provider.
+4. **Prompt optimization** — built-in pipeline for **token efficiency** and **answer quality** on every provider ([details](Prompt-Optimization)).
 
 - **Extension** — chat sidebar, spec manager, configuration panel
 - **CLI** — all file I/O, authentication, agent routing (bundled inside the `.vsix`)

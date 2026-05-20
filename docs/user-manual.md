@@ -72,6 +72,10 @@ For GitHub with Copilot Agent: `run_git` / `run_gh` tools (needs `gh auth login`
 
 **Harness of AI: Open Configuration** → **Agents** → **Configure** each provider → **Test Connection**.
 
+**Workspace** tab — **Prompt optimization** (on by default): trims history, dedupes messages, caps context file size, and injects quality rules so prompts use fewer tokens and get more focused answers on every provider. See [prompt-optimization.md](prompt-optimization.md).
+
+**Spending** tab — estimated requests and tokens per provider after each chat turn (`.harness/usage-stats.json`).
+
 ---
 
 ## 5. API servers
@@ -85,3 +89,4 @@ Built-in endpoints for Copilot, Devin, and Cursor; optional custom OpenAI-compat
 - [starter-kit.md](starter-kit.md) — quick install
 - [user-guide.md](user-guide.md) — full reference
 - [why-harness.md](why-harness.md) — benefits of a single interaction model
+- [prompt-optimization.md](prompt-optimization.md) — efficiency and quality pipeline

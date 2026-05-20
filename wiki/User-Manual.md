@@ -89,8 +89,19 @@ In configuration, open the **API Servers** tab:
 | Tab | Purpose |
 |-----|---------|
 | **MCP** | Connect Model Context Protocol servers (stdio or HTTP) |
-| **Workspace** | Default workspace path, default agent, prompt optimization |
+| **Workspace** | Default workspace path, default agent, **prompt optimization** (see below) |
 | **Spending** | Token and request usage per provider |
+
+### Prompt optimization (Workspace tab)
+
+Enabled by default. Harness optimizes every outgoing prompt **before** routing:
+
+- **Efficiency** — trims history (24 messages), dedupes repeated user lines, caps context files (12 000 chars), merges duplicate system text
+- **Quality** — injects a response contract (goal first, minimal diffs, mode-specific rules for Ask / Agent / Spec+Agent)
+
+Works on **all** providers. Tune via `harness.promptOptimization.*` or the checkbox in Workspace.
+
+See [Prompt Optimization](Prompt-Optimization) and use **Spending** to compare estimated tokens over time.
 
 ---
 

@@ -49,13 +49,37 @@ Details: [Context and Specs](Context-and-Specs).
 
 ---
 
+## Prompt optimization (efficiency + quality)
+
+Every message passes through Harness’s **optimization pipeline** before it reaches Copilot, Cursor, Claude, Devin, or Kiro.
+
+**Efficiency**
+
+- Trim chat history to recent turns (default 24)
+- Remove duplicate user messages and empty assistant placeholders
+- Cap each context file (default 12 000 characters) while keeping head and tail
+- Merge duplicate system guidance into one block
+
+**Quality**
+
+- Inject a **response contract**: answer the goal first, structured bullets, minimal code diffs
+- **Mode-aware hints** for Ask, Agent, and Spec+Agent (plans, spec authority, no unsolicited edits)
+- Same rules on **every provider** — switching pills does not drop your standards
+
+**On by default.** Configure in [Configuration → Workspace](Configuration) or read [Prompt Optimization](Prompt-Optimization).
+
+Use [Spending](User-Manual#6-other-configuration-tabs) to see estimated token impact over time.
+
+---
+
 ## Together in one workflow
 
 1. **Specs** — what the agent must follow (SDD)
 2. **Context** — which files matter (context engineering)
-3. **Provider** — who answers (Copilot, Claude, … or Auto)
+3. **Optimization** — trim and structure prompts for efficiency and quality
+4. **Provider** — who answers (Copilot, Claude, … or Auto)
 
-All three in the Harness sidebar — no IDE hopping.
+All four in the Harness sidebar — no IDE hopping.
 
 ---
 

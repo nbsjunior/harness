@@ -59,6 +59,8 @@ Crucially, context is **provider-agnostic**:
 2. Ask Copilot a question
 3. Switch to **Claude** for a deeper refactor — **the same context** is still attached
 
+Harness also **optimizes** prompts before routing (history trim, dedupe, file caps, quality contract) — see [prompt-optimization.md](prompt-optimization.md).
+
 You are not re-uploading files in a different product; Harness carries the engineering context across providers.
 
 ---

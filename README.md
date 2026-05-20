@@ -24,7 +24,9 @@ Today most teams use several AI tools. Each has its own window, login, and conte
 |---------|----------------|
 | **Single chat panel** | Copilot, Claude, Cursor, Devin, and Kiro from one composer — switch with a pill or **Auto** routing. |
 | **Shared context** | Attach files once (**Add to Harness of AI Context**). The same chips go to **every** provider on the next message. |
-| **One setup flow** | API keys, MCP servers, workspace defaults, and spending — one configuration panel (plus a dedicated **User Manual** tab in the app). |
+| **Spending dashboard** | See **requests**, **tokens in/out**, and **agent time** per provider — plus recent chat turns — in one **Spending** tab (workspace-local). |
+| **Prompt optimization** | Built-in pipeline trims history, dedupes messages, caps context files, and injects quality rules — **fewer tokens**, **better answers** on every provider. |
+| **One setup flow** | API keys, MCP servers, workspace defaults, and usage stats — one configuration panel (plus a dedicated **User Manual** tab in the app). |
 | **Spec-Driven Development** | Skills and workflows in `.harness/specs/`; **Spec+Agent** injects them before the agent runs. |
 | **Same CLI under the hood** | Extension and standalone CLI share routing, auth, and file I/O — no duplicate logic. |
 
@@ -83,15 +85,73 @@ Harness of AI is a VSCode extension that acts as a **Meta-Agent Orchestrator**: 
 
 | Feature | Description |
 |---|---|
+| **Spending & usage** | Track **calls**, **tokens (in/out)**, and **duration** per provider; summary cards + recent turns — see [Spending](#spending--usage-tracking) |
+| **Prompt optimization** | Pre-route pipeline for **efficiency** (dedupe, history trim, file caps) and **quality** (response contract, mode hints) — see [Prompt optimization](#prompt-optimization) |
 | **Multi-provider chat** | Copilot, Claude, Cursor, Devin, Kiro — one UI; switch with a pill or **Auto** routing |
 | **Chat Sidebar** | Conversational interface with streaming responses and message history |
 | **Context engineering** | Right-click → *Add to Harness of AI Context*; chips above composer; shared across providers |
 | **Spec Manager (SDD)** | Browse, create and edit specs (Skills, Tools, Workflows) in `.harness/specs/` |
 | **Spec+Agent mode** | Inject active specs as system context before agent runs (Copilot) |
-| **Configuration Panel** | API keys and endpoints for all providers in one place |
+| **Configuration Panel** | Agents, MCP, workspace, and **Spending** — API keys and endpoints in one place |
 | **CLI Orchestrator** | Node.js daemon: file I/O, spec parsing, agent routing (bundled in `.vsix`) |
 | **MCP Support** | Connect Model Context Protocol servers (stdio or HTTP) |
 | **Auto-reconnect** | CLI daemon restarts automatically if it crashes |
+
+---
+
+## Spending & usage tracking
+
+When you use multiple AI providers, it is easy to lose track of how much each one is used. Harness records usage **per workspace** after every chat turn and shows it in the configuration UI.
+
+**Open:** `Ctrl+Shift+P` → **Harness of AI: Open Configuration** → **Spending** tab.
+
+| What you see | Details |
+|--------------|---------|
+| **Summary cards** | Total tokens, total requests, total agent time, active workspace |
+| **By provider** | Copilot, Cursor, Claude, Devin, Kiro — requests, tokens (total and in/out), cumulative duration |
+| **Recent turns** | Last messages with timestamp, provider, tokens, duration, and mode (Ask / Agent / Spec+Agent) |
+
+Data is stored in **`.harness/usage-stats.json`** (created on first chat). Token counts are **estimates** (~4 characters per token) from prompt and response text, so you can compare providers even when an API does not return official usage headers.
+
+**Actions:** **Refresh** reloads stats from disk; **Reset stats** clears the workspace file (with confirmation).
+
+Use this view to spot which provider you use most, whether Agent mode drives higher token use, and when to switch providers before hitting vendor quotas (for example Copilot HTTP 429).
+
+Pair with **prompt optimization** (below) to reduce tokens before they show up here.
+
+---
+
+## Prompt optimization
+
+Before any provider sees your message, Harness runs a **prompt engineering pipeline** (`optimizeMessagesForRouting`). It is **on by default** for every provider — not Copilot-only.
+
+**Configure:** `Ctrl+Shift+P` → **Harness of AI: Open Configuration** → **Workspace** → *Prompt optimization (token efficiency)*.
+
+### Efficiency (fewer tokens)
+
+| Technique | Effect |
+|-----------|--------|
+| **History trim** | Keeps the last 24 non-system messages (configurable) — long threads stop growing without bound |
+| **Dedupe** | Removes consecutive duplicate user messages |
+| **Prune** | Drops empty assistant placeholders |
+| **Merge guidance** | One system block instead of stacked duplicates |
+| **Context file cap** | Truncates each attached file at 12 000 chars (head + tail preserved) with a clear notice |
+| **Normalize** | Strips trailing spaces and excessive blank lines |
+
+### Quality (better answers)
+
+| Technique | Effect |
+|-----------|--------|
+| **Response contract** | Goal first; bullets for lists; no repeating the question or pasted context verbatim |
+| **Code discipline** | Minimal diffs and paths — no full-file dumps unless you ask |
+| **Mode hints** | Ask = Q&A; Agent = focused edits; Spec+Agent = specs are authoritative |
+| **Agent planning** | Short plan, small steps, self-check before finish (Agent / Spec+Agent) |
+
+Because guidance is **provider-agnostic**, switching from Copilot to Claude or Cursor keeps the same efficiency and quality rules.
+
+**Settings:** `harness.promptOptimization.enabled`, `maxContextCharsPerFile`, `maxHistoryMessages`.
+
+Full reference: [docs/prompt-optimization.md](docs/prompt-optimization.md) · Wiki: [Prompt Optimization](https://github.com/nbsjunior/harness/wiki/Prompt-Optimization)
 
 ---
 
@@ -204,6 +264,16 @@ Set an API key for at least one agent. The easiest to start is **GitHub Copilot*
 ### 3. Chat
 
 Click the **Harness icon** in the Activity Bar, type a message, press **Enter**.
+
+### 4. Check usage (Spending)
+
+After a few messages:
+
+```
+Ctrl+Shift+P → Harness of AI: Open Configuration → Spending
+```
+
+You will see request counts and estimated tokens **per provider**, plus a short history of recent turns.
 
 ---
 
@@ -448,7 +518,8 @@ We welcome PRs, docs, tests, and new agent connectors. See [CONTRIBUTING.md](CON
 ## Roadmap
 
 - [ ] Session persistence across VSCode restarts
-- [ ] Token usage tracking and budget alerts
+- [x] Token and request usage tracking (Spending tab + `.harness/usage-stats.json`)
+- [ ] Budget alerts and spending limits per provider
 - [ ] Spec auto-discovery from repository structure
 - [ ] Multi-agent parallel execution (fan-out)
 - [ ] GitHub Actions integration for CI agent runs
