@@ -374,12 +374,34 @@ export class AgentRouter {
     const cfg = req.config.cursor;
     const mode = req.mode ?? 'ask';
 
-    // Cursor provider always uses Cursor Cloud API (never GitHub Copilot).
-    // Local workspace file edits (Agent tool loop) are only available with provider **Copilot**.
     if (mode === 'agent' || mode === 'spec+agent') {
+      const execution = readCursorAgentExecution();
+      const copilotReady = checkAgentReadiness('copilot', req.config).ready;
+
+      const useLocal =
+        execution === 'local' || (execution === 'auto' && copilotReady);
+
+      if (useLocal) {
+        if (!copilotReady) {
+          req.onError(
+            'Cursor Agent (local workspace) needs GitHub Copilot configured. ' +
+              'Run `gh auth login` with the copilot scope, or set harness.cursor.agentExecution to "cloud" in settings.',
+          );
+          return;
+        }
+        req.onChunk(
+          '**[Harness of AI]** Cursor + Agent: editing **your VS Code workspace** locally ' +
+            '(read/write/search). **Live Edits** will show each file change.\n\n',
+        );
+        await this.routeLocalWorkspaceAgent(req);
+        return;
+      }
+
       req.onChunk(
-        '**[Harness of AI]** Cursor **Agent** runs on **Cursor Cloud** (api.cursor.com). ' +
-          'To edit files directly in this VS Code workspace, choose provider **Copilot** with Agent mode.\n\n',
+        '**[Harness of AI]** Cursor Agent is using **Cursor Cloud** (remote). ' +
+          'It cannot change files in your open VS Code folder — **Live Edits stays empty**. ' +
+          'For local `helloworld.html` edits: set **harness.cursor.agentExecution** to `auto` or `local` ' +
+          'and configure Copilot (`gh auth login`), or pick provider **Copilot** + Agent.\n\n',
       );
     }
 
@@ -1028,4 +1050,24 @@ async function executeCopilotTool(
   } catch (err) {
     return `Tool execution error: ${(err as Error).message}`;
   }
+}
+
+type CursorAgentExecution = 'local' | 'cloud' | 'auto';
+
+/** From HARNESS_SETTINGS_JSON — extension bridges harness.cursor.agentExecution. */
+function readCursorAgentExecution(): CursorAgentExecution {
+  const raw = process.env['HARNESS_SETTINGS_JSON'];
+  if (!raw?.trim()) {
+    return 'auto';
+  }
+  try {
+    const bridge = JSON.parse(raw) as { cursor?: { agentExecution?: string } };
+    const v = bridge.cursor?.agentExecution;
+    if (v === 'local' || v === 'cloud' || v === 'auto') {
+      return v;
+    }
+  } catch {
+    // ignore
+  }
+  return 'auto';
 }

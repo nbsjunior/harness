@@ -60,7 +60,7 @@ export const AGENT_DESCRIPTORS: Record<AgentId, AgentDescriptor> = {
     id: 'cursor',
     label: 'Cursor AI',
     description:
-      'Cursor Cloud Agents API (api.cursor.com) — not IDE chat; best for repo tasks; use Ask mode or Copilot for quick Q&A',
+      'Cursor — Ask uses Cloud API; Agent edits your VS Code workspace locally when Copilot is configured (Live Edits)',
     supportsStreaming: true,
     supportsMcp: false,
   },
