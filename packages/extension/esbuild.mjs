@@ -76,6 +76,20 @@ const configWebviewConfig = {
 };
 
 /** @type {esbuild.BuildOptions} */
+const liveEditsWebviewConfig = {
+  ...commonOptions,
+  entryPoints: ['src/webview/live-edits/main.ts'],
+  platform: 'browser',
+  format: 'esm',
+  target: 'es2022',
+  outfile: 'dist/webview/live-edits/main.js',
+  external: [],
+  define: {
+    'process.env.NODE_ENV': isProduction ? '"production"' : '"development"',
+  },
+};
+
+/** @type {esbuild.BuildOptions} */
 const manualWebviewConfig = {
   ...commonOptions,
   entryPoints: ['src/webview/manual/main.ts'],
@@ -91,12 +105,13 @@ const manualWebviewConfig = {
 
 async function build() {
   if (isWatch) {
-    const [extCtx, chatCtx, specCtx, configCtx, manualCtx] = await Promise.all([
+    const [extCtx, chatCtx, specCtx, configCtx, manualCtx, liveEditsCtx] = await Promise.all([
       esbuild.context(extensionConfig),
       esbuild.context(chatWebviewConfig),
       esbuild.context(specWebviewConfig),
       esbuild.context(configWebviewConfig),
       esbuild.context(manualWebviewConfig),
+      esbuild.context(liveEditsWebviewConfig),
     ]);
 
     await Promise.all([
@@ -105,6 +120,7 @@ async function build() {
       specCtx.watch(),
       configCtx.watch(),
       manualCtx.watch(),
+      liveEditsCtx.watch(),
     ]);
 
     console.log('[esbuild] Watching for changes...');
@@ -115,6 +131,7 @@ async function build() {
       esbuild.build(specWebviewConfig),
       esbuild.build(configWebviewConfig),
       esbuild.build(manualWebviewConfig),
+      esbuild.build(liveEditsWebviewConfig),
     ]);
 
     console.log('[esbuild] Build complete.');

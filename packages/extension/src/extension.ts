@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { ChatViewProvider } from './providers/ChatViewProvider';
+import { LiveEditsViewProvider } from './providers/LiveEditsViewProvider';
 import { SpecManagerProvider } from './panels/SpecManagerPanel';
 import { ConfigurationPanel } from './panels/ConfigurationPanel';
 import { UserManualPanel } from './panels/UserManualPanel';
@@ -26,8 +27,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const snapshotProvider = HarnessSnapshotProvider.register(context);
   const terminalService = new AgentTerminalService();
   let chatViewProvider!: ChatViewProvider;
+  let liveEditsProvider!: LiveEditsViewProvider;
   const editTracker = new AgentEditTracker(snapshotProvider, (sessionId, edits) => {
     chatViewProvider?.notifyLiveEdits(sessionId, edits);
+    liveEditsProvider?.update(edits, editTracker.hasPendingRevert(sessionId));
   });
 
   // Start IPC daemon, then run lightweight workspace bootstrap in a separate process.
@@ -68,6 +71,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     terminalService,
   );
 
+  liveEditsProvider = new LiveEditsViewProvider(context.extensionUri);
+
   const specManagerProvider = new SpecManagerProvider(
     context.extensionUri,
     cliService,
@@ -78,6 +83,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.window.registerWebviewViewProvider(
       ChatViewProvider.VIEW_ID,
       chatViewProvider,
+      { webviewOptions: { retainContextWhenHidden: true } },
+    ),
+    vscode.window.registerWebviewViewProvider(
+      LiveEditsViewProvider.VIEW_ID,
+      liveEditsProvider,
       { webviewOptions: { retainContextWhenHidden: true } },
     ),
     vscode.window.registerWebviewViewProvider(
@@ -118,6 +128,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Clear chat + context (view title toolbar — same as in-webview "Clear all")
     vscode.commands.registerCommand('harness.clearContext', () => {
       chatViewProvider.clearChatAndContext();
+    }),
+
+    vscode.commands.registerCommand('harness.revertAgentChanges', () => {
+      void chatViewProvider.revertAgentChanges();
+    }),
+
+    vscode.commands.registerCommand('harness.liveEdits.focus', async () => {
+      await vscode.commands.executeCommand('harness.liveEditsView.focus');
     }),
 
     // Show current context items

@@ -2,7 +2,7 @@
   "name": "harness-vscode",
   "displayName": "Harness of AI — Meta-Agent Orchestrator",
   "description": "One VS Code sidebar for Copilot, Claude, Cursor, Devin, and Kiro — with Spec-Driven Development and shared file context. No IDE switching per provider.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "publisher": "harness-ai",
   "license": "MIT",
@@ -61,6 +61,12 @@
         },
         {
           "type": "webview",
+          "id": "harness.liveEditsView",
+          "name": "Live Edits",
+          "contextualTitle": "Harness Live Edits"
+        },
+        {
+          "type": "webview",
           "id": "harness.specView",
           "name": "Spec Manager",
           "contextualTitle": "Harness of AI Spec Manager"
@@ -115,6 +121,18 @@
         "title": "Clear Chat & Context",
         "category": "Harness of AI",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "harness.revertAgentChanges",
+        "title": "Revert Agent File Changes",
+        "category": "Harness of AI",
+        "icon": "$(discard)"
+      },
+      {
+        "command": "harness.liveEdits.focus",
+        "title": "Focus Live Edits Panel",
+        "category": "Harness of AI",
+        "icon": "$(diff)"
       },
       {
         "command": "harness.showContext",

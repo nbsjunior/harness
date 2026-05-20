@@ -349,13 +349,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         break;
       }
 
-      case 'revertAgentChanges': {
-        void this.editTracker.revertSession(this.activeSessionId).then(() => {
-          this.postRevertState();
-          this.post({ command: 'liveEditsUpdated', payload: { edits: [] } });
-        });
+      case 'revertAgentChanges':
+        void this.revertAgentChanges();
         break;
-      }
 
       case 'focusAgentTerminal':
         this.terminalService.focus();
@@ -421,6 +417,13 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       default:
         this.output.warn(`Unknown webview command: ${msg.command}`);
     }
+  }
+
+  async revertAgentChanges(): Promise<void> {
+    await this.editTracker.revertSession(this.activeSessionId);
+    this.liveEdits = [];
+    this.post({ command: 'liveEditsUpdated', payload: { edits: [] } });
+    this.postRevertState();
   }
 
   /** Called by extension when live edits change (diff UI). */
