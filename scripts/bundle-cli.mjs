@@ -58,43 +58,167 @@ if (fs.existsSync(vendorSrc)) {
   console.warn('[bundle-cli] vendor/aidlc-rules missing — run aidlc rules setup in packages/cli/vendor');
 }
 
-/** Copy @cursor/sdk (+ platform native package) so dynamic import resolves from cli/dist/index.js */
-function copyCursorSdkVendor() {
-  const cursorSrc = path.join(root, 'node_modules', '@cursor');
-  const cursorDest = path.join(root, 'packages', 'extension', 'cli', 'node_modules', '@cursor');
-  if (!fs.existsSync(cursorSrc)) {
-    console.warn('[bundle-cli] node_modules/@cursor missing — run npm install at repo root');
-    return;
+/** Parse `name` or `@scope/name` from an npm version range spec. */
+function parsePackageName(spec) {
+  if (!spec || typeof spec !== 'string') {
+    return '';
   }
-  copyDirRecursive(cursorSrc, cursorDest);
+  if (spec.startsWith('@')) {
+    const slash = spec.indexOf('/', 1);
+    if (slash === -1) {
+      return spec;
+    }
+    const at = spec.indexOf('@', slash + 1);
+    return at === -1 ? spec : spec.slice(0, at);
+  }
+  const at = spec.indexOf('@');
+  return at === -1 ? spec : spec.slice(0, at);
+}
 
-  const sdkRoot = path.join(cursorSrc, 'sdk');
-  const pkgPath = path.join(sdkRoot, 'package.json');
-  if (!fs.existsSync(pkgPath)) {
+/** Only bundle the @cursor/sdk-* optional native package for the build host OS/arch. */
+function cursorPlatformPackageForHost(depName) {
+  const arch = process.arch === 'x64' ? 'x64' : process.arch === 'arm64' ? 'arm64' : process.arch;
+  const platform =
+    process.platform === 'win32'
+      ? 'win32'
+      : process.platform === 'darwin'
+        ? 'darwin'
+        : process.platform === 'linux'
+          ? 'linux'
+          : process.platform;
+  return depName === `@cursor/sdk-${platform}-${arch}`;
+}
+
+function packageDir(nmRoot, name) {
+  if (!name) {
+    return null;
+  }
+  if (name.startsWith('@')) {
+    const parts = name.split('/');
+    if (parts.length !== 2) {
+      return null;
+    }
+    return path.join(nmRoot, parts[0], parts[1]);
+  }
+  return path.join(nmRoot, name);
+}
+
+/** Collect transitive runtime deps for @cursor/sdk (hoisted + nested package.json). */
+function collectCursorSdkDependencyNames(nmRoot) {
+  const names = new Set();
+  const queue = ['@cursor/sdk'];
+  const visitedDirs = new Set();
+
+  function enqueue(name) {
+    if (!name || names.has(name)) {
+      return;
+    }
+    names.add(name);
+    queue.push(name);
+  }
+
+  function walkPackageJson(pkgDir) {
+    if (!pkgDir || visitedDirs.has(pkgDir)) {
+      return;
+    }
+    const pkgPath = path.join(pkgDir, 'package.json');
+    if (!fs.existsSync(pkgPath)) {
+      return;
+    }
+    visitedDirs.add(pkgDir);
+
+    let pkg;
+    try {
+      pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    } catch {
+      return;
+    }
+
+    for (const section of ['dependencies', 'optionalDependencies', 'peerDependencies']) {
+      const block = pkg[section];
+      if (!block || typeof block !== 'object') {
+        continue;
+      }
+      for (const depName of Object.keys(block)) {
+        if (
+          section === 'optionalDependencies' &&
+          depName.startsWith('@cursor/sdk-') &&
+          !cursorPlatformPackageForHost(depName)
+        ) {
+          continue;
+        }
+        enqueue(parsePackageName(depName));
+      }
+    }
+
+    const nestedNm = path.join(pkgDir, 'node_modules');
+    if (!fs.existsSync(nestedNm)) {
+      return;
+    }
+    for (const entry of fs.readdirSync(nestedNm, { withFileTypes: true })) {
+      if (entry.name === '.bin') {
+        continue;
+      }
+      if (entry.name.startsWith('@')) {
+        const scopePath = path.join(nestedNm, entry.name);
+        for (const sub of fs.readdirSync(scopePath, { withFileTypes: true })) {
+          if (sub.isDirectory()) {
+            walkPackageJson(path.join(scopePath, sub.name));
+          }
+        }
+      } else if (entry.isDirectory()) {
+        walkPackageJson(path.join(nestedNm, entry.name));
+      }
+    }
+  }
+
+  while (queue.length > 0) {
+    const name = queue.shift();
+    walkPackageJson(packageDir(nmRoot, name));
+  }
+
+  return names;
+}
+
+/** Copy @cursor/sdk and full dependency tree so dynamic import works inside the .vsix */
+function copyCursorSdkVendor() {
+  const nmRoot = path.join(root, 'node_modules');
+  const destNm = path.join(root, 'packages', 'extension', 'cli', 'node_modules');
+
+  if (!fs.existsSync(path.join(nmRoot, '@cursor', 'sdk'))) {
+    console.warn('[bundle-cli] node_modules/@cursor/sdk missing — run npm install at repo root');
     return;
   }
-  const sdkPkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
-  const optional = sdkPkg.optionalDependencies ?? {};
-  for (const dep of Object.keys(optional)) {
-    if (!dep.startsWith('@cursor/sdk-')) {
+
+  const depNames = collectCursorSdkDependencyNames(nmRoot);
+  let copied = 0;
+  const missing = [];
+
+  for (const name of [...depNames].sort()) {
+    const src = packageDir(nmRoot, name);
+    const dest = packageDir(destNm, name);
+    if (!src || !fs.existsSync(path.join(src, 'package.json'))) {
+      missing.push(name);
       continue;
     }
-    const depSrc = path.join(root, 'node_modules', dep);
-    if (fs.existsSync(depSrc)) {
-      const depDest = path.join(root, 'packages', 'extension', 'cli', 'node_modules', dep);
-      copyDirRecursive(depSrc, depDest);
-    }
+    copyDirRecursive(src, dest);
+    copied += 1;
   }
 
-  for (const dep of ['@bufbuild/protobuf', '@connectrpc/connect', '@connectrpc/connect-node', 'sqlite3', 'zod']) {
-    const depSrc = path.join(root, 'node_modules', dep);
-    if (fs.existsSync(depSrc)) {
-      const depDest = path.join(root, 'packages', 'extension', 'cli', 'node_modules', dep);
-      copyDirRecursive(depSrc, depDest);
-    }
+  const optionalPlatform = missing.filter((n) => n.startsWith('@cursor/sdk-'));
+  const requiredMissing = missing.filter((n) => !n.startsWith('@cursor/sdk-'));
+  if (optionalPlatform.length > 0) {
+    console.log(
+      `[bundle-cli] Optional Cursor platform packages skipped (not installed on this OS): ${optionalPlatform.join(', ')}`,
+    );
+  }
+  if (requiredMissing.length > 0) {
+    console.warn('[bundle-cli] Cursor SDK deps not found at repo root:', requiredMissing.join(', '));
   }
 
-  console.log('[bundle-cli] Copied @cursor/sdk vendor → packages/extension/cli/node_modules/@cursor/');
+  console.log(
+    `[bundle-cli] Copied @cursor/sdk vendor (${copied} packages) → packages/extension/cli/node_modules/`,
+  );
 }
 
 copyCursorSdkVendor();
