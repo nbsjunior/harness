@@ -1,8 +1,8 @@
-# Harness Wiki
+# Harness of AI Wiki
 
-**Harness** is a meta-agent orchestrator for VS Code: **one IDE**, **many AI providers** (Copilot, Claude, Cursor, Devin, Kiro), plus **Spec-Driven Development** and **context engineering** in the same sidebar — without switching editors per vendor.
+**Harness of AI** is a meta-agent orchestrator for VS Code: **one IDE**, **many AI providers** (Copilot, Claude, Cursor, Devin, Kiro), plus **Spec-Driven Development** and **context engineering** in the same sidebar — without switching editors per vendor.
 
-**[Why Harness?](Why-Harness)** — the main advantages explained.
+**[Manual de uso (com prints)](User-Manual)** · **[Why Harness of AI?](Why-Harness)**
 
 ---
 
@@ -10,8 +10,8 @@
 
 | I want to… | Start here |
 |------------|------------|
-| Understand why to use Harness | [Why Harness](Why-Harness) |
-
+| Manual ilustrado (PT) | **[User Manual](User-Manual)** |
+| Understand why to use Harness of AI | [Why Harness](Why-Harness) |
 | Install and send my first message | [Getting Started](Getting-Started) |
 | Use the chat UI (providers, modes) | [Chat Interface](Chat-Interface) |
 | Configure API keys | [Configuration](Configuration) |
@@ -24,7 +24,7 @@
 
 ---
 
-## What is Harness?
+## What is Harness of AI?
 
 ```
 VS Code Extension (UI)  ←→  CLI daemon (IPC)  ←→  Agent connectors

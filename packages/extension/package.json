@@ -1,8 +1,8 @@
 {
   "name": "harness-vscode",
-  "displayName": "Harness — Meta-Agent Orchestrator",
+  "displayName": "Harness of AI — Meta-Agent Orchestrator",
   "description": "One VS Code sidebar for Copilot, Claude, Cursor, Devin, and Kiro — with Spec-Driven Development and shared file context. No IDE switching per provider.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "publisher": "harness-ai",
   "license": "MIT",
@@ -46,7 +46,7 @@
       "activitybar": [
         {
           "id": "harness-sidebar",
-          "title": "Harness",
+          "title": "Harness of AI",
           "icon": "resources/harness.svg"
         }
       ]
@@ -57,57 +57,57 @@
           "type": "webview",
           "id": "harness.chatView",
           "name": "Chat",
-          "contextualTitle": "Harness Chat"
+          "contextualTitle": "Harness of AI Chat"
         },
         {
           "type": "webview",
           "id": "harness.specView",
           "name": "Spec Manager",
-          "contextualTitle": "Harness Spec Manager"
+          "contextualTitle": "Harness of AI Spec Manager"
         }
       ]
     },
     "commands": [
       {
         "command": "harness.addToContext",
-        "title": "Add to Harness Context",
-        "category": "Harness",
+        "title": "Add to Harness of AI Context",
+        "category": "Harness of AI",
         "icon": "$(add)"
       },
       {
         "command": "harness.removeFromContext",
-        "title": "Remove from Harness Context",
-        "category": "Harness",
+        "title": "Remove from Harness of AI Context",
+        "category": "Harness of AI",
         "icon": "$(remove)"
       },
       {
         "command": "harness.runAgent",
         "title": "Run Agent",
-        "category": "Harness",
+        "category": "Harness of AI",
         "icon": "$(play)"
       },
       {
         "command": "harness.openConfig",
         "title": "Open Configuration",
-        "category": "Harness",
+        "category": "Harness of AI",
         "icon": "$(settings-gear)"
       },
       {
         "command": "harness.initWorkspace",
         "title": "Initialize Workspace",
-        "category": "Harness",
+        "category": "Harness of AI",
         "icon": "$(new-folder)"
       },
       {
         "command": "harness.newSpec",
         "title": "New Spec / Skill",
-        "category": "Harness",
+        "category": "Harness of AI",
         "icon": "$(file-add)"
       },
       {
         "command": "harness.clearContext",
         "title": "Clear Chat & Context",
-        "category": "Harness",
+        "category": "Harness of AI",
         "icon": "$(clear-all)"
       },
       {
@@ -118,25 +118,25 @@
       {
         "command": "harness.check.getGoat",
         "title": "Check getGoat",
-        "category": "Harness",
+        "category": "Harness of AI",
         "icon": "$(pulse)"
       },
       {
         "command": "harness.copilotLogin",
         "title": "Login: GitHub Copilot",
-        "category": "Harness",
+        "category": "Harness of AI",
         "icon": "$(account)"
       },
       {
         "command": "harness.aidlcInstall",
         "title": "Install AI-DLC Workflow (Kiro)",
-        "category": "Harness",
+        "category": "Harness of AI",
         "icon": "$(cloud-download)"
       },
       {
         "command": "harness.setup",
         "title": "Run Setup (Kiro CLI + AI-DLC)",
-        "category": "Harness",
+        "category": "Harness of AI",
         "icon": "$(rocket)"
       }
     ],
@@ -216,12 +216,12 @@
       ]
     },
     "configuration": {
-      "title": "Harness",
+      "title": "Harness of AI",
       "properties": {
         "harness.defaultWorkspace": {
           "type": "string",
           "default": "",
-          "description": "Override workspace root for Harness CLI and context (absolute path). Empty = use the opened VS Code workspace folder.",
+          "description": "Override workspace root for Harness of AI CLI and context (absolute path). Empty = use the opened VS Code workspace folder.",
           "scope": "resource"
         },
         "harness.specsDirectory": {
@@ -272,13 +272,13 @@
             "kiro"
           ],
           "default": "auto",
-          "description": "Default provider in chat (auto = Harness picks the best agent per message).",
+          "description": "Default provider in chat (auto = Harness of AI picks the best agent per message).",
           "scope": "resource"
         },
         "harness.cliPath": {
           "type": "string",
           "default": "",
-          "description": "Absolute path to the Harness CLI binary. Leave empty to use the bundled CLI.",
+          "description": "Absolute path to the Harness of AI CLI binary. Leave empty to use the bundled CLI.",
           "scope": "machine"
         },
         "harness.connectors.copilot.token": {
@@ -435,7 +435,7 @@
         "harness.telemetry.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Enable anonymous usage telemetry to help improve Harness.",
+          "description": "Enable anonymous usage telemetry to help improve Harness of AI.",
           "scope": "machine"
         }
       }
@@ -443,13 +443,13 @@
     "walkthroughs": [
       {
         "id": "harness.gettingStarted",
-        "title": "Getting Started with Harness",
+        "title": "Getting Started with Harness of AI",
         "description": "Set up your AI agent orchestrator in minutes.",
         "steps": [
           {
             "id": "harness.gettingStarted.init",
             "title": "Initialize your workspace",
-            "description": "Run **Harness: Initialize Workspace** to create the `.harness/` directory with example specs.\n[Initialize Workspace](command:harness.initWorkspace)",
+            "description": "Run **Harness of AI: Initialize Workspace** to create the `.harness/` directory with example specs.\n[Initialize Workspace](command:harness.initWorkspace)",
             "completionEvents": [
               "onCommand:harness.initWorkspace"
             ]
@@ -457,7 +457,7 @@
           {
             "id": "harness.gettingStarted.configure",
             "title": "Configure agent connectors",
-            "description": "Add your API keys in Harness settings.\n[Open Configuration](command:harness.openConfig)",
+            "description": "Add your API keys in Harness of AI settings.\n[Open Configuration](command:harness.openConfig)",
             "completionEvents": [
               "onCommand:harness.openConfig"
             ]
@@ -465,7 +465,7 @@
           {
             "id": "harness.gettingStarted.chat",
             "title": "Start chatting with your agent",
-            "description": "Click the Harness icon in the Activity Bar and start a conversation.",
+            "description": "Click the Harness of AI icon in the Activity Bar and start a conversation.",
             "completionEvents": [
               "onView:harness.chatView"
             ]

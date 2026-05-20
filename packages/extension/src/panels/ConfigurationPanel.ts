@@ -45,7 +45,7 @@ export class ConfigurationPanel {
   ) {
     this.panel = vscode.window.createWebviewPanel(
       ConfigurationPanel.VIEW_TYPE,
-      'Harness Configuration',
+      'Harness of AI Configuration',
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -359,7 +359,7 @@ export class ConfigurationPanel {
              style-src ${this.panel.webview.cspSource} 'unsafe-inline';
              font-src ${this.panel.webview.cspSource};
              img-src ${this.panel.webview.cspSource} data:;" />
-  <title>Harness Configuration</title>
+  <title>Harness of AI Configuration</title>
 </head>
 <body>
   <div id="root"></div>

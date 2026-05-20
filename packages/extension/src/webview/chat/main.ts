@@ -21,7 +21,7 @@ marked.setOptions({ breaks: true, gfm: true });
 
 const vscode = acquireVsCodeApi<{ history: ChatMessage[]; agent: AgentSelectionId }>();
 
-const AUTO_META = { short: 'Auto', color: '#a855f7', label: 'Auto (Harness picks provider)' };
+const AUTO_META = { short: 'Auto', color: '#a855f7', label: 'Auto (Harness of AI picks provider)' };
 
 const AGENT_META: Record<AgentId, { short: string; color: string; label: string }> = {
   copilot: { short: 'Copilot', color: '#238636', label: 'GitHub Copilot' },
@@ -216,7 +216,7 @@ function renderMessages(): void {
 function renderEmptyState(): void {
   messagesEl.innerHTML = /* html */`
     <div class="empty-state">
-      <p class="empty-title">Harness</p>
+      <p class="empty-title">Harness of AI</p>
       <p class="empty-sub">Ask a question or describe a change. Pick a provider below.</p>
     </div>`;
 }

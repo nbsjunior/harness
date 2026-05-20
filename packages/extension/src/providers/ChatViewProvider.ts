@@ -439,7 +439,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
              style-src ${webview.cspSource} 'unsafe-inline';
              font-src ${webview.cspSource};
              img-src ${webview.cspSource} data:;" />
-  <title>Harness Chat</title>
+  <title>Harness of AI Chat</title>
   <style>
     :root {
       --container-padding: 12px;

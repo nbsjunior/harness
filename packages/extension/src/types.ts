@@ -30,7 +30,7 @@ export const AUTO_SELECTION_DESCRIPTOR: AutoSelectionDescriptor = {
   id: 'auto',
   label: 'Auto',
   description:
-    'Harness picks the best provider from your prompt (default: Copilot; complex code → Claude; integrations → Claude; specs → Kiro; …)',
+    'Harness of AI picks the best provider from your prompt (default: Copilot; complex code → Claude; integrations → Claude; specs → Kiro; …)',
 };
 
 export interface AgentDescriptor {

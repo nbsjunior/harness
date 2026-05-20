@@ -9,8 +9,8 @@ import { McpClientManager } from './mcp/McpClientManager';
 import type { AgentId, AgentSelectionId } from './types';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  const outputChannel = vscode.window.createOutputChannel('Harness', { log: true });
-  outputChannel.info('Harness extension activating… (View → Output → Harness for full trace)');
+  const outputChannel = vscode.window.createOutputChannel('Harness of AI', { log: true });
+  outputChannel.info('Harness of AI extension activating… (View → Output → Harness of AI for full trace)');
 
   // -------------------------------------------------------------------------
   // Core services
@@ -34,7 +34,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       if (result.stderr) {
         outputChannel.info(result.stderr.trim());
       }
-      outputChannel.info('Harness bootstrap complete (workspace + AI-DLC).');
+      outputChannel.info('Harness of AI bootstrap complete (workspace + AI-DLC).');
     } catch (err) {
       outputChannel.error(`CLI failed to start or bootstrap: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -89,7 +89,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
       await contextProvider.add(target);
       void vscode.window.showInformationMessage(
-        `Added to Harness context: ${path.basename(target.fsPath)}`,
+        `Added to Harness of AI context: ${path.basename(target.fsPath)}`,
       );
       chatViewProvider.notifyContextChanged();
     }),
@@ -112,7 +112,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     vscode.commands.registerCommand('harness.showContext', () => {
       const items = contextProvider.getItems();
       if (items.length === 0) {
-        void vscode.window.showInformationMessage('Harness context is empty.');
+        void vscode.window.showInformationMessage('Harness of AI context is empty.');
         return;
       }
       const labels = items.map((item) => item.label).join('\n• ');
@@ -122,7 +122,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Run agent via Quick Pick
     vscode.commands.registerCommand('harness.runAgent', async () => {
       const agentItems: vscode.QuickPickItem[] = [
-        { label: '$(sparkle) Auto (Harness picks)', description: 'auto' },
+        { label: '$(sparkle) Auto (Harness of AI picks)', description: 'auto' },
         { label: '$(copilot) GitHub Copilot', description: 'copilot' },
         { label: '$(robot) Devin', description: 'devin' },
         { label: '$(sparkle) Cursor AI', description: 'cursor' },
@@ -131,7 +131,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       ];
 
       const chosen = await vscode.window.showQuickPick(agentItems, {
-        title: 'Harness — Select Agent',
+        title: 'Harness of AI — Select Agent',
         placeHolder: 'Choose an agent to run',
       });
 
@@ -166,14 +166,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       try {
         await cliService.start();
         const result = await cliService.runCommand('setup', workspaceFolder ? [workspaceFolder.uri.fsPath] : []);
-        const channel = vscode.window.createOutputChannel('Harness Setup');
+        const channel = vscode.window.createOutputChannel('Harness of AI Setup');
         channel.clear();
         channel.appendLine(result.stdout || result.stderr || 'Setup finished.');
         channel.show();
         if (result.success) {
-          void vscode.window.showInformationMessage('Harness setup complete (Kiro CLI + AI-DLC).');
-        } else {
-          void vscode.window.showWarningMessage('Harness setup finished with warnings. See Output → Harness Setup.');
+          void vscode.window.showInformationMessage('Harness of AI setup complete (Kiro CLI + AI-DLC).');
+          } else {
+          void vscode.window.showWarningMessage('Harness of AI setup finished with warnings. See Output → Harness of AI Setup.');
         }
       } catch (err) {
         void vscode.window.showErrorMessage(
@@ -212,20 +212,20 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     vscode.commands.registerCommand('harness.check.getGoat', async () => {
       const result = await cliService.runCommand('check', ['getGoat']);
-      const channel = vscode.window.createOutputChannel('Harness getGoat');
+      const channel = vscode.window.createOutputChannel('Harness of AI getGoat');
       channel.clear();
       channel.appendLine(result.stderr || result.stdout || 'getGoat completed.');
       channel.show();
       if (!result.success) {
         const action = await vscode.window.showWarningMessage(
-          'Harness getGoat: no agents ready. See Output → Harness getGoat.',
+          'Harness of AI getGoat: no agents ready. See Output → Harness of AI getGoat.',
           'Login GitHub Copilot',
         );
         if (action === 'Login GitHub Copilot') {
           await vscode.commands.executeCommand('harness.copilotLogin');
         }
       } else {
-        void vscode.window.showInformationMessage('Harness getGoat: at least one agent is ready.');
+        void vscode.window.showInformationMessage('Harness of AI getGoat: at least one agent is ready.');
       }
     }),
 
@@ -257,7 +257,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
 
       if (choice.id === 'gh') {
-        const terminal = vscode.window.createTerminal({ name: 'Harness: gh auth login' });
+        const terminal = vscode.window.createTerminal({ name: 'Harness of AI: gh auth login' });
         terminal.show();
         // gh auth refresh adds the copilot scope to existing auth without re-login.
         // Falls back to full login if not yet authenticated.
@@ -298,11 +298,11 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
       await context.secrets.store('harness.connectors.copilot.token', token);
       void vscode.window.showInformationMessage(
-        'GitHub Copilot token saved. Restarting Harness daemon...',
+        'GitHub Copilot token saved. Restarting Harness of AI daemon...',
       );
       cliService.dispose();
       void cliService.start().then(() => {
-        void vscode.window.showInformationMessage('Harness daemon restarted with new token.');
+        void vscode.window.showInformationMessage('Harness of AI daemon restarted with new token.');
       });
     }),
 
@@ -317,7 +317,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       const result = await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: 'Harness: Initializing workspace...',
+          title: 'Harness of AI: Initializing workspace...',
           cancellable: false,
         },
         async () => cliService.runCommand('init', [workspaceFolder.uri.fsPath]),
@@ -325,7 +325,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
       if (result.success) {
         void vscode.window.showInformationMessage(
-          'Harness workspace initialized! `.harness/` directory created.',
+          'Harness of AI workspace initialized! `.harness/` directory created.',
         );
       } else {
         void vscode.window.showErrorMessage(`Initialization failed: ${result.stderr}`);
@@ -348,7 +348,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     outputChannel,
   );
 
-  outputChannel.info('Harness extension activated.');
+  outputChannel.info('Harness of AI extension activated.');
 }
 
 export function deactivate(): void {
