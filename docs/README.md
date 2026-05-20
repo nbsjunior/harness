@@ -23,6 +23,7 @@ Use this index to find the right doc without reading the whole repository.
 | [sdd-specs.md](sdd-specs.md) | Developers | Spec YAML format (Skill / Tool / Workflow). |
 | [copilot-modes.md](copilot-modes.md) | Developers | Copilot Ask / Agent / Spec+Agent behaviour and flow. |
 | [cursor-agent.md](cursor-agent.md) | Developers & users | Cursor Agent local (SDK) vs Cloud; `agentExecution` setting. |
+| [prompt-optimization.md](prompt-optimization.md) | Everyone | Pre-route pipeline — token efficiency and answer quality. |
 | [auto-routing.md](auto-routing.md) | Developers & users | **Auto** provider — routing table and algorithm. |
 | [getting-started.md](getting-started.md) | Developers | Clone, build, run locally. |
 | [user-guide.md](user-guide.md) | End users | Chat, context, specs, configuration UI. |

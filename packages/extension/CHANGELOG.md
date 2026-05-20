@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.7] — 2026-05-19
+
+### Added
+
+- Cursor Agent local edits via `@cursor/sdk` (no GitHub Copilot quota required when Cursor API key is set)
+- Spending tab documentation; prompt optimization pipeline documented in README and wiki
+
+### Changed
+
+- Cursor + Agent defaults to Cursor SDK local workspace path when API key is configured
+- README highlights Spending, prompt optimization efficiency/quality, and Cursor local agent
+
 ## [0.1.0] — 2026-05-18
 
 ### Added
