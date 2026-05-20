@@ -58,4 +58,45 @@ if (fs.existsSync(vendorSrc)) {
   console.warn('[bundle-cli] vendor/aidlc-rules missing — run aidlc rules setup in packages/cli/vendor');
 }
 
+/** Copy @cursor/sdk (+ platform native package) so dynamic import resolves from cli/dist/index.js */
+function copyCursorSdkVendor() {
+  const cursorSrc = path.join(root, 'node_modules', '@cursor');
+  const cursorDest = path.join(root, 'packages', 'extension', 'cli', 'node_modules', '@cursor');
+  if (!fs.existsSync(cursorSrc)) {
+    console.warn('[bundle-cli] node_modules/@cursor missing — run npm install at repo root');
+    return;
+  }
+  copyDirRecursive(cursorSrc, cursorDest);
+
+  const sdkRoot = path.join(cursorSrc, 'sdk');
+  const pkgPath = path.join(sdkRoot, 'package.json');
+  if (!fs.existsSync(pkgPath)) {
+    return;
+  }
+  const sdkPkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+  const optional = sdkPkg.optionalDependencies ?? {};
+  for (const dep of Object.keys(optional)) {
+    if (!dep.startsWith('@cursor/sdk-')) {
+      continue;
+    }
+    const depSrc = path.join(root, 'node_modules', dep);
+    if (fs.existsSync(depSrc)) {
+      const depDest = path.join(root, 'packages', 'extension', 'cli', 'node_modules', dep);
+      copyDirRecursive(depSrc, depDest);
+    }
+  }
+
+  for (const dep of ['@bufbuild/protobuf', '@connectrpc/connect', '@connectrpc/connect-node', 'sqlite3', 'zod']) {
+    const depSrc = path.join(root, 'node_modules', dep);
+    if (fs.existsSync(depSrc)) {
+      const depDest = path.join(root, 'packages', 'extension', 'cli', 'node_modules', dep);
+      copyDirRecursive(depSrc, depDest);
+    }
+  }
+
+  console.log('[bundle-cli] Copied @cursor/sdk vendor → packages/extension/cli/node_modules/@cursor/');
+}
+
+copyCursorSdkVendor();
+
 console.log(`[bundle-cli] Copied CLI → packages/extension/cli/dist/ (${fs.statSync(path.join(destDir, 'index.js')).size} bytes)`);

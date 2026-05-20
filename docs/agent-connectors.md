@@ -121,11 +121,30 @@ connectors:
 
 ### Cursor AI
 
+Harness uses **two paths** depending on chat mode and settings:
+
+| Path | When | Local VS Code files |
+|------|------|---------------------|
+| **Cursor SDK local** | Agent / Spec+Agent + API key + `agentExecution` `auto` or `local` | Yes |
+| **Cursor Cloud API v1** | Ask mode, or `agentExecution` `cloud` | No |
+
+Full details: [cursor-agent.md](cursor-agent.md).
+
+#### Local Agent (Cursor SDK)
+
+**Package:** `@cursor/sdk` (loaded at runtime from `extension/cli/node_modules/@cursor/`).
+
+**Requires:** `CURSOR_API_KEY` or `harness.connectors.cursor.apiKey`.
+
+**Setting:** `harness.cursor.agentExecution` — `auto` (default), `local`, or `cloud`.
+
+Does **not** require GitHub Copilot for local file edits.
+
+#### Cloud (Ask / remote Agent)
+
 **Protocol:** [Cursor Cloud Agents API v1](https://cursor.com/docs/cloud-agent/api/endpoints)  
 **Streaming:** Yes (SSE on run stream)  
 **Default endpoint:** `https://api.cursor.com`
-
-#### How it works
 
 Harness calls `POST /v1/agents`, then streams from `GET /v1/agents/{id}/runs/{runId}/stream`. Follow-ups use `POST /v1/agents/{id}/runs`.
 

@@ -127,6 +127,8 @@ CLI `loadHarnessConfig()` also calls `getGhCliToken()` when no env token is set.
 | `ipc/IpcServer.ts` | Daemon entry-point. Reads stdin frames, dispatches to handlers, writes stdout frames. |
 | `router/AgentRouter.ts` | Routes `AgentRequest` to the correct connector. Implements Ask/Agent/Spec+Agent loops. |
 | `router/agentReadiness.ts` | `checkAgentReadiness()` — validates tokens/keys before routing. Used by `check getGoat`. |
+| `connectors/cursorLocal.ts` | Cursor **SDK local** runtime (`@cursor/sdk`) — Agent/Spec+Agent edits `HARNESS_WORKSPACE` without Copilot. |
+| `connectors/cursorCloud.ts` | Cursor **Cloud Agents API** v1 — Ask mode and `harness.cursor.agentExecution: cloud`. |
 | `connectors/copilotAuth.ts` | GitHub Copilot 2-step auth: `getCopilotApiToken()` exchanges `gho_` OAuth token → short-lived Copilot token (15 min TTL, in-process cache). Falls back to direct OAuth if exchange returns 404. |
 | `connectors/ghToken.ts` | `getGhCliToken()` — calls `gh auth token` subprocess; skips classic PATs (`ghp_`). |
 | `connectors/kiroCli.ts` | `runKiroCli()` — runs kiro-cli headless with AI-DLC steering prompt. |
@@ -166,9 +168,9 @@ CLI `loadHarnessConfig()` also calls `getGhCliToken()` when no env token is set.
        reads context files (fs.readFile)
        if spec+agent: reads spec files, prepends as <spec> system message
        calls router.route(AgentRequest)
-6. AgentRouter.routeCopilot()  (or routeDevin / routeClaude / …)
-       Ask mode: streamSseRequest → streams chunks back
-       Agent mode: httpPostJson loop, executes tools, streams progress
+6. AgentRouter.routeCopilot() / routeCursor() / routeDevin / …
+       Copilot Ask: SSE stream; Copilot Agent: tool loop (read_file, write_file, …)
+       Cursor Agent: routeCursorLocal() (@cursor/sdk, local cwd) when API key set; else Cloud or Copilot fallback
 7. IPC frames:  chat:chunk { done:false } × N  →  chat:chunk { done:true }
 8. AgentService listener dispatches onChunk / onComplete to ChatViewProvider
 9. ChatViewProvider posts appendChunk / messageComplete to webview

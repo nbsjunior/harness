@@ -55,7 +55,7 @@ Internal handlers: `handleChatSend` (context + spec injection), `handleContextBu
 | `routeCopilot()` | Token resolve + ask (SSE) or agent (tool loop). |
 | `routeCopilotAgent()` | OpenAI tools loop, max 10 iterations. |
 | `routeDevin()` | POST session to Devin API. |
-| `routeCursor()` | SSE to Cursor OpenAI-compatible endpoint. |
+| `routeCursor()` | Agent/Spec+Agent: Cursor SDK local or Copilot fallback; else Cloud API. Ask: Cloud. |
 | `routeClaude()` | Spawn Claude Code CLI, parse NDJSON stdout. |
 | `routeKiro()` | ensure Kiro CLI + AI-DLC, `runKiroCli()`. |
 | `buildOpenAiMessages()` | Map chat history; inject agent system prompt by mode. |
@@ -70,6 +70,22 @@ Module-level: `buildCopilotTools()`, `executeCopilotTool()` — agent file tools
 | `AgentReadiness` | `{ agent, label, ready, hint }`. |
 | `checkAgentReadiness()` | Per-agent token/CLI checks. |
 | `checkAllAgents()` | All five agents for `check getGoat`. |
+
+### `connectors/cursorLocal.ts`
+| Export | Purpose |
+|--------|---------|
+| `routeCursorLocal()` | `@cursor/sdk` local runtime — edits `HARNESS_WORKSPACE`, emits `onToolEvent`. |
+| `cancelCursorLocalSession()` | Cancel active SDK run on Stop. |
+| `clearCursorLocalSession()` | Dispose SDK agent for session. |
+| `CursorLocalUnavailableError` | SDK load failure — router may fall back to Copilot. |
+
+### `connectors/cursorCloud.ts`
+| Export | Purpose |
+|--------|---------|
+| `routeCursorCloud()` | Cursor Cloud Agents API v1 — remote runs. |
+| `buildCursorPrompt()` | Shared prompt for Cloud + SDK local (context + history). |
+| `cancelCursorCloudSession()` | Cancel cloud run on Stop. |
+| `probeCursorApi()` | `GET /v1/me` connection test. |
 
 ### `connectors/copilotAuth.ts`
 | Export | Purpose |

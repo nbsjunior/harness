@@ -345,7 +345,7 @@
             "cloud"
           ],
           "default": "auto",
-          "description": "Cursor + Agent mode: auto = edit VS Code workspace locally when Copilot is configured (Live Edits); cloud = remote Cursor API only (no local file changes).",
+          "description": "Cursor + Agent mode: auto = local file edits via Cursor SDK when API key is set (no Copilot); cloud = remote Cursor Cloud only (no local file changes).",
           "scope": "resource"
         },
         "harness.cliPath": {

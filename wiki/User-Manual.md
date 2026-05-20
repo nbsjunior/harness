@@ -53,7 +53,7 @@ By default Harness attaches: manual context chips, **open editor tabs**, and the
 | **Agent** | Local read/write in workspace | Local tools (same as Copilot Agent; needs Copilot token) |
 | **Spec+Agent** | Local + specs | Local + specs |
 
-Agent mode uses tools: `read_file`, `write_file`, `list_files`, `search_in_files`, `run_git`, `run_gh`. Files change on disk in your project. Cursor Cloud does not edit the IDE tree directly.
+**Copilot Agent** uses local tools via the Copilot API (`read_file`, `write_file`, …). **Cursor Agent** (with a Cursor API key) uses the **Cursor SDK** to edit files in your open workspace — no Copilot quota. **Cursor Cloud** (Ask or `agentExecution: cloud`) is remote and does not edit local files. See [cursor-agent.md](../docs/cursor-agent.md).
 
 For GitHub CLI: configure `gh auth login`; Agent mode can call `run_gh`.
 
@@ -70,7 +70,7 @@ Use **Configure** on each agent, paste the API key or token, then **Test Connect
 | GitHub Copilot | Code review and generation via GitHub |
 | Claude Code | Large context and complex reasoning |
 | Devin | Autonomous engineering tasks |
-| Cursor AI | Cloud Agents API (`api.cursor.com`) |
+| Cursor AI | SDK local (Agent) or Cloud API (`api.cursor.com`) |
 | Kiro (AI-DLC) | Kiro CLI + steering rules in `.kiro/steering/` |
 
 ---
