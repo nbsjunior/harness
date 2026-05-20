@@ -116,36 +116,57 @@ function basicAuth(apiKey: string): string {
   return `Basic ${Buffer.from(`${apiKey}:`, 'utf-8').toString('base64')}`;
 }
 
+/** Pull `<file>` / `<spec>` blocks from system messages (injected by IpcServer). */
+function extractHarnessContextBlocks(messages: ChatMessage[]): string {
+  const blocks: string[] = [];
+  for (const m of messages) {
+    if (m.role !== 'system' || !m.content.trim()) {
+      continue;
+    }
+    if (m.content.includes('<file path=') || m.content.includes('<spec path=')) {
+      blocks.push(m.content.trim());
+    }
+  }
+  return blocks.join('\n\n');
+}
+
 function buildPrompt(
   messages: ChatMessage[],
   context: ContextItem[],
-  includeHistory: boolean,
 ): string {
   const parts: string[] = [];
+  const workspace = process.env['HARNESS_WORKSPACE']?.trim() || process.cwd();
 
-  if (context.length > 0) {
-    parts.push('## Context files');
+  parts.push(`Workspace root (local VS Code project): ${workspace}`);
+  parts.push('');
+
+  const fileBlocks = extractHarnessContextBlocks(messages);
+  if (fileBlocks) {
+    parts.push(fileBlocks);
+    parts.push('');
+  } else if (context.length > 0) {
+    parts.push('## Context paths (read these in the repo if linked via GitHub)');
     for (const c of context) {
       parts.push(`- ${c.label}: ${c.absolutePath}`);
     }
     parts.push('');
   }
 
-  if (includeHistory) {
-    for (const m of messages) {
-      if (m.role === 'system') {
-        if (m.content.trim()) {
-          parts.push(m.content.trim());
-          parts.push('');
-        }
+  for (const m of messages) {
+    if (m.role === 'system') {
+      if (
+        m.content.includes('<file path=') ||
+        m.content.includes('<spec path=') ||
+        m.content.includes('assisting through Harness')
+      ) {
         continue;
       }
-      const who = m.role === 'user' ? 'User' : 'Assistant';
-      parts.push(`${who}:\n${m.content}\n`);
+      parts.push(m.content.trim());
+      parts.push('');
+      continue;
     }
-  } else {
-    const lastUser = [...messages].reverse().find((m) => m.role === 'user');
-    if (lastUser?.content) parts.push(lastUser.content);
+    const who = m.role === 'user' ? 'User' : 'Assistant';
+    parts.push(`${who}:\n${m.content}\n`);
   }
 
   return parts.join('\n').trim();
@@ -820,7 +841,7 @@ export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
   const baseUrl = normalizeCursorBaseUrl(req.endpoint);
   const mode = cursorMode(req.mode);
   const existing = getSession(req.sessionId);
-  const promptText = buildPrompt(req.messages, req.context, !existing);
+  const promptText = buildPrompt(req.messages, req.context);
 
   if (!promptText) {
     req.onError('No user message to send to Cursor.');

@@ -96,7 +96,11 @@ export async function buildHarnessProcessEnv(
   const env: NodeJS.ProcessEnv = {
     ...baseEnv,
     HARNESS_IPC: baseEnv['HARNESS_IPC'] ?? '1',
-    HARNESS_WORKSPACE: workspacePath ?? baseEnv['HARNESS_WORKSPACE'] ?? '',
+    HARNESS_WORKSPACE:
+      workspacePath ??
+      vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ??
+      baseEnv['HARNESS_WORKSPACE'] ??
+      '',
     HARNESS_SETTINGS_JSON: JSON.stringify(settingsBridge),
   };
 

@@ -249,7 +249,9 @@ async function handleChatSend(
     enrichedMessages.unshift({
       id: crypto.randomUUID(),
       role: 'system',
-      content: `The user has selected the following files as context:\n\n${contextBlock}`,
+      content:
+        `Workspace: ${workspaceRoot}\n\n` +
+        `The following project context is attached (files and/or folders scanned from the IDE):\n\n${contextBlock}`,
       timestamp: Date.now(),
     });
   }
@@ -291,7 +293,17 @@ async function handleChatSend(
     await router.route({
       sessionId,
       messages: enrichedMessages,
-      context: contextPaths.map((p) => ({ absolutePath: p, kind: 'file', label: p })),
+      context: contextPaths.map((p) => {
+        let kind: 'file' | 'directory' = 'file';
+        try {
+          if (fs.statSync(p).isDirectory()) {
+            kind = 'directory';
+          }
+        } catch {
+          // keep file
+        }
+        return { absolutePath: p, kind, label: p };
+      }),
       agent,
       mode: mode ?? 'ask',
       specCount: specPaths?.length ?? 0,

@@ -13,6 +13,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { buildContextPathsForChat } from '../contextPaths.js';
 import type {
   AgentId,
   AgentSelectionId,
@@ -186,7 +187,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     await this.agentService.chat({
       sessionId: this.activeSessionId,
       messages: this.history.slice(0, -1), // exclude the empty assistant placeholder
-      contextPaths: this.contextProvider.getAbsolutePaths(),
+      contextPaths: buildContextPathsForChat(this.contextProvider),
       agent: this.selectedAgent,
       mode: this.selectedMode,
       specPaths,
