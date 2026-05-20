@@ -36,9 +36,31 @@ The welcome screen lists unified chat, shared context, specs (SDD), and MCP. Cli
 
 ## 3. Chat & shared context
 
+By default Harness attaches:
+
+- Files you add with **Add to Harness of AI Context**
+- **Open editor tabs** (`harness.context.includeOpenEditors`, default on)
+- The **workspace folder** (`harness.context.includeWorkspaceRoot`, default on) — scanned as text files (depth/limits apply)
+
+You can turn auto-attach off in VS Code settings under **Harness of AI → Context**.
+
+Manual chips are still useful to focus on a subdirectory or specific files.
+
 - Right-click → **Add to Harness of AI Context**
 - **+ New chat** / **Clear context** / **Clear Chat & Context**
 - Provider pills: **Auto**, Copilot, Claude, Cursor, Devin, Kiro
+
+### Modes and local file edits
+
+| Mode | Copilot | Cursor |
+|------|---------|--------|
+| **Ask** | Chat only | Cloud agent (plan) — remote; uses full context in prompt |
+| **Agent** | Reads/writes files **in your VS Code workspace** | Same local tools as Copilot Agent (not Cursor Cloud) |
+| **Spec+Agent** | Like Agent + active specs | Like Agent + specs |
+
+**Agent** and **Spec+Agent** use Harness **local workspace tools** (`read_file`, `write_file`, `list_files`, `search_in_files`, `run_git`, `run_gh`) against `HARNESS_WORKSPACE`. Changes appear in the IDE. Cursor Cloud API does not write to your disk — that is why Cursor + Agent routes through local tools (requires GitHub Copilot configured).
+
+For GitHub: use Agent mode and the model can call `run_git` / `run_gh` (needs `gh auth login` for `gh`).
 
 ---
 

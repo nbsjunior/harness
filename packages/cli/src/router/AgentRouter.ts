@@ -118,6 +118,42 @@ export class AgentRouter {
   // GitHub Copilot — OpenAI-compatible SSE streaming
   // ---------------------------------------------------------------------------
 
+  private async resolveCopilotApiToken(cfg: AgentConnectorConfig['copilot']): Promise<string | null> {
+    if (!cfg.token) {
+      return null;
+    }
+    const tokenError = validateCopilotToken(cfg.token);
+    if (tokenError) {
+      return null;
+    }
+    try {
+      return await getCopilotApiToken(cfg.token);
+    } catch {
+      return cfg.token;
+    }
+  }
+
+  /**
+   * Local workspace agent: Copilot tool loop (read/write/search/git) against HARNESS_WORKSPACE.
+   * Used for Copilot Agent mode and for Cursor/Devin Agent mode when cloud APIs cannot edit the IDE.
+   */
+  private async routeLocalWorkspaceAgent(req: AgentRequest): Promise<void> {
+    const cfg = req.config.copilot;
+    const copilotToken = await this.resolveCopilotApiToken(cfg);
+    if (!copilotToken) {
+      req.onError(
+        'Local Agent mode needs GitHub Copilot configured (`gh auth login` or Harness → Copilot). ' +
+          'It reads and writes files in your VS Code workspace.',
+      );
+      return;
+    }
+
+    const mode = req.mode ?? 'agent';
+    const messages = this.buildOpenAiMessages(req.messages, mode);
+    const url = new URL('/chat/completions', cfg.endpoint);
+    await this.routeCopilotAgent(url, copilotToken, messages, req);
+  }
+
   private async routeCopilot(req: AgentRequest): Promise<void> {
     const cfg = req.config.copilot;
     if (!cfg.token) {
@@ -128,20 +164,10 @@ export class AgentRouter {
       return;
     }
 
-    const tokenError = validateCopilotToken(cfg.token);
-    if (tokenError) {
-      req.onError(tokenError);
+    const copilotToken = await this.resolveCopilotApiToken(cfg);
+    if (!copilotToken) {
+      req.onError(validateCopilotToken(cfg.token) ?? 'Invalid Copilot token.');
       return;
-    }
-
-    // Try to get a short-lived Copilot API token via the internal exchange endpoint.
-    // If the token already has the `copilot` scope it can be used directly — the
-    // exchange endpoint returns 404 for accounts without an individual Copilot plan.
-    let copilotToken = cfg.token;
-    try {
-      copilotToken = await getCopilotApiToken(cfg.token);
-    } catch {
-      // Fall through: use the OAuth/PAT token directly (works when it has `copilot` scope)
     }
 
     const mode = req.mode ?? 'ask';
@@ -308,6 +334,19 @@ export class AgentRouter {
 
   private async routeCursor(req: AgentRequest): Promise<void> {
     const cfg = req.config.cursor;
+    const mode = req.mode ?? 'ask';
+
+    // Cursor Cloud Agents run remotely — they do not edit the local VS Code tree.
+    // Agent / Spec+Agent in the IDE use Harness local workspace tools (Copilot API).
+    if (mode === 'agent' || mode === 'spec+agent') {
+      req.onChunk(
+        '**[Harness of AI]** Agent mode edits files **in your VS Code workspace** ' +
+          '(read/write/search/git). Cursor Cloud API is used only for Ask/Plan.\n\n',
+      );
+      await this.routeLocalWorkspaceAgent(req);
+      return;
+    }
+
     await routeCursorCloud({
       sessionId: req.sessionId,
       messages: req.messages,
@@ -475,16 +514,16 @@ export class AgentRouter {
     // Inject mode-specific system prompt if there isn't one already
     const hasSystemPrompt = mapped.some(m => m.role === 'system');
     if (!hasSystemPrompt && (mode === 'agent' || mode === 'spec+agent')) {
+      const workspace = process.env['HARNESS_WORKSPACE']?.trim() || process.cwd();
       mapped.unshift({
         role: 'system',
         content:
-          `You are an autonomous coding agent with full access to read and write files in the workspace. ` +
-          `When the user describes a task, use the available tools to read relevant files first, ` +
-          `then produce the changes needed. Always explain what you changed and why. ` +
-          `For file edits, use write_file to apply the changes directly. ` +
+          `You are an autonomous coding agent for the VS Code workspace at: ${workspace}. ` +
+          `Use read_file, write_file, list_files, search_in_files, run_git, and run_gh tools. ` +
+          `Context files are in <file> blocks in earlier system messages — read them before editing. ` +
+          `Apply changes with write_file so the engineer sees them in the IDE. ` +
           (mode === 'spec+agent'
-            ? `Active Harness Spec definitions are provided as <spec> blocks in the system context — ` +
-              `treat them as authoritative guidance for behaviour, tools, and constraints.`
+            ? `Active Harness Spec definitions are in <spec> blocks — follow them.`
             : ''),
       });
     }
@@ -634,6 +673,7 @@ export class AgentRouter {
 
 import * as fs from 'fs';
 import * as fsPath from 'path';
+import { execFileSync } from 'child_process';
 
 interface CopilotChatResponse {
   choices?: Array<{
@@ -710,6 +750,43 @@ function buildCopilotTools(): unknown[] {
         },
       },
     },
+    {
+      type: 'function',
+      function: {
+        name: 'run_git',
+        description:
+          'Run a git command in the workspace root (e.g. status, diff, log, branch, add, commit). ' +
+          'Do not pass destructive flags unless the user asked.',
+        parameters: {
+          type: 'object',
+          properties: {
+            args: {
+              type: 'string',
+              description: 'Git subcommand and arguments, e.g. "status" or "diff --staged".',
+            },
+          },
+          required: ['args'],
+        },
+      },
+    },
+    {
+      type: 'function',
+      function: {
+        name: 'run_gh',
+        description:
+          'Run GitHub CLI (gh) in the workspace, e.g. "pr list", "issue view 12", "repo view". Requires gh auth login.',
+        parameters: {
+          type: 'object',
+          properties: {
+            args: {
+              type: 'string',
+              description: 'gh subcommand and arguments, e.g. "pr create --title ...".',
+            },
+          },
+          required: ['args'],
+        },
+      },
+    },
   ];
 }
 
@@ -768,11 +845,19 @@ async function executeCopilotTool(
 
   function resolvePath(p: string): string {
     if (fsPath.isAbsolute(p)) return p;
-    // Try to resolve relative to a context item directory first
-    const ctxDir = context[0]
-      ? fsPath.dirname(context[0].absolutePath)
-      : workspace;
-    return fsPath.resolve(ctxDir, p);
+    return fsPath.resolve(workspace, p);
+  }
+
+  function runShellCommand(bin: string, args: string): string {
+    const argv = args.trim().split(/\s+/).filter(Boolean);
+    const output = execFileSync(bin, argv, {
+      cwd: workspace,
+      encoding: 'utf-8',
+      maxBuffer: 512 * 1024,
+      timeout: 120_000,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return output.trim() || '(no output)';
   }
 
   try {
@@ -838,6 +923,35 @@ async function executeCopilotTool(
         return results.length > 0
           ? results.join('\n')
           : `No matches for "${pattern}" in ${abs}`;
+      }
+
+      case 'run_git': {
+        const raw = (args['args'] ?? '').trim();
+        if (!raw) return 'Error: git args required';
+        const allowed = /^(status|diff|log|branch|add|commit|push|pull|fetch|checkout|stash|remote|show|rev-parse|merge|rebase)(\s|$)/;
+        if (!allowed.test(raw)) {
+          return `Error: git subcommand not allowed. Use: status, diff, log, branch, add, commit, push, pull, fetch, checkout, stash, remote, show, rev-parse, merge, rebase. Got: ${raw}`;
+        }
+        try {
+          return runShellCommand('git', raw);
+        } catch (err) {
+          const e = err as { stdout?: string; stderr?: string; message?: string };
+          return [e.stderr, e.stdout, e.message].filter(Boolean).join('\n').trim() || 'git failed';
+        }
+      }
+
+      case 'run_gh': {
+        const raw = (args['args'] ?? '').trim();
+        if (!raw) return 'Error: gh args required';
+        if (/[;&|`$]/.test(raw)) {
+          return 'Error: invalid characters in gh args';
+        }
+        try {
+          return runShellCommand('gh', raw);
+        } catch (err) {
+          const e = err as { stdout?: string; stderr?: string; message?: string };
+          return [e.stderr, e.stdout, e.message].filter(Boolean).join('\n').trim() || 'gh failed';
+        }
       }
 
       default:

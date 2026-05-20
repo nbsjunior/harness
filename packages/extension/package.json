@@ -266,6 +266,18 @@
           "description": "Max non-system chat messages kept in the prompt (recent turns only).",
           "scope": "resource"
         },
+        "harness.context.includeOpenEditors": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically attach visible editor files to each chat message (in addition to manual context chips).",
+          "scope": "resource"
+        },
+        "harness.context.includeWorkspaceRoot": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically include the workspace folder in context so agents can see the project (scanned as text files, same limits as manual folder context).",
+          "scope": "resource"
+        },
         "harness.contextDirectories": {
           "type": "array",
           "items": {

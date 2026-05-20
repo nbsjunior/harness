@@ -36,16 +36,26 @@ Click **Get started →** to configure agents, or **Skip** and configure later. 
 
 ## 3. Chat & shared context
 
-Everything happens in one interaction surface — no copy-paste between tools:
+By default Harness attaches: manual context chips, **open editor tabs**, and the **workspace folder** (see settings `harness.context.includeOpenEditors` and `harness.context.includeWorkspaceRoot`).
 
 - **Explorer** or editor → right-click → **Add to Harness of AI Context**
-- File chips appear above the composer; the **same context** is sent to whichever provider you pick next
-- **+ New chat** — new thread, keeps context
-- **Clear context** — removes file chips only
-- View title → **Clear Chat & Context** — full reset
+- The **same context** is sent to whichever provider you pick next
+- **+ New chat** / **Clear context** / **Clear Chat & Context**
 
 **Providers:** Auto, Copilot, Claude, Cursor, Devin, Kiro.  
-**Copilot modes:** Ask | Agent | Spec+Agent.
+**Modes:** Ask | Agent | Spec+Agent.
+
+### Local edits in VS Code (Agent / Spec+Agent)
+
+| Mode | Copilot | Cursor |
+|------|---------|--------|
+| **Ask** | Chat | Cursor Cloud (remote) |
+| **Agent** | Local read/write in workspace | Local tools (same as Copilot Agent; needs Copilot token) |
+| **Spec+Agent** | Local + specs | Local + specs |
+
+Agent mode uses tools: `read_file`, `write_file`, `list_files`, `search_in_files`, `run_git`, `run_gh`. Files change on disk in your project. Cursor Cloud does not edit the IDE tree directly.
+
+For GitHub CLI: configure `gh auth login`; Agent mode can call `run_gh`.
 
 ---
 
