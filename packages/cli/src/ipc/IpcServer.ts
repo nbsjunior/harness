@@ -224,7 +224,8 @@ async function handleChatSend(
   msg: IPCMessage<ChatSendPayload>,
   router: AgentRouter,
 ): Promise<void> {
-  const { sessionId, messages, contextPaths, agent, specsDir, mode, specPaths } = msg.payload;
+  const { sessionId, messages, contextPaths, agent, specsDir, mode, specPaths, model } =
+    msg.payload;
   const agentConfig = loadAgentConfig(specsDir);
   const messageId = crypto.randomUUID();
   const workspaceRoot = getWorkspaceRoot();
@@ -306,8 +307,16 @@ async function handleChatSend(
       }),
       agent,
       mode: mode ?? 'ask',
+      model,
       specCount: specPaths?.length ?? 0,
       config: agentConfig,
+      onToolEvent: (event) => {
+        writeFrame({
+          id: msg.id,
+          action: 'chat:tool',
+          payload: { sessionId, ...event },
+        });
+      },
       onAutoRouted: (auto) => {
         resolvedAgent = auto.agent;
         writeFrame({

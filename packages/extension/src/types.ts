@@ -196,7 +196,8 @@ export type IpcAction =
   | 'usage:stats'
   | 'usage:reset'
   | 'usage:reset:result'
-  | 'chat:usage';
+  | 'chat:usage'
+  | 'chat:tool';
 
 /**
  * Base IPC message envelope. All extension ↔ CLI communication uses this shape.
@@ -229,6 +230,27 @@ export interface ChatSendPayload {
   mode?: CopilotMode;
   /** Resolved spec file paths — populated by extension for spec+agent mode */
   specPaths?: string[];
+  /** Provider model id (`auto` = provider default). */
+  model?: string;
+}
+
+export interface ChatToolEventPayload {
+  sessionId: string;
+  tool: string;
+  phase: 'before' | 'after' | 'terminal';
+  path?: string;
+  oldContent?: string | null;
+  preview?: string;
+  command?: string;
+}
+
+export interface LiveEditEntry {
+  id: string;
+  tool: string;
+  path: string;
+  phase: 'before' | 'after';
+  preview?: string;
+  timestamp: number;
 }
 
 export interface ChatChunkPayload {
@@ -294,6 +316,9 @@ export type WebviewCommand =
   | 'ready'
   // Chat streaming control
   | 'stopStream'
+  | 'selectModel'
+  | 'revertAgentChanges'
+  | 'focusAgentTerminal'
   // Configuration wizard
   | 'saveSecret'
   | 'testConnection'
@@ -332,6 +357,9 @@ export type ExtensionCommand =
   | 'tokenUsage'
   | 'streamStopped'
   | 'autoRouted'
+  | 'liveEditsUpdated'
+  | 'revertAvailable'
+  | 'modelChanged'
   // Configuration wizard responses
   | 'configLoaded'
   | 'connectionResult'
@@ -343,6 +371,11 @@ export interface ExtensionMessage<T = unknown> {
   payload?: T;
 }
 
+export interface ProviderModelOption {
+  id: string;
+  label: string;
+}
+
 export interface InitializePayload {
   agent: AgentSelectionId;
   mode: CopilotMode;
@@ -351,6 +384,10 @@ export interface InitializePayload {
   agents: AgentDescriptor[];
   /** Last Auto routing decision for the active session (if any). */
   lastAutoRoute?: ChatAutoRoutedPayload;
+  selectedModel: string;
+  providerModels: Record<AgentId, ProviderModelOption[]>;
+  liveEdits: LiveEditEntry[];
+  canRevert: boolean;
 }
 
 export interface TokenUsagePayload {

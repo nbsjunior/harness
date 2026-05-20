@@ -116,10 +116,14 @@ Sends a conversation history and context paths to the agent.
       "/home/user/project/src/middleware/"
     ],
     "agent": "copilot",
+    "mode": "agent",
+    "model": "gpt-4.1",
     "specsDir": "/home/user/project/.harness/specs"
   }
 }
 ```
+
+`model` is optional (`auto` = provider default). Copilot Ask/Agent and local workspace Agent loops pass it to the API; Claude CLI receives `--model` when set.
 
 **Response:** Not a direct response — the CLI sends streaming `chat:chunk` push events. The `id` in chunks matches the request `id`.
 
@@ -149,6 +153,41 @@ Sent by the CLI for every token/chunk received from the agent. `done: true` sign
   "id": "req-001",
   "action": "chat:chunk",
   "payload": { "sessionId": "session-abc", "messageId": "msg-2", "chunk": "", "done": true }
+}
+```
+
+---
+
+### `chat:tool` — Agent tool / file event (push event)
+
+Sent during **Agent** / **Spec+Agent** runs when the local tool loop reads or writes files, or runs `git` / `gh`. The extension uses this to open live diffs, show a “Live edits” strip in chat, and mirror shell commands to the integrated terminal.
+
+**Frame (write_file before):**
+```json
+{
+  "id": "req-001",
+  "action": "chat:tool",
+  "payload": {
+    "sessionId": "session-abc",
+    "tool": "write_file",
+    "phase": "before",
+    "path": "/workspace/src/foo.ts",
+    "oldContent": "export const x = 1;\n"
+  }
+}
+```
+
+**Frame (terminal mirror):**
+```json
+{
+  "id": "req-001",
+  "action": "chat:tool",
+  "payload": {
+    "sessionId": "session-abc",
+    "tool": "run_git",
+    "phase": "terminal",
+    "command": "git status"
+  }
 }
 ```
 

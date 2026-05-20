@@ -7,6 +7,9 @@ import { UserManualPanel } from './panels/UserManualPanel';
 import { ContextProvider } from './providers/ContextProvider';
 import { CliService } from './services/CliService';
 import { McpClientManager } from './mcp/McpClientManager';
+import { HarnessSnapshotProvider } from './services/HarnessSnapshotProvider';
+import { AgentEditTracker } from './services/AgentEditTracker';
+import { AgentTerminalService } from './services/AgentTerminalService';
 import type { AgentId, AgentSelectionId } from './types';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
@@ -20,6 +23,12 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const cliService = new CliService(context, outputChannel);
   const mcpManager = new McpClientManager(context, outputChannel);
   const contextProvider = new ContextProvider(context);
+  const snapshotProvider = HarnessSnapshotProvider.register(context);
+  const terminalService = new AgentTerminalService();
+  let chatViewProvider!: ChatViewProvider;
+  const editTracker = new AgentEditTracker(snapshotProvider, (sessionId, edits) => {
+    chatViewProvider?.notifyLiveEdits(sessionId, edits);
+  });
 
   // Start IPC daemon, then run lightweight workspace bootstrap in a separate process.
   // (never run Kiro download / setup inside the daemon — it would block stdout IPC).
@@ -50,11 +59,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   // Webview providers
   // -------------------------------------------------------------------------
 
-  const chatViewProvider = new ChatViewProvider(
+  chatViewProvider = new ChatViewProvider(
     context.extensionUri,
     cliService,
     contextProvider,
     outputChannel,
+    editTracker,
+    terminalService,
   );
 
   const specManagerProvider = new SpecManagerProvider(
