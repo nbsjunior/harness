@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # Auto provider routing
 
 Choose **Auto** in the chat provider bar and Harness picks the best agent for each message.

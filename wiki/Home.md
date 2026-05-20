@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # Harness of AI Wiki
 
 **Harness of AI** is a meta-agent orchestrator for VS Code: **one IDE**, **many AI providers** (Copilot, Claude, Cursor, Devin, Kiro), plus **Spec-Driven Development** and **context engineering** in the same sidebar — without switching editors per vendor.

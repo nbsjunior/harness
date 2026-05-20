@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # User Manual — Harness of AI
 
 **Harness of AI** is a meta-agent orchestrator for VS Code: one sidebar for **Copilot**, **Claude**, **Cursor**, **Devin**, and **Kiro**, with shared file context and Spec-Driven Development (SDD).

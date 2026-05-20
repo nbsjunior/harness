@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # User Guide
 
 Day-to-day usage of Harness in VS Code.

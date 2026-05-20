@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # User Manual — Harness of AI
 
 > Wiki copy (same content): [User-Manual](https://github.com/nbsjunior/harness/wiki/User-Manual)

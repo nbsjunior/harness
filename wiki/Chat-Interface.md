@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # Chat Interface
 
 The Harness chat is designed like **Cursor**: messages on top, composer at the bottom, provider pills below the input.

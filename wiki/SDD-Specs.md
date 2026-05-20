@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # SDD Specs
 
 **Spec-Driven Development** — YAML files in `.harness/specs/` that describe skills, tools, and workflows for agents.

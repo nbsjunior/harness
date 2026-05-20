@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # Context and Specs
 
 Harness combines **context engineering** (which files the model sees) and **Spec-Driven Development** (how the agent should behave) in **one workflow** — regardless of whether you use Copilot, Claude, Cursor, or another provider.
