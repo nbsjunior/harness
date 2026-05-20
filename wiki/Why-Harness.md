@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # Why Harness?
 
 The main advantage of Harness: **stay in one IDE (VS Code)** and reuse **several AI providers** — Copilot, Claude, Cursor, Devin, Kiro — without switching editors. At the same time, use **Spec-Driven Development** and **context engineering** in the **same** chat and workspace.

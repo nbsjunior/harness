@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/harness-icon.png" alt="Harness of AI logo" width="96" />
+</p>
+
 # Harness of AI — Meta-Agent Orchestrator for VSCode
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)

@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # Copilot Modes
 
 When **GitHub Copilot** is selected, three modes are available in the chat bottom bar.

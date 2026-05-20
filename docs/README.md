@@ -1,4 +1,8 @@
-# Harness — Documentation Index
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
+# Harness of AI — Documentation Index
 
 Use this index to find the right doc without reading the whole repository.
 

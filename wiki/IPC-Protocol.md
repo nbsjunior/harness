@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # IPC Protocol
 
 Extension ↔ CLI communication when the daemon runs with `--ipc`.

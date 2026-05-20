@@ -1,6 +1,18 @@
+<p align="center">
+  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+</p>
+
 # Wiki source (GitHub Wiki)
 
 This folder is the **source of truth** for the [GitHub Wiki](https://github.com/nbsjunior/harness/wiki).
+
+## Branding
+
+Logo: `images/harness-icon.png`. After adding a new wiki page, run:
+
+```bash
+node scripts/wiki-branding.mjs
+```
 
 ## Publish to GitHub Wiki
 
