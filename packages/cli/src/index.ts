@@ -8,6 +8,9 @@ import { contextBuildCommand } from './commands/contextBuild.js';
 import { getGoatCommand } from './commands/getGoat.js';
 import { aidlcInstallCommand, aidlcStatusCommand } from './commands/aidlc.js';
 import { setupCommand } from './commands/setup.js';
+import { specDiscoverCommand } from './commands/specDiscover.js';
+import { agentFanoutCommand } from './commands/agentFanout.js';
+import { webServeCommand } from './commands/webServe.js';
 import { startIpcServer } from './ipc/IpcServer.js';
 import type { AgentId } from './types.js';
 
@@ -187,6 +190,46 @@ if (process.argv.includes('--ipc')) {
     .action(async (dir: string) => {
       const code = await aidlcStatusCommand(dir);
       process.exit(code);
+    });
+
+  program
+    .command('spec:discover')
+    .description('Suggest SDD specs from repository structure')
+    .option('--json', 'Output JSON', false)
+    .option('--write', 'Write suggested spec files that do not exist', false)
+    .action(async (options: { json?: boolean; write?: boolean }) => {
+      const code = await specDiscoverCommand({
+        ...(options.json ? { json: true } : {}),
+        ...(options.write ? { write: true } : {}),
+      });
+      process.exit(code);
+    });
+
+  program
+    .command('agent:fanout')
+    .description('Run the same prompt on multiple agents in parallel')
+    .requiredOption('-a, --agents <list>', 'Comma-separated agents (copilot,cursor,claude,…)')
+    .requiredOption('-p, --prompt <text>', 'Prompt to send to each agent')
+    .option('-m, --mode <mode>', 'Interaction mode', 'ask')
+    .action(async (options: { agents: string; prompt: string; mode?: string }) => {
+      try {
+        await agentFanoutCommand(options);
+      } catch (err) {
+        console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+        process.exit(1);
+      }
+    });
+
+  program
+    .command('web:serve')
+    .description('Start a read-only web dashboard (usage, session, plugins)')
+    .option('-p, --port <n>', 'HTTP port', '3847')
+    .option('--host <host>', 'Bind host', '127.0.0.1')
+    .action(async (options: { port?: string; host?: string }) => {
+      await webServeCommand({
+        port: parseInt(options.port ?? '3847', 10),
+        ...(options.host ? { host: options.host } : {}),
+      });
     });
 
   // ---------------------------------------------------------------------------

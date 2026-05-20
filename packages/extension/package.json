@@ -284,6 +284,33 @@
           "description": "Max non-system chat messages kept in the prompt (recent turns only).",
           "scope": "resource"
         },
+        "harness.spending.budgetEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable token budget alerts in chat and the Spending tab.",
+          "scope": "resource"
+        },
+        "harness.spending.budgetTotalTokens": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "Workspace-wide estimated token budget (0 = no cap).",
+          "scope": "resource"
+        },
+        "harness.spending.budgetWarnPercent": {
+          "type": "number",
+          "default": 80,
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Warn when usage reaches this percent of the budget.",
+          "scope": "resource"
+        },
+        "harness.spending.budgetTokensByAgent": {
+          "type": "object",
+          "default": {},
+          "description": "Per-provider token caps, e.g. {\"copilot\": 500000, \"cursor\": 200000}.",
+          "scope": "resource"
+        },
         "harness.context.includeOpenEditors": {
           "type": "boolean",
           "default": true,

@@ -63,6 +63,12 @@ export async function buildHarnessProcessEnv(
       maxContextCharsPerFile: harness.get<number>('promptOptimization.maxContextCharsPerFile', 12_000),
       maxHistoryMessages: harness.get<number>('promptOptimization.maxHistoryMessages', 24),
     },
+    spending: {
+      budgetEnabled: harness.get<boolean>('spending.budgetEnabled', false),
+      budgetTotalTokens: harness.get<number>('spending.budgetTotalTokens', 0),
+      budgetWarnPercent: harness.get<number>('spending.budgetWarnPercent', 80),
+      budgetTokensByAgent: harness.get<Record<string, number>>('spending.budgetTokensByAgent', {}),
+    },
     connectors: {
       copilot: {
         endpoint: harness.get<string>('connectors.copilot.endpoint', 'https://api.githubcopilot.com'),

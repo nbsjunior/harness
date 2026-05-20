@@ -50,6 +50,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private sessionTokens = 0;
   private readonly modelByAgent = new Map<AgentSelectionId, string>();
   private liveEdits: LiveEditEntry[] = [];
+  private sessionHydrated = false;
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -109,11 +110,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.onDidChangeVisibility(() => {
       if (webviewView.visible) {
-        this.sendInitialize();
+        void this.hydrateSessionFromDisk().then(() => this.sendInitialize());
       }
     });
 
-    this.sendInitialize();
+    void this.hydrateSessionFromDisk().then(() => this.sendInitialize());
   }
 
   // ---------------------------------------------------------------------------
@@ -155,6 +156,10 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     this.lastAutoRoute = undefined;
     this.sessionTokens = 0;
     this.liveEdits = [];
+
+    void this.cliService
+      .send({ id: crypto.randomUUID(), action: 'session:clear', payload: {} })
+      .catch(() => undefined);
 
     this.post({ command: 'chatCleared' });
     this.post({ command: 'liveEditsUpdated', payload: { edits: [] } });
@@ -245,6 +250,9 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       onUsage: (usage) => {
         this.sessionTokens += usage.tokensTotal;
         this.postTokenUsage(usage.stats.total.tokensTotal);
+        if (usage.alerts?.length) {
+          this.post({ command: 'budgetAlert', payload: { alerts: usage.alerts } });
+        }
       },
       onChunk: (chunk: string, messageId: string) => {
         // Accumulate chunk in local history
@@ -268,6 +276,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
           command: 'messageComplete',
           payload: { messageId: assistantMessage.id },
         });
+        void this.persistSessionToDisk();
       },
       onError: (error: string, _messageId: string) => {
         const msg = this.history.find((m) => m.id === assistantMessage.id);
@@ -301,7 +310,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private async handleWebviewMessage(msg: WebviewMessage): Promise<void> {
     switch (msg.command) {
       case 'ready':
-        this.sendInitialize();
+        void this.hydrateSessionFromDisk().then(() => this.sendInitialize());
         break;
 
       case 'sendMessage': {
@@ -434,6 +443,72 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     this.liveEdits = edits;
     this.post({ command: 'liveEditsUpdated', payload: { edits } });
     this.postRevertState();
+  }
+
+  private async hydrateSessionFromDisk(): Promise<void> {
+    if (this.sessionHydrated) {
+      return;
+    }
+    this.sessionHydrated = true;
+    try {
+      const res = await this.cliService.send<
+        Record<string, never>,
+        { session: {
+          sessionId: string;
+          selectedAgent: AgentSelectionId;
+          selectedMode: CopilotMode;
+          model?: string;
+          messages: ChatMessage[];
+          contextPaths: string[];
+        } | null }
+      >(
+        { id: crypto.randomUUID(), action: 'session:load', payload: {} },
+        { expectResponse: 'session:loaded', timeoutMs: 10_000 },
+      );
+      const stored = res.payload?.session;
+      if (!stored?.messages?.length) {
+        return;
+      }
+      this.history = stored.messages.map((m) => ({ ...m, streaming: false }));
+      this.activeSessionId = stored.sessionId;
+      this.selectedAgent = stored.selectedAgent;
+      this.selectedMode = stored.selectedMode;
+      if (stored.model) {
+        this.modelByAgent.set(this.selectedAgent, stored.model);
+      }
+      for (const p of stored.contextPaths ?? []) {
+        if (fs.existsSync(p)) {
+          await this.contextProvider.add(vscode.Uri.file(p));
+        }
+      }
+      this.output.info(
+        `[Harness] Restored chat session (${this.history.length} messages) from .harness/chat-session.json`,
+      );
+    } catch (err) {
+      this.output.warn(`[Harness] Session restore skipped: ${(err as Error).message}`);
+    }
+  }
+
+  private async persistSessionToDisk(): Promise<void> {
+    try {
+      await this.cliService.send(
+        {
+          id: crypto.randomUUID(),
+          action: 'session:save',
+          payload: {
+            sessionId: this.activeSessionId,
+            selectedAgent: this.selectedAgent,
+            selectedMode: this.selectedMode,
+            model: this.getSelectedModel(),
+            messages: this.history.filter((m) => !m.streaming),
+            contextPaths: buildContextPathsForChat(this.contextProvider),
+          },
+        },
+        { expectResponse: 'session:saved', timeoutMs: 10_000 },
+      );
+    } catch {
+      /* CLI may be restarting */
+    }
   }
 
   private sendInitialize(): void {

@@ -212,6 +212,15 @@ is present).
 | `aidlc:install` | ext→cli | `{ workspaceRoot, force? }` |
 | `aidlc:status` | ext→cli | `{ workspaceRoot }` |
 | `setup:bootstrap` | ext→cli | `{ workspaceRoot }` |
+| `session:load` / `session:loaded` | ext↔cli | Persisted chat in `.harness/chat-session.json` |
+| `session:save` / `session:saved` | ext↔cli | Save chat snapshot |
+| `session:clear` | ext→cli | Remove persisted session |
+| `usage:alerts` | cli→ext | Budget threshold push (after `usage:get` / `chat:usage`) |
+| `spec:discover` / `spec:discover:result` | ext↔cli | Repo-structure spec suggestions |
+| `chat:fanout` / `chat:fanout:result` | ext↔cli | Parallel multi-agent prompt |
+| `plugins:list` / `plugins:list:result` | ext↔cli | Community connector manifest (preview) |
+
+Roadmap details: [docs/backlog-features.md](docs/backlog-features.md).
 
 ---
 
