@@ -244,12 +244,20 @@ export interface ChatToolEventPayload {
   command?: string;
 }
 
+export interface LiveEditsPanelPayload {
+  edits: LiveEditEntry[];
+  canRevert: boolean;
+  activePath?: string;
+}
+
 export interface LiveEditEntry {
   id: string;
   tool: string;
   path: string;
   phase: 'before' | 'after';
   preview?: string;
+  beforeContent?: string | null;
+  afterContent?: string;
   timestamp: number;
 }
 
@@ -360,6 +368,7 @@ export type ExtensionCommand =
   | 'liveEditsUpdated'
   | 'revertAvailable'
   | 'modelChanged'
+  | 'liveEditsPanel'
   // Configuration wizard responses
   | 'configLoaded'
   | 'connectionResult'

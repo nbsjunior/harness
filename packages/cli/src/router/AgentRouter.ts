@@ -258,7 +258,16 @@ export class AgentRouter {
           JSON.stringify(bodyObj),
         );
       } catch (err) {
-        req.onError(`Copilot agent request failed: ${(err as Error).message}`);
+        const msg = (err as Error).message;
+        if (/429|quota exceeded/i.test(msg)) {
+          req.onError(
+            'GitHub Copilot quota exceeded (HTTP 429). Wait and retry, pick another model, ' +
+              'or use provider **Cursor** / **Claude** for Ask mode. ' +
+              'Local workspace Agent mode requires Copilot when provider is **Copilot**.',
+          );
+        } else {
+          req.onError(`Copilot agent request failed: ${msg}`);
+        }
         return;
       }
 
@@ -361,19 +370,17 @@ export class AgentRouter {
   // Cursor AI — Cloud Agents API v1 (https://api.cursor.com)
   // ---------------------------------------------------------------------------
 
-  private async routeCursor(req: AgentRequest, agent: AgentId): Promise<void> {
+  private async routeCursor(req: AgentRequest, _agent: AgentId): Promise<void> {
     const cfg = req.config.cursor;
     const mode = req.mode ?? 'ask';
 
-    // Cursor Cloud Agents run remotely — they do not edit the local VS Code tree.
-    // Agent / Spec+Agent in the IDE use Harness local workspace tools (Copilot API).
+    // Cursor provider always uses Cursor Cloud API (never GitHub Copilot).
+    // Local workspace file edits (Agent tool loop) are only available with provider **Copilot**.
     if (mode === 'agent' || mode === 'spec+agent') {
       req.onChunk(
-        '**[Harness of AI]** Agent mode edits files **in your VS Code workspace** ' +
-          '(read/write/search/git). Cursor Cloud API is used only for Ask/Plan.\n\n',
+        '**[Harness of AI]** Cursor **Agent** runs on **Cursor Cloud** (api.cursor.com). ' +
+          'To edit files directly in this VS Code workspace, choose provider **Copilot** with Agent mode.\n\n',
       );
-      await this.routeLocalWorkspaceAgent(req);
-      return;
     }
 
     await routeCursorCloud({

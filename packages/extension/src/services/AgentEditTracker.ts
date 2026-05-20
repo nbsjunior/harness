@@ -61,6 +61,7 @@ export class AgentEditTracker {
 
     if (event.phase === 'before' && event.path) {
       const abs = path.resolve(event.path);
+      entry.beforeContent = event.oldContent ?? null;
       if (!session.files.has(abs)) {
         session.files.set(abs, {
           absPath: abs,
@@ -70,6 +71,8 @@ export class AgentEditTracker {
           this.snapshots.setSnapshot(abs, event.oldContent);
         }
       }
+      this.onLiveEdits(event.sessionId, [...list]);
+      void vscode.commands.executeCommand('harness.liveEdits.focus');
     }
 
     if (event.phase === 'after' && event.path) {
@@ -78,9 +81,12 @@ export class AgentEditTracker {
       if (cfg.get<boolean>('showLiveDiff', true)) {
         await this.openDiff(abs, session);
       }
-      const preview = event.preview ?? this.readPreview(abs);
-      entry.preview = preview;
+      const afterContent = this.readFull(abs);
+      entry.afterContent = afterContent;
+      entry.preview = event.preview ?? afterContent.slice(0, 400);
+      entry.beforeContent = session.files.get(abs)?.before ?? entry.beforeContent;
       this.onLiveEdits(event.sessionId, [...list]);
+      void vscode.commands.executeCommand('harness.liveEdits.focus');
 
       if (cfg.get<boolean>('openChangedFiles', true)) {
         try {
@@ -139,10 +145,9 @@ export class AgentEditTracker {
     }
   }
 
-  private readPreview(absPath: string, max = 400): string {
+  private readFull(absPath: string): string {
     try {
-      const text = fs.readFileSync(absPath, 'utf-8');
-      return text.length > max ? `${text.slice(0, max)}…` : text;
+      return fs.readFileSync(absPath, 'utf-8');
     } catch {
       return '';
     }
