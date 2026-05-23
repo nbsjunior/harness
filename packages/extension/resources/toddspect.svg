@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Fox around globe — classic Firefox-inspired silhouette -->
+  <circle cx="12" cy="12" r="8.5"/>
+  <!-- Ears & head -->
+  <path d="M7.5 9.5 L9 5.5 L11 8.5 L12 6 L13 8.5 L15 5.5 L16.5 9.5"/>
+  <path d="M8.5 11.5 Q12 13.5 15.5 11.5"/>
+  <!-- Snout -->
+  <path d="M11 13.5 L12 15 L13 13.5"/>
+  <!-- Tail wrapping the globe -->
+  <path d="M16 13.5 Q19.5 15.5 18 18.5 Q15 21 11.5 19.5 Q7 18 7.5 15 Q8 13 10 13.5"/>
+</svg>
