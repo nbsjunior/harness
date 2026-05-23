@@ -1,6 +1,6 @@
 /**
  * @module router/autoRouter
- * **Harness Auto provider** — selects the best `AgentId` from the user prompt and session signals.
+ * **ToddSpect Auto provider** — selects the best `AgentId` from the user prompt and session signals.
  *
  * ## Algorithm (v1)
  *
@@ -21,7 +21,7 @@
  * | Claude  | Complex refactors, architecture, integrations (APIs, OAuth, webhooks), security/perf |
  * | Cursor  | Multi-file repo work, cloud agent tasks, large selected context |
  * | Devin   | Long-horizon autonomous implementation (“build end-to-end”, ship feature) |
- * | Kiro    | Spec-driven / AI-DLC / `.kiro` steering / Harness `spec+agent` mode |
+ * | Kiro    | Spec-driven / AI-DLC / `.kiro` steering / ToddSpect `spec+agent` mode |
  *
  * @see docs/auto-routing.md — full documentation for users and contributors
  */
@@ -64,7 +64,7 @@ export const AUTO_ROUTING_RULES: ReadonlyArray<{
       'ai dlc',
       'steering',
       '.kiro',
-      'harness spec',
+      'toddspect spec',
       'spec-driven',
       'sdd',
       'workflow spec',
@@ -357,7 +357,7 @@ export function resolveAutoAgent(input: AutoRouteInput): AutoRouteResult {
     agent: 'copilot',
     ruleId: winningRuleId,
     reason:
-      `${winningReason} (no agent configured — run harness check getGoat; configure Cursor, Copilot, etc.).`,
+      `${winningReason} (no agent configured — run toddspect check getGoat; configure Cursor, Copilot, etc.).`,
     scores,
     fallbackUsed: true,
     requestedFallbackFrom: topScored,

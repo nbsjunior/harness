@@ -8,14 +8,14 @@ import { UserManualPanel } from './panels/UserManualPanel';
 import { ContextProvider } from './providers/ContextProvider';
 import { CliService } from './services/CliService';
 import { McpClientManager } from './mcp/McpClientManager';
-import { HarnessSnapshotProvider } from './services/HarnessSnapshotProvider';
+import { ToddSpectSnapshotProvider } from './services/ToddSpectSnapshotProvider';
 import { AgentEditTracker } from './services/AgentEditTracker';
 import { AgentTerminalService } from './services/AgentTerminalService';
 import type { AgentId, AgentSelectionId } from './types';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
-  const outputChannel = vscode.window.createOutputChannel('Harness of AI', { log: true });
-  outputChannel.info('Harness of AI extension activating… (View → Output → Harness of AI for full trace)');
+  const outputChannel = vscode.window.createOutputChannel('ToddSpect', { log: true });
+  outputChannel.info('ToddSpect extension activating… (View → Output → ToddSpect for full trace)');
 
   // -------------------------------------------------------------------------
   // Core services
@@ -24,7 +24,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const cliService = new CliService(context, outputChannel);
   const mcpManager = new McpClientManager(context, outputChannel);
   const contextProvider = new ContextProvider(context);
-  const snapshotProvider = HarnessSnapshotProvider.register(context);
+  const snapshotProvider = ToddSpectSnapshotProvider.register(context);
   const terminalService = new AgentTerminalService();
   let chatViewProvider!: ChatViewProvider;
   let liveEditsProvider!: LiveEditsViewProvider;
@@ -47,7 +47,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       if (result.stderr) {
         outputChannel.info(result.stderr.trim());
       }
-      outputChannel.info('Harness of AI bootstrap complete (workspace + AI-DLC).');
+      outputChannel.info('ToddSpect bootstrap complete (workspace + AI-DLC).');
     } catch (err) {
       outputChannel.error(`CLI failed to start or bootstrap: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -105,7 +105,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   context.subscriptions.push(
     // Add file/folder to context
-    vscode.commands.registerCommand('harness.addToContext', async (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('toddspect.addToContext', async (uri?: vscode.Uri) => {
       const target = uri ?? vscode.window.activeTextEditor?.document.uri;
       if (!target) {
         void vscode.window.showWarningMessage('No file or folder selected.');
@@ -113,13 +113,13 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
       await contextProvider.add(target);
       void vscode.window.showInformationMessage(
-        `Added to Harness of AI context: ${path.basename(target.fsPath)}`,
+        `Added to ToddSpect context: ${path.basename(target.fsPath)}`,
       );
       chatViewProvider.notifyContextChanged();
     }),
 
     // Remove file/folder from context
-    vscode.commands.registerCommand('harness.removeFromContext', async (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('toddspect.removeFromContext', async (uri?: vscode.Uri) => {
       if (!uri) {
         return;
       }
@@ -128,23 +128,23 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
 
     // Clear chat + context (view title toolbar — same as in-webview "Clear all")
-    vscode.commands.registerCommand('harness.clearContext', () => {
+    vscode.commands.registerCommand('toddspect.clearContext', () => {
       chatViewProvider.clearChatAndContext();
     }),
 
-    vscode.commands.registerCommand('harness.revertAgentChanges', () => {
+    vscode.commands.registerCommand('toddspect.revertAgentChanges', () => {
       void chatViewProvider.revertAgentChanges();
     }),
 
-    vscode.commands.registerCommand('harness.liveEdits.focus', async () => {
-      await vscode.commands.executeCommand('harness.liveEditsView.focus');
+    vscode.commands.registerCommand('toddspect.liveEdits.focus', async () => {
+      await vscode.commands.executeCommand('toddspect.liveEditsView.focus');
     }),
 
     // Show current context items
-    vscode.commands.registerCommand('harness.showContext', () => {
+    vscode.commands.registerCommand('toddspect.showContext', () => {
       const items = contextProvider.getItems();
       if (items.length === 0) {
-        void vscode.window.showInformationMessage('Harness of AI context is empty.');
+        void vscode.window.showInformationMessage('ToddSpect context is empty.');
         return;
       }
       const labels = items.map((item) => item.label).join('\n• ');
@@ -152,9 +152,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
 
     // Run agent via Quick Pick
-    vscode.commands.registerCommand('harness.runAgent', async () => {
+    vscode.commands.registerCommand('toddspect.runAgent', async () => {
       const agentItems: vscode.QuickPickItem[] = [
-        { label: '$(sparkle) Auto (Harness of AI picks)', description: 'auto' },
+        { label: '$(sparkle) Auto (ToddSpect picks)', description: 'auto' },
         { label: '$(copilot) GitHub Copilot', description: 'copilot' },
         { label: '$(robot) Devin', description: 'devin' },
         { label: '$(sparkle) Cursor AI', description: 'cursor' },
@@ -163,7 +163,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       ];
 
       const chosen = await vscode.window.showQuickPick(agentItems, {
-        title: 'Harness of AI — Select Agent',
+        title: 'ToddSpect — Select Agent',
         placeHolder: 'Choose an agent to run',
       });
 
@@ -184,32 +184,32 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
       await chatViewProvider.sendChatMessage(prompt, agentId);
       // Reveal the chat view
-      await vscode.commands.executeCommand('harness.chatView.focus');
+      await vscode.commands.executeCommand('toddspect.chatView.focus');
     }),
 
     // Open configuration panel
-    vscode.commands.registerCommand('harness.openConfig', () => {
+    vscode.commands.registerCommand('toddspect.openConfig', () => {
       ConfigurationPanel.createOrShow(context.extensionUri, context, cliService);
     }),
 
-    vscode.commands.registerCommand('harness.openUserManual', () => {
+    vscode.commands.registerCommand('toddspect.openUserManual', () => {
       UserManualPanel.createOrShow(context.extensionUri);
     }),
 
     // Diagnose setup (runs CLI `check getGoat` with extension secrets/env)
-    vscode.commands.registerCommand('harness.setup', async () => {
+    vscode.commands.registerCommand('toddspect.setup', async () => {
       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
       try {
         await cliService.start();
         const result = await cliService.runCommand('setup', workspaceFolder ? [workspaceFolder.uri.fsPath] : []);
-        const channel = vscode.window.createOutputChannel('Harness of AI Setup');
+        const channel = vscode.window.createOutputChannel('ToddSpect Setup');
         channel.clear();
         channel.appendLine(result.stdout || result.stderr || 'Setup finished.');
         channel.show();
         if (result.success) {
-          void vscode.window.showInformationMessage('Harness of AI setup complete (Kiro CLI + AI-DLC).');
+          void vscode.window.showInformationMessage('ToddSpect setup complete (Kiro CLI + AI-DLC).');
           } else {
-          void vscode.window.showWarningMessage('Harness of AI setup finished with warnings. See Output → Harness of AI Setup.');
+          void vscode.window.showWarningMessage('ToddSpect setup finished with warnings. See Output → ToddSpect Setup.');
         }
       } catch (err) {
         void vscode.window.showErrorMessage(
@@ -218,7 +218,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
     }),
 
-    vscode.commands.registerCommand('harness.aidlcInstall', async () => {
+    vscode.commands.registerCommand('toddspect.aidlcInstall', async () => {
       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
       if (!workspaceFolder) {
         void vscode.window.showErrorMessage('Open a workspace folder first.');
@@ -246,27 +246,27 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
     }),
 
-    vscode.commands.registerCommand('harness.check.getGoat', async () => {
+    vscode.commands.registerCommand('toddspect.check.getGoat', async () => {
       const result = await cliService.runCommand('check', ['getGoat']);
-      const channel = vscode.window.createOutputChannel('Harness of AI getGoat');
+      const channel = vscode.window.createOutputChannel('ToddSpect getGoat');
       channel.clear();
       channel.appendLine(result.stderr || result.stdout || 'getGoat completed.');
       channel.show();
       if (!result.success) {
         const action = await vscode.window.showWarningMessage(
-          'Harness of AI getGoat: no agents ready. See Output → Harness of AI getGoat.',
+          'ToddSpect getGoat: no agents ready. See Output → ToddSpect getGoat.',
           'Login GitHub Copilot',
         );
         if (action === 'Login GitHub Copilot') {
-          await vscode.commands.executeCommand('harness.copilotLogin');
+          await vscode.commands.executeCommand('toddspect.copilotLogin');
         }
       } else {
-        void vscode.window.showInformationMessage('Harness of AI getGoat: at least one agent is ready.');
+        void vscode.window.showInformationMessage('ToddSpect getGoat: at least one agent is ready.');
       }
     }),
 
     // Login GitHub Copilot via gh auth login (terminal) or token input box
-    vscode.commands.registerCommand('harness.copilotLogin', async () => {
+    vscode.commands.registerCommand('toddspect.copilotLogin', async () => {
       const choice = await vscode.window.showQuickPick(
         [
           {
@@ -293,7 +293,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       }
 
       if (choice.id === 'gh') {
-        const terminal = vscode.window.createTerminal({ name: 'Harness of AI: gh auth login' });
+        const terminal = vscode.window.createTerminal({ name: 'ToddSpect: gh auth login' });
         terminal.show();
         // gh auth refresh adds the copilot scope to existing auth without re-login.
         // Falls back to full login if not yet authenticated.
@@ -332,18 +332,18 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         return;
       }
 
-      await context.secrets.store('harness.connectors.copilot.token', token);
+      await context.secrets.store('toddspect.connectors.copilot.token', token);
       void vscode.window.showInformationMessage(
-        'GitHub Copilot token saved. Restarting Harness of AI daemon...',
+        'GitHub Copilot token saved. Restarting ToddSpect daemon...',
       );
       cliService.dispose();
       void cliService.start().then(() => {
-        void vscode.window.showInformationMessage('Harness of AI daemon restarted with new token.');
+        void vscode.window.showInformationMessage('ToddSpect daemon restarted with new token.');
       });
     }),
 
-    // Initialize workspace .harness/ directory
-    vscode.commands.registerCommand('harness.initWorkspace', async () => {
+    // Initialize workspace .toddspect/ directory
+    vscode.commands.registerCommand('toddspect.initWorkspace', async () => {
       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
       if (!workspaceFolder) {
         void vscode.window.showErrorMessage('No workspace folder open.');
@@ -353,7 +353,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       const result = await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: 'Harness of AI: Initializing workspace...',
+          title: 'ToddSpect: Initializing workspace...',
           cancellable: false,
         },
         async () => cliService.runCommand('init', [workspaceFolder.uri.fsPath]),
@@ -361,7 +361,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
       if (result.success) {
         void vscode.window.showInformationMessage(
-          'Harness of AI workspace initialized! `.harness/` directory created.',
+          'ToddSpect workspace initialized! `.toddspect/` directory created.',
         );
       } else {
         void vscode.window.showErrorMessage(`Initialization failed: ${result.stderr}`);
@@ -369,7 +369,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     }),
 
     // Create new Spec
-    vscode.commands.registerCommand('harness.newSpec', async () => {
+    vscode.commands.registerCommand('toddspect.newSpec', async () => {
       specManagerProvider.createNewSpec();
     }),
   );
@@ -384,7 +384,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     outputChannel,
   );
 
-  outputChannel.info('Harness of AI extension activated.');
+  outputChannel.info('ToddSpect extension activated.');
 }
 
 export function deactivate(): void {

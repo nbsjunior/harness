@@ -1,15 +1,15 @@
 /**
  * @module config
- * Merges Harness configuration from YAML, environment variables, and the VS Code settings bridge.
+ * Merges ToddSpect configuration from YAML, environment variables, and the VS Code settings bridge.
  *
  * **Why:** Connectors need a single `AgentConnectorConfig` whether the CLI runs as a daemon
- * (extension) or standalone (`harness chat`). Secrets come from env; endpoints often from
- * `HARNESS_SETTINGS_JSON`.
+ * (extension) or standalone (`toddspect chat`). Secrets come from env; endpoints often from
+ * `TODDSPECT_SETTINGS_JSON`.
  *
  * **Copilot token order:** YAML token → env vars → `getGhCliToken()` (live `gh auth token`).
  * Extension-side precedence for env injection is defined in `configBridge.ts` (gh first).
  *
- * @see loadHarnessConfig — full merge including defaultAgent
+ * @see loadToddSpectConfig — full merge including defaultAgent
  * @see loadAgentConfig — connectors only (used by IPC router)
  */
 import * as fs from 'fs';
@@ -46,12 +46,12 @@ export interface KiroConnectorConfig {
   mode: 'cli' | 'rest';
 }
 
-export interface LoadedHarnessConfig {
+export interface LoadedToddSpectConfig {
   connectors: AgentConnectorConfig;
   defaultAgent: AgentSelectionId;
 }
 
-interface HarnessConfigFile {
+interface ToddSpectConfigFile {
   defaultAgent?: AgentSelectionId;
   connectors?: {
     copilot?: { token?: string; endpoint?: string };
@@ -71,11 +71,11 @@ interface HarnessConfigFile {
   aidlc?: { autoInstall?: boolean };
 }
 
-/** Non-secret settings pushed from the VS Code extension via HARNESS_SETTINGS_JSON. */
-interface HarnessSettingsBridge {
+/** Non-secret settings pushed from the VS Code extension via TODDSPECT_SETTINGS_JSON. */
+interface ToddSpectSettingsBridge {
   defaultAgent?: AgentSelectionId;
-  connectors?: HarnessConfigFile['connectors'];
-  aidlc?: HarnessConfigFile['aidlc'];
+  connectors?: ToddSpectConfigFile['connectors'];
+  aidlc?: ToddSpectConfigFile['aidlc'];
   promptOptimization?: {
     enabled?: boolean;
     maxContextCharsPerFile?: number;
@@ -89,15 +89,15 @@ interface HarnessSettingsBridge {
   };
 }
 
-export interface HarnessPromptSettings {
+export interface ToddSpectPromptSettings {
   enabled: boolean;
   maxContextCharsPerFile: number;
   maxHistoryMessages: number;
 }
 
-/** Workspace root — set by extension via HARNESS_WORKSPACE (may override VS Code folder). */
+/** Workspace root — set by extension via TODDSPECT_WORKSPACE (may override VS Code folder). */
 export function getWorkspaceRoot(): string {
-  const fromEnv = process.env['HARNESS_WORKSPACE']?.trim();
+  const fromEnv = process.env['TODDSPECT_WORKSPACE']?.trim();
   if (fromEnv) {
     return fromEnv;
   }
@@ -118,7 +118,7 @@ export function loadSpendingBudgetSettings(): SpendingBudgetSettings {
   };
 }
 
-export function loadPromptSettings(): HarnessPromptSettings {
+export function loadPromptSettings(): ToddSpectPromptSettings {
   const bridge = loadSettingsBridge();
   const p = bridge.promptOptimization ?? {};
   return {
@@ -135,15 +135,15 @@ function resolveInWorkspace(relativeOrAbsolute: string): string {
   return path.join(getWorkspaceRoot(), relativeOrAbsolute);
 }
 
-function loadSettingsBridge(): HarnessSettingsBridge {
-  const raw = process.env['HARNESS_SETTINGS_JSON'];
+function loadSettingsBridge(): ToddSpectSettingsBridge {
+  const raw = process.env['TODDSPECT_SETTINGS_JSON'];
   if (!raw) {
     return {};
   }
   try {
-    return JSON.parse(raw) as HarnessSettingsBridge;
+    return JSON.parse(raw) as ToddSpectSettingsBridge;
   } catch {
-    process.stderr.write('[harness-cli] Failed to parse HARNESS_SETTINGS_JSON\n');
+    process.stderr.write('[toddspect-cli] Failed to parse TODDSPECT_SETTINGS_JSON\n');
     return {};
   }
 }
@@ -158,7 +158,7 @@ function pickNonEmpty(...values: (string | undefined | null)[]): string {
   return '';
 }
 
-function loadYamlConfig(specsDir?: string): HarnessConfigFile {
+function loadYamlConfig(specsDir?: string): ToddSpectConfigFile {
   const workspace = getWorkspaceRoot();
   const candidates: string[] = [];
 
@@ -169,19 +169,19 @@ function loadYamlConfig(specsDir?: string): HarnessConfigFile {
   }
 
   candidates.push(
-    path.join(workspace, '.harness', 'config.yaml'),
-    path.join(workspace, '.harness', 'config.yml'),
+    path.join(workspace, '.toddspect', 'config.yaml'),
+    path.join(workspace, '.toddspect', 'config.yml'),
   );
 
   for (const candidate of candidates) {
     if (fs.existsSync(candidate)) {
       try {
-        const fileConfig = (yaml.load(fs.readFileSync(candidate, 'utf-8')) as HarnessConfigFile) ?? {};
-        process.stderr.write(`[harness-cli] Loaded config from: ${candidate}\n`);
+        const fileConfig = (yaml.load(fs.readFileSync(candidate, 'utf-8')) as ToddSpectConfigFile) ?? {};
+        process.stderr.write(`[toddspect-cli] Loaded config from: ${candidate}\n`);
         return fileConfig;
       } catch (err) {
         process.stderr.write(
-          `[harness-cli] Failed to parse config at ${candidate}: ${(err as Error).message}\n`,
+          `[toddspect-cli] Failed to parse config at ${candidate}: ${(err as Error).message}\n`,
         );
       }
       break;
@@ -197,18 +197,18 @@ function loadYamlConfig(specsDir?: string): HarnessConfigFile {
  * Merge order (highest precedence first):
  *  1. `getGhCliToken()` — live `gh auth token` subprocess (Copilot only)
  *  2. Environment variables (`GH_TOKEN`, `ANTHROPIC_API_KEY`, `KIRO_API_KEY`, …)
- *  3. `HARNESS_SETTINGS_JSON` — VS Code settings bridged by `configBridge.ts`
- *  4. `.harness/config.yaml` in the workspace
+ *  3. `TODDSPECT_SETTINGS_JSON` — VS Code settings bridged by `configBridge.ts`
+ *  4. `.toddspect/config.yaml` in the workspace
  *  5. Built-in defaults
  *
- * The returned `LoadedHarnessConfig` is the single source of truth for all
+ * The returned `LoadedToddSpectConfig` is the single source of truth for all
  * connector settings inside the CLI. Never read env vars or config files directly
  * elsewhere — always call this function.
  *
  * @param specsDir - workspace-relative path to the specs directory, used to
- *                   locate the config file. Defaults to `.harness`.
+ *                   locate the config file. Defaults to `.toddspect`.
  */
-export function loadHarnessConfig(specsDir?: string): LoadedHarnessConfig {
+export function loadToddSpectConfig(specsDir?: string): LoadedToddSpectConfig {
   const fileConfig = loadYamlConfig(specsDir);
   const bridge = loadSettingsBridge();
 
@@ -301,7 +301,7 @@ export function loadHarnessConfig(specsDir?: string): LoadedHarnessConfig {
   return { connectors, defaultAgent };
 }
 
-/** @deprecated Use loadHarnessConfig — returns connectors only. */
+/** @deprecated Use loadToddSpectConfig — returns connectors only. */
 export function loadAgentConfig(specsDir?: string): AgentConnectorConfig {
-  return loadHarnessConfig(specsDir).connectors;
+  return loadToddSpectConfig(specsDir).connectors;
 }

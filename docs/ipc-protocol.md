@@ -1,4 +1,4 @@
-# Harness IPC Protocol
+# ToddSpect IPC Protocol
 
 The **Extension Host** (VSCode extension process) and the **CLI Daemon** communicate through a strictly defined protocol over `stdin`/`stdout` using newline-delimited JSON.
 
@@ -41,7 +41,7 @@ interface IPCMessage<TPayload = unknown> {
 When the CLI cannot fulfill a request, it responds with the **same `id` and `action`** as the request, an empty/null `payload`, and a non-empty `error` string:
 
 ```json
-{ "id": "abc-123", "action": "spec:parse", "payload": null, "error": "File not found: .harness/specs/missing.md" }
+{ "id": "abc-123", "action": "spec:parse", "payload": null, "error": "File not found: .toddspect/specs/missing.md" }
 ```
 
 The Extension Host rejects the corresponding `Promise` with an `Error` whose message is `msg.error`.
@@ -118,7 +118,7 @@ Sends a conversation history and context paths to the agent.
     "agent": "copilot",
     "mode": "agent",
     "model": "gpt-4.1",
-    "specsDir": "/home/user/project/.harness/specs"
+    "specsDir": "/home/user/project/.toddspect/specs"
   }
 }
 ```
@@ -216,7 +216,7 @@ Sent when the agent call fails mid-stream.
 {
   "id": "req-002",
   "action": "spec:parse",
-  "payload": { "path": "/home/user/project/.harness/specs" }
+  "payload": { "path": "/home/user/project/.toddspect/specs" }
 }
 ```
 
@@ -233,7 +233,7 @@ Sent when the agent call fails mid-stream.
         "description": "Performs a thorough code review…",
         "tools": [{ "name": "read_file", "description": "Reads a source file" }],
         "agents": { "preferred": "copilot", "fallback": "claude" },
-        "filePath": "/home/user/project/.harness/specs/skill-code-review.md"
+        "filePath": "/home/user/project/.toddspect/specs/skill-code-review.md"
       }
     ]
   }

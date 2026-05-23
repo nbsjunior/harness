@@ -47,16 +47,16 @@ postMessage({ command: 'selectMode', payload: { mode: 'agent' } });
 
 ```typescript
 // ✅ Store
-await context.secrets.store('harness.connectors.copilot.token', token);
+await context.secrets.store('toddspect.connectors.copilot.token', token);
 
 // ✅ Read
-const token = await context.secrets.get('harness.connectors.copilot.token');
+const token = await context.secrets.get('toddspect.connectors.copilot.token');
 ```
 
 Never store secrets in VS Code settings (they appear in settings.json in plain text).
 
 ## Adding a VS Code Command
 
-1. Register in `extension.ts`: `vscode.commands.registerCommand('harness.myCmd', ...)`
+1. Register in `extension.ts`: `vscode.commands.registerCommand('toddspect.myCmd', ...)`
 2. Declare in `package.json` → `contributes.commands`
 3. Add to palette via `contributes.menus` if needed

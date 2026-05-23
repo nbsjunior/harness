@@ -1,13 +1,13 @@
 ---
-description: Harness project architecture, conventions and key design decisions
+description: ToddSpect project architecture, conventions and key design decisions
 alwaysApply: true
 ---
 
-# Harness — Architecture Overview
+# ToddSpect — Architecture Overview
 
 > Before editing code, read `AGENTS.md`, then `docs/ai-reference.md` and `docs/code-map.md`.
 
-Harness is a **dual-mode meta-agent orchestrator**: it routes prompts to AI agents
+ToddSpect is a **dual-mode meta-agent orchestrator**: it routes prompts to AI agents
 (Copilot, Devin, Cursor, Claude, Kiro) via a VS Code Extension OR standalone CLI.
 
 ## Package Structure
@@ -25,7 +25,7 @@ Protocol: newline-delimited JSON on stdin/stdout.
 
 ```
 stdout = JSON frames ONLY  →  never console.log() in daemon code
-stderr = human logs        →  use harnessLog() / harnessWarn() from log.ts
+stderr = human logs        →  use toddspectLog() / toddspectWarn() from log.ts
 ```
 
 Message shape: `{ id: uuid, action: IpcAction, payload: T, error?: string }`
@@ -35,8 +35,8 @@ Message shape: `{ id: uuid, action: IpcAction, payload: T, error?: string }`
 1. `gh auth token` (live — for Copilot only)
 2. VS Code Secrets
 3. Environment variables (GH_TOKEN, ANTHROPIC_API_KEY, …)
-4. HARNESS_SETTINGS_JSON (bridged from VS Code settings)
-5. `.harness/config.yaml`
+4. TODDSPECT_SETTINGS_JSON (bridged from VS Code settings)
+5. `.toddspect/config.yaml`
 6. Defaults
 
 ## Copilot Mode Selector
@@ -44,7 +44,7 @@ Message shape: `{ id: uuid, action: IpcAction, payload: T, error?: string }`
 Three modes in the chat UI:
 - `ask` — simple chat/completions, conversational
 - `agent` — tool-calling loop (read_file, write_file, list_files, search_in_files)
-- `spec+agent` — like agent but injects `.harness/specs/*.yaml` as `<spec>` system context
+- `spec+agent` — like agent but injects `.toddspect/specs/*.yaml` as `<spec>` system context
 
 ## Adding a New Agent Checklist
 

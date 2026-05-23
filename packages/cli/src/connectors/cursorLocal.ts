@@ -1,6 +1,6 @@
 /**
- * Cursor SDK local runtime — edits files in HARNESS_WORKSPACE via @cursor/sdk.
- * Does not use GitHub Copilot; requires CURSOR_API_KEY / harness.connectors.cursor.apiKey.
+ * Cursor SDK local runtime — edits files in TODDSPECT_WORKSPACE via @cursor/sdk.
+ * Does not use GitHub Copilot; requires CURSOR_API_KEY / toddspect.connectors.cursor.apiKey.
  *
  * @cursor/sdk is loaded at runtime (dynamic import) so the CLI bundle stays external-friendly.
  */
@@ -10,7 +10,7 @@ import type { ChatMessage, ChatToolEventPayload, ContextItem, CopilotMode } from
 import { resolveProviderModel } from '../models/providerModels.js';
 import { buildCursorPrompt } from './cursorCloud.js';
 import { isChatSessionCancelled } from '../session/cancel.js';
-import { harnessLog, harnessWarn } from '../log.js';
+import { toddspectLog, toddspectWarn } from '../log.js';
 
 export class CursorLocalUnavailableError extends Error {
   constructor(message: string) {
@@ -90,7 +90,7 @@ export function clearCursorLocalSession(sessionId: string): void {
   if (entry) {
     sessionAgents.delete(sessionId);
     void entry.agent[Symbol.asyncDispose]().catch((err: Error) => {
-      harnessWarn(`[cursor-local] dispose failed: ${err.message}`);
+      toddspectWarn(`[cursor-local] dispose failed: ${err.message}`);
     });
   }
 }
@@ -124,7 +124,7 @@ function cursorSdkModelId(model?: string): string {
 }
 
 function workspaceRoot(): string {
-  return process.env['HARNESS_WORKSPACE']?.trim() || process.cwd();
+  return process.env['TODDSPECT_WORKSPACE']?.trim() || process.cwd();
 }
 
 function resolveWorkspacePath(filePath: string): string {
@@ -268,7 +268,7 @@ async function getOrCreateAgent(
   }
 
   sessionAgents.set(sessionId, { agent });
-  harnessLog(`[cursor-local] session=${sessionId} agent=${agent.agentId} cwd=${cwd}`);
+  toddspectLog(`[cursor-local] session=${sessionId} agent=${agent.agentId} cwd=${cwd}`);
   return agent;
 }
 
@@ -282,7 +282,7 @@ export async function cancelCursorLocalSession(sessionId: string): Promise<void>
     try {
       await run.cancel();
     } catch (err) {
-      harnessWarn(`[cursor-local] cancel failed: ${(err as Error).message}`);
+      toddspectWarn(`[cursor-local] cancel failed: ${(err as Error).message}`);
     }
   }
   entry.activeRun = undefined;
@@ -292,7 +292,7 @@ export async function routeCursorLocal(req: CursorLocalRequest): Promise<void> {
   const apiKey = req.apiKey.trim();
   if (!apiKey) {
     req.onError(
-      'Cursor API key required for local file edits. Set CURSOR_API_KEY or harness.connectors.cursor.apiKey ' +
+      'Cursor API key required for local file edits. Set CURSOR_API_KEY or toddspect.connectors.cursor.apiKey ' +
         '(https://cursor.com/dashboard/integrations).',
     );
     return;
@@ -326,7 +326,7 @@ export async function routeCursorLocal(req: CursorLocalRequest): Promise<void> {
   }
 
   req.onChunk('**[Agent]** Cursor local run starting…\n\n');
-  harnessLog(`[cursor-local] session=${req.sessionId} model=${modelId} followUp=${isFollowUp}`);
+  toddspectLog(`[cursor-local] session=${req.sessionId} model=${modelId} followUp=${isFollowUp}`);
 
   let run: SdkRunHandle;
   try {

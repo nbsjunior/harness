@@ -1,5 +1,5 @@
 /**
- * Persist chat session to `.harness/chat-session.json` (survives VS Code restart).
+ * Persist chat session to `.toddspect/chat-session.json` (survives VS Code restart).
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -20,7 +20,7 @@ export interface PersistedChatSession {
 }
 
 export function chatSessionPath(workspaceRoot?: string): string {
-  return path.join(workspaceRoot ?? getWorkspaceRoot(), '.harness', 'chat-session.json');
+  return path.join(workspaceRoot ?? getWorkspaceRoot(), '.toddspect', 'chat-session.json');
 }
 
 export function loadChatSession(workspaceRoot?: string): PersistedChatSession | null {
@@ -53,7 +53,7 @@ export function saveChatSession(
   workspaceRoot?: string,
 ): PersistedChatSession {
   const root = workspaceRoot ?? getWorkspaceRoot();
-  const dir = path.join(root, '.harness');
+  const dir = path.join(root, '.toddspect');
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }

@@ -1,5 +1,5 @@
-# Example — copy to harness-agent.yml and configure secrets.
-name: Harness Agent
+# Example — copy to toddspect-agent.yml and configure secrets.
+name: ToddSpect Agent
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ on:
         default: 'Review this repository for obvious bugs and missing tests.'
 
 jobs:
-  harness:
+  toddspect:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,7 +19,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Harness CLI
+      - name: Install ToddSpect CLI
         run: npm ci && npm run build:cli
 
       - name: Agent readiness
@@ -29,9 +29,9 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node packages/cli/dist/index.js check getGoat --json
 
-      - name: Run Harness agent
+      - name: Run ToddSpect agent
         env:
-          HARNESS_WORKSPACE: ${{ github.workspace }}
+          TODDSPECT_WORKSPACE: ${{ github.workspace }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           node packages/cli/dist/index.js agent:run \

@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # Chat Interface
 
-The Harness chat is designed like **Cursor**: messages on top, composer at the bottom, provider pills below the input.
+The ToddSpect chat is designed like **Cursor**: messages on top, composer at the bottom, provider pills below the input.
 
-This is where you **switch AI providers without leaving VS Code** — Copilot, Claude, Cursor, Devin, Kiro, or **Auto** — while keeping the same **context chips** and (for Copilot) **Spec+Agent** mode. See [Why Harness](Why-Harness).
+This is where you **switch AI providers without leaving VS Code** — Copilot, Claude, Cursor, Devin, Kiro, or **Auto** — while keeping the same **context chips** and (for Copilot) **Spec+Agent** mode. See [Why ToddSpect](Why-ToddSpect).
 
 ## Layout
 
@@ -36,7 +36,7 @@ This is where you **switch AI providers without leaving VS Code** — Copilot, C
 
 Click a provider to switch: **Auto**, **Copilot**, **Devin**, **Cursor**, **Claude**, **Kiro**.
 
-**Auto** (default) lets Harness pick the best provider per message — see [Auto Routing](Auto-Routing).
+**Auto** (default) lets ToddSpect pick the best provider per message — see [Auto Routing](Auto-Routing).
 
 The selected pill is highlighted. Changing provider applies to the next message.
 
@@ -65,4 +65,4 @@ Context chips also open files on click (× removes from context).
 
 ## Output trace
 
-**View → Output → Harness** — full IPC trace (secrets redacted). Use for debugging daemon issues.
+**View → Output → ToddSpect** — full IPC trace (secrets redacted). Use for debugging daemon issues.

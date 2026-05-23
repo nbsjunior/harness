@@ -1,19 +1,19 @@
-# Harness — CLI or VS Code Extension
+# ToddSpect — CLI or VS Code Extension
 
-Harness offers **two ways** to use the same orchestrator. Pick one — both share `.harness/` config and the same agent router.
+ToddSpect offers **two ways** to use the same orchestrator. Pick one — both share `.toddspect/` config and the same agent router.
 
-**Value proposition:** the extension is how most teams get **one IDE + many providers + SDD + context** in a single UI. The CLI is the same engine for scripts and CI. See [why-harness.md](why-harness.md).
+**Value proposition:** the extension is how most teams get **one IDE + many providers + SDD + context** in a single UI. The CLI is the same engine for scripts and CI. See [why-toddspect.md](why-toddspect.md).
 
 ```
                     ┌─────────────────────────────────┐
-                    │     Harness Agent Router        │
+                    │     ToddSpect Agent Router        │
                     │  Copilot · Claude · Devin · …   │
                     └───────────────┬─────────────────┘
                                     │
               ┌─────────────────────┴─────────────────────┐
               ▼                                           ▼
    ┌──────────────────────┐                 ┌──────────────────────┐
-   │  VS Code Extension   │                 │   CLI (`harness`)    │
+   │  VS Code Extension   │                 │   CLI (`toddspect`)    │
    │  Sidebar Chat UI     │                 │   Terminal / CI      │
    │  Config wizard       │                 │   Scripts / pipes      │
    └──────────┬───────────┘                 └──────────┬───────────┘
@@ -30,17 +30,17 @@ Harness offers **two ways** to use the same orchestrator. Pick one — both shar
 |---|---|
 | Chat in the IDE, context from Explorer, Spec Manager | **VS Code Extension** |
 | Scripts, CI, terminal one-liners, no IDE | **CLI** |
-| Both | Install extension **and** use CLI — same tokens via `gh auth token` / `.harness/config.yaml` |
+| Both | Install extension **and** use CLI — same tokens via `gh auth token` / `.toddspect/config.yaml` |
 
 ---
 
 ## Quick start — Extension (simplest for most users)
 
-1. Install `harness-vscode-0.1.0.vsix` (includes bundled CLI).
-2. Click **Harness** in the Activity Bar → **Chat**.
-3. `Ctrl+Shift+P` → **Harness: Initialize Workspace**.
-4. `Ctrl+Shift+P` → **Harness: Open Configuration** → configure **GitHub Copilot** (`gh auth token`).
-5. Right-click files → **Add to Harness Context** → send a message.
+1. Install `toddspect-vscode-0.1.0.vsix` (includes bundled CLI).
+2. Click **ToddSpect** in the Activity Bar → **Chat**.
+3. `Ctrl+Shift+P` → **ToddSpect: Initialize Workspace**.
+4. `Ctrl+Shift+P` → **ToddSpect: Open Configuration** → configure **GitHub Copilot** (`gh auth token`).
+5. Right-click files → **Add to ToddSpect Context** → send a message.
 
 Details: [starter-kit.md](starter-kit.md)
 
@@ -50,10 +50,10 @@ Details: [starter-kit.md](starter-kit.md)
 
 ```bash
 # 1. Build (from repo clone)
-cd harness
+cd toddspect
 npm install
 npm run build:cli
-npm run setup    # Kiro CLI + AI-DLC rules + .harness/
+npm run setup    # Kiro CLI + AI-DLC rules + .toddspect/
 
 # 2. Auth for Copilot (recommended)
 gh auth login
@@ -76,8 +76,8 @@ Or link globally after build:
 
 ```bash
 cd packages/cli && npm link
-harness check getGoat
-harness agent:run -a copilot -p "Hello"
+toddspect check getGoat
+toddspect agent:run -a copilot -p "Hello"
 ```
 
 ---
@@ -87,11 +87,11 @@ harness agent:run -a copilot -p "Hello"
 | Source | Extension | CLI |
 |---|---|---|
 | Secrets (tokens) | VS Code Secret Storage → `GH_TOKEN`, etc. | Same env vars when spawned from extension |
-| Endpoints / paths | VS Code settings → `HARNESS_SETTINGS_JSON` | Read by CLI daemon |
-| Project config | `.harness/config.yaml` | `.harness/config.yaml` |
+| Endpoints / paths | VS Code settings → `TODDSPECT_SETTINGS_JSON` | Read by CLI daemon |
+| Project config | `.toddspect/config.yaml` | `.toddspect/config.yaml` |
 | Shell env | `GH_TOKEN`, `ANTHROPIC_API_KEY`, … | Same |
 
-**Tip:** Run **`Harness: Check getGoat`** or `harness check getGoat` before your first chat to see which agents are ready.
+**Tip:** Run **`ToddSpect: Check getGoat`** or `toddspect check getGoat` before your first chat to see which agents are ready.
 
 ---
 
@@ -105,7 +105,7 @@ npm run getGoat
 In VS Code:
 
 ```
-Ctrl+Shift+P → Harness: Check getGoat
+Ctrl+Shift+P → ToddSpect: Check getGoat
 ```
 
 Expected: at least **GitHub Copilot** shows ✓ when `GH_TOKEN` is set with a valid OAuth token (`gho_…`), not classic `ghp_…`.
@@ -117,7 +117,7 @@ Expected: at least **GitHub Copilot** shows ✓ when `GH_TOKEN` is set with a va
 ```bash
 git pull
 npm run package:vsix
-code --install-extension packages/extension/harness-vscode-0.1.0.vsix
+code --install-extension packages/extension/toddspect-vscode-0.1.0.vsix
 ```
 
 Reload VSCode. CLI inside the `.vsix` updates automatically with the extension.
@@ -131,5 +131,5 @@ Reload VSCode. CLI inside the `.vsix` updates automatically with the extension.
 | Extension says CLI not found | Reinstall `.vsix` built with `npm run package:vsix` |
 | getGoat shows 0/5 agents | `gh auth login` → `export GH_TOKEN=$(gh auth token)` |
 | Copilot HTTP 400 PAT | Do not use `ghp_` tokens — use `gh auth token` |
-| CLI works, Extension does not | Reload window; **Harness: Check getGoat** |
-| Extension works, CLI does not | Run CLI from project root; `harness init` |
+| CLI works, Extension does not | Reload window; **ToddSpect: Check getGoat** |
+| Extension works, CLI does not | Run CLI from project root; `toddspect init` |

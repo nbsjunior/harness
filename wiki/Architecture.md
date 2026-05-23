@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # Architecture
@@ -21,7 +21,7 @@
 
 1. **Extension never reads file contents** for agent calls
 2. **stdout** = JSON IPC only (daemon mode)
-3. **stderr** = human logs (`harnessLog`)
+3. **stderr** = human logs (`toddspectLog`)
 4. **Secrets** in VS Code Secret Storage or env — not in YAML
 
 ## Packages
@@ -37,5 +37,5 @@ The CLI is bundled as a single ESM file inside the `.vsix` (`extension/cli/dist/
 
 ## More detail
 
-- Repository: [docs/architecture.md](https://github.com/nbsjunior/harness/blob/main/docs/architecture.md)
-- AI reference: [AGENTS.md](https://github.com/nbsjunior/harness/blob/main/AGENTS.md)
+- Repository: [docs/architecture.md](https://github.com/nbsjunior/ToddSpect/blob/main/docs/architecture.md)
+- AI reference: [AGENTS.md](https://github.com/nbsjunior/ToddSpect/blob/main/AGENTS.md)

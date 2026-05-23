@@ -190,7 +190,7 @@ function renderWorkflowPane(): HTMLElement {
       <button id="wf-new-feature" class="btn-primary btn-sm">+ New feature</button>
       <button id="wf-discover" class="btn-ghost btn-sm" title="Repo-based spec suggestions">Discover</button>
     </div>
-    ${!status.initialized ? `<div class="wf-banner">Initialize <code>.harness/sdd/</code> to mirror <a href="https://github.com/github/spec-kit">spec-kit</a> (constitution → specify → plan → tasks → implement).</div>` : ''}
+    ${!status.initialized ? `<div class="wf-banner">Initialize <code>.toddspect/sdd/</code> to mirror <a href="https://github.com/github/spec-kit">spec-kit</a> (constitution → specify → plan → tasks → implement).</div>` : ''}
     ${wizardHtml}
     <div class="wf-feature-row">
       <label class="form-label">Active feature</label>

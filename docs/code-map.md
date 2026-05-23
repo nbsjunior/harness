@@ -1,4 +1,4 @@
-# Harness — Code Map (exports by file)
+# ToddSpect — Code Map (exports by file)
 
 > One-line purpose for every public export. Use with [ai-reference.md](ai-reference.md) for *why*.
 
@@ -17,15 +17,15 @@ Shared IPC and domain types (mirror extension). Key: `AgentId`, `CopilotMode`, `
 |--------|---------|
 | `AgentConnectorConfig` | All agent connection settings (tokens, endpoints, Kiro CLI path). |
 | `KiroConnectorConfig` | Kiro-specific: cliPath, trustTools, aidlcAutoInstall, mode cli\|rest. |
-| `LoadedHarnessConfig` | Config + defaultAgent. |
-| `loadHarnessConfig()` | Merge YAML + env + `HARNESS_SETTINGS_JSON`; Copilot token includes `getGhCliToken()`. |
+| `LoadedToddSpectConfig` | Config + defaultAgent. |
+| `loadToddSpectConfig()` | Merge YAML + env + `TODDSPECT_SETTINGS_JSON`; Copilot token includes `getGhCliToken()`. |
 | `loadAgentConfig()` | Returns only `connectors` slice (used by IPC router). |
 
 ### `log.ts`
 | Export | Purpose |
 |--------|---------|
-| `harnessLog()` | Print to stderr if `HARNESS_IPC=1`, else stdout. |
-| `harnessWarn()` | Same for warnings. |
+| `toddspectLog()` | Print to stderr if `TODDSPECT_IPC=1`, else stdout. |
+| `toddspectWarn()` | Same for warnings. |
 
 ### `ipc/IpcServer.ts`
 | Export | Purpose |
@@ -74,7 +74,7 @@ Module-level: `buildCopilotTools()`, `executeCopilotTool()` — agent file tools
 ### `connectors/cursorLocal.ts`
 | Export | Purpose |
 |--------|---------|
-| `routeCursorLocal()` | `@cursor/sdk` local runtime — edits `HARNESS_WORKSPACE`, emits `onToolEvent`. |
+| `routeCursorLocal()` | `@cursor/sdk` local runtime — edits `TODDSPECT_WORKSPACE`, emits `onToolEvent`. |
 | `cancelCursorLocalSession()` | Cancel active SDK run on Stop. |
 | `clearCursorLocalSession()` | Dispose SDK agent for session. |
 | `CursorLocalUnavailableError` | SDK load failure — router may fall back to Copilot. |
@@ -110,13 +110,13 @@ Module-level: `buildCopilotTools()`, `executeCopilotTool()` — agent file tools
 ### `kiro/bootstrap.ts`
 | Export | Purpose |
 |--------|---------|
-| `ensureKiroCli()` | Download/install Kiro CLI for OS/arch; cache path in `~/.harness/tools`. |
+| `ensureKiroCli()` | Download/install Kiro CLI for OS/arch; cache path in `~/.toddspect/tools`. |
 | `resolveKiroCliPathSync()` | Sync path: env > cache marker > bundled > `kiro-cli`. |
 
 ### `kiro/paths.ts`
 | Export | Purpose |
 |--------|---------|
-| `getKiroToolsRoot()` | `~/.harness/tools/kiro-cli`. |
+| `getKiroToolsRoot()` | `~/.toddspect/tools/kiro-cli`. |
 | `readCachedKiroCliPath()` / `writeCachedKiroCliPath()` | Marker file for installed binary. |
 | `resolveBundledKiroCliPath()` | Path inside extension/npm package if present. |
 
@@ -172,7 +172,7 @@ Version, steering rule names, release zip URL for AI-DLC rules.
 ### `commands/init.ts`
 | Export | Purpose |
 |--------|---------|
-| `initCommand()` | Create `.harness/` scaffold (config, specs dir). |
+| `initCommand()` | Create `.toddspect/` scaffold (config, specs dir). |
 
 ### `commands/aidlc.ts`
 | Export | Purpose |
@@ -183,7 +183,7 @@ Version, steering rule names, release zip URL for AI-DLC rules.
 ### `commands/agentRun.ts`
 | Export | Purpose |
 |--------|---------|
-| `agentRunCommand()` | One-shot agent prompt from CLI (`harness run`). |
+| `agentRunCommand()` | One-shot agent prompt from CLI (`toddspect run`). |
 
 ### `commands/contextBuild.ts`
 | Export | Purpose |
@@ -210,7 +210,7 @@ Version, steering rule names, release zip URL for AI-DLC rules.
 | `activate()` | Start CliService daemon, bootstrap setup subprocess, register commands/webviews. |
 | `deactivate()` | Subscriptions dispose CLI/MCP. |
 
-Commands include: `harness.check.getGoat`, `harness.copilotLogin`, `harness.setup`, `harness.aidlcInstall`, context commands.
+Commands include: `toddspect.check.getGoat`, `toddspect.copilotLogin`, `toddspect.setup`, `toddspect.aidlcInstall`, context commands.
 
 ### `types.ts`
 Canonical types for extension + webview: `AGENT_DESCRIPTORS`, `CopilotMode`, IPC payloads, webview command unions.
@@ -218,7 +218,7 @@ Canonical types for extension + webview: `AGENT_DESCRIPTORS`, `CopilotMode`, IPC
 ### `configBridge.ts`
 | Export | Purpose |
 |--------|---------|
-| `buildHarnessProcessEnv()` | Build env for CLI child: secrets, live `gh auth token` first, `HARNESS_SETTINGS_JSON`, `KIRO_CLI_PATH`. |
+| `buildToddSpectProcessEnv()` | Build env for CLI child: secrets, live `gh auth token` first, `TODDSPECT_SETTINGS_JSON`, `KIRO_CLI_PATH`. |
 
 ### `services/CliService.ts`
 | Export | Purpose |
@@ -251,7 +251,7 @@ Canonical types for extension + webview: `AGENT_DESCRIPTORS`, `CopilotMode`, IPC
 
 | Export | Purpose |
 |--------|---------|
-| `initSddWorkspace()` | Bootstrap `.harness/sdd/` (spec-kit layout). |
+| `initSddWorkspace()` | Bootstrap `.toddspect/sdd/` (spec-kit layout). |
 | `getSddWorkflowStatus()` | Step states (locked/ready/done) per feature. |
 | `createSddFeature()` | New `specs/001-slug/` with spec + clarifications templates. |
 | `writeSddArtifact()` | Scaffold constitution, spec, plan, tasks, checklist. |
@@ -261,7 +261,7 @@ Canonical types for extension + webview: `AGENT_DESCRIPTORS`, `CopilotMode`, IPC
 ### `panels/SpecManagerPanel.ts`
 | Export | Purpose |
 |--------|---------|
-| `SpecManagerProvider` | SDD webview: spec-kit workflow + Harness specs editor; IPC `sdd:workflow:*`. |
+| `SpecManagerProvider` | SDD webview: spec-kit workflow + ToddSpect specs editor; IPC `sdd:workflow:*`. |
 
 ### `mcp/McpClientManager.ts`
 | Export | Purpose |
@@ -298,5 +298,5 @@ Browser bundle: spec editor/list UI.
 
 | Path | Purpose |
 |------|---------|
-| `.harness/config.yaml` | Default agent, connector endpoints (no secrets). |
-| `.harness/specs/*.yaml` | SDD spec definitions for Spec+Agent mode. |
+| `.toddspect/config.yaml` | Default agent, connector endpoints (no secrets). |
+| `.toddspect/specs/*.yaml` | SDD spec definitions for Spec+Agent mode. |

@@ -41,13 +41,13 @@ export function pruneEmptyAssistantTurns(messages: ChatMessage[]): ChatMessage[]
   );
 }
 
-/** Merge multiple Harness guidance system messages into one block. */
-export function mergeHarnessSystemGuidance(messages: ChatMessage[]): ChatMessage[] {
+/** Merge multiple ToddSpect guidance system messages into one block. */
+export function mergeToddSpectSystemGuidance(messages: ChatMessage[]): ChatMessage[] {
   const guidanceParts: string[] = [];
   const rest: ChatMessage[] = [];
 
   for (const m of messages) {
-    if (m.role === 'system' && m.content.includes('assisting through Harness')) {
+    if (m.role === 'system' && m.content.includes('assisting through ToddSpect')) {
       guidanceParts.push(normalizeMessageContent(m.content));
     } else {
       rest.push(m);
@@ -60,7 +60,7 @@ export function mergeHarnessSystemGuidance(messages: ChatMessage[]): ChatMessage
 
   const merged = [...new Set(guidanceParts)].join('\n\n');
   const firstIdx = messages.findIndex(
-    (m) => m.role === 'system' && m.content.includes('assisting through Harness'),
+    (m) => m.role === 'system' && m.content.includes('assisting through ToddSpect'),
   );
   const mergedMsg: ChatMessage = {
     id: messages[firstIdx]?.id ?? crypto.randomUUID(),
@@ -72,7 +72,7 @@ export function mergeHarnessSystemGuidance(messages: ChatMessage[]): ChatMessage
   let inserted = false;
   const out: ChatMessage[] = [];
   for (const m of messages) {
-    if (m.role === 'system' && m.content.includes('assisting through Harness')) {
+    if (m.role === 'system' && m.content.includes('assisting through ToddSpect')) {
       if (!inserted) {
         out.push(mergedMsg);
         inserted = true;
@@ -89,7 +89,7 @@ const AGENT_COT_HINT = `For multi-step implementation:
 - Execute in small verifiable steps; prefer minimal diffs.
 - After changes, self-check: requirements, types, security, tests.`;
 
-const SPEC_AGENT_HINT = `Active Harness specs are authoritative. Satisfy their acceptance criteria before optional improvements.`;
+const SPEC_AGENT_HINT = `Active ToddSpect specs are authoritative. Satisfy their acceptance criteria before optional improvements.`;
 
 export function augmentGuidanceForMode(base: string, mode?: CopilotMode): string {
   const m = mode ?? 'ask';
@@ -117,6 +117,6 @@ export function applyPromptEngineeringPipeline(
   }));
   out = dedupeConsecutiveUserMessages(out);
   out = pruneEmptyAssistantTurns(out);
-  out = mergeHarnessSystemGuidance(out);
+  out = mergeToddSpectSystemGuidance(out);
   return out;
 }

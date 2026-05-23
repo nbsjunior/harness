@@ -1,10 +1,10 @@
-# GitHub Actions — Harness agent runs
+# GitHub Actions — ToddSpect agent runs
 
-Run Harness in CI with the same CLI bundled in the VSIX (or `npm run build:cli` in your repo).
+Run ToddSpect in CI with the same CLI bundled in the VSIX (or `npm run build:cli` in your repo).
 
 ## Example workflow
 
-Copy [`.github/workflows/harness-agent.example.yml`](../.github/workflows/harness-agent.example.yml) to `harness-agent.yml` and set secrets:
+Copy [`.github/workflows/toddspect-agent.example.yml`](../.github/workflows/toddspect-agent.example.yml) to `toddspect-agent.yml` and set secrets:
 
 | Secret | Purpose |
 |--------|---------|
@@ -16,17 +16,17 @@ Copy [`.github/workflows/harness-agent.example.yml`](../.github/workflows/harnes
 
 ```bash
 # One-shot review (stdout)
-harness agent:run -a copilot -p "Review the PR diff for security issues"
+toddspect agent:run -a copilot -p "Review the PR diff for security issues"
 
 # Parallel fan-out
-harness agent:fanout -a copilot,claude -p "Summarize risks in src/auth/"
+toddspect agent:fanout -a copilot,claude -p "Summarize risks in src/auth/"
 
 # Spec suggestions from repo layout
-harness spec:discover --write
+toddspect spec:discover --write
 ```
 
 ## Tips
 
-- Set `HARNESS_WORKSPACE` to `$GITHUB_WORKSPACE`
-- Use `harness check getGoat --json` in a prior step to fail fast when agents are misconfigured
+- Set `TODDSPECT_WORKSPACE` to `$GITHUB_WORKSPACE`
+- Use `toddspect check getGoat --json` in a prior step to fail fast when agents are misconfigured
 - Fan-out runs are independent; combine results in a job summary step

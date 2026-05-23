@@ -1,37 +1,37 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # Configuration
 
 ## Configuration panel
 
-`Ctrl+Shift+P` → **Harness: Open Configuration**
+`Ctrl+Shift+P` → **ToddSpect: Open Configuration**
 
 Tabs:
 - **Agents** — API keys and endpoints per provider
 - **API Servers** — custom OpenAI-compatible servers
 - **MCP** — Model Context Protocol servers
-- **Workspace** — paths and harness settings
+- **Workspace** — paths and toddspect settings
 
 ## VS Code settings
 
 ```json
 {
-  "harness.defaultAgent": "copilot",
-  "harness.specsDirectory": ".harness/specs",
-  "harness.connectors.copilot.token": "",
-  "harness.connectors.cursor.endpoint": "https://api.cursor.com",
-  "harness.connectors.cursor.apiKey": "",
-  "harness.connectors.devin.apiKey": "",
-  "harness.connectors.claude.path": "claude",
-  "harness.connectors.kiro.apiKey": ""
+  "toddspect.defaultAgent": "copilot",
+  "toddspect.specsDirectory": ".toddspect/specs",
+  "toddspect.connectors.copilot.token": "",
+  "toddspect.connectors.cursor.endpoint": "https://api.cursor.com",
+  "toddspect.connectors.cursor.apiKey": "",
+  "toddspect.connectors.devin.apiKey": "",
+  "toddspect.connectors.claude.path": "claude",
+  "toddspect.connectors.kiro.apiKey": ""
 }
 ```
 
-Secrets should use **Harness: Open Configuration** (stored in VS Code Secret Storage), not plain `settings.json`.
+Secrets should use **ToddSpect: Open Configuration** (stored in VS Code Secret Storage), not plain `settings.json`.
 
-## Project config (`.harness/config.yaml`)
+## Project config (`.toddspect/config.yaml`)
 
 ```yaml
 connectors:
@@ -58,12 +58,12 @@ Never commit API keys in YAML.
 | `CURSOR_API_KEY`, `CURSOR_API_ENDPOINT` | Cursor |
 | `ANTHROPIC_API_KEY`, `CLAUDE_PATH` | Claude |
 | `KIRO_API_KEY` | Kiro |
-| `HARNESS_WORKSPACE` | CLI working directory |
+| `TODDSPECT_WORKSPACE` | CLI working directory |
 
 ## Check getGoat
 
 ```bash
-harness check getGoat
+toddspect check getGoat
 ```
 
-Or **Harness: Check getGoat** — shows which agents are ready and hints for missing config.
+Or **ToddSpect: Check getGoat** — shows which agents are ready and hints for missing config.

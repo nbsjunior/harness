@@ -1,8 +1,8 @@
 {
-  "name": "harness",
+  "name": "toddspect",
   "version": "0.1.0",
   "private": true,
-  "description": "Meta-Agent Orchestrator for VSCode — abstracts GitHub Copilot, Devin, Cursor, Claude Code and AWS KIRO",
+  "description": "ToddSpect — Meta-Agent Orchestrator for VSCode",
   "workspaces": [
     "packages/extension",
     "packages/cli"

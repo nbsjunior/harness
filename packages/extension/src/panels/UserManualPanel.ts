@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 export class UserManualPanel {
-  static readonly VIEW_TYPE = 'harness.userManual';
+  static readonly VIEW_TYPE = 'toddspect.userManual';
   private static instance?: UserManualPanel;
 
   private readonly panel: vscode.WebviewPanel;
@@ -9,7 +9,7 @@ export class UserManualPanel {
   private constructor(private readonly extensionUri: vscode.Uri) {
     this.panel = vscode.window.createWebviewPanel(
       UserManualPanel.VIEW_TYPE,
-      'Harness of AI — User Manual',
+      'ToddSpect — User Manual',
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -23,7 +23,7 @@ export class UserManualPanel {
     this.panel.webview.onDidReceiveMessage((raw: unknown) => {
       const msg = raw as { command: string };
       if (msg.command === 'openChat') {
-        void vscode.commands.executeCommand('harness.chatView.focus');
+        void vscode.commands.executeCommand('toddspect.chatView.focus');
       }
     });
 
@@ -55,7 +55,7 @@ export class UserManualPanel {
     content="default-src 'none';
              script-src 'nonce-${nonce}' ${this.panel.webview.cspSource};
              style-src ${this.panel.webview.cspSource} 'unsafe-inline';" />
-  <title>Harness of AI — User Manual</title>
+  <title>ToddSpect — User Manual</title>
 </head>
 <body>
   <div id="root"></div>

@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # Agent Connectors
 
-Harness routes chat to five agents via the CLI `AgentRouter`.
+ToddSpect routes chat to five agents via the CLI `AgentRouter`.
 
 | Agent | Protocol | API key / auth |
 |-------|----------|----------------|
@@ -14,7 +14,7 @@ Harness routes chat to five agents via the CLI `AgentRouter`.
 | **Claude Code** | CLI subprocess | `claude` on PATH + optional `ANTHROPIC_API_KEY` |
 | **Kiro (AI-DLC)** | kiro-cli + steering | `KIRO_API_KEY` |
 
-Run `harness check getGoat` or **Harness: Check getGoat** to see readiness.
+Run `toddspect check getGoat` or **ToddSpect: Check getGoat** to see readiness.
 
 ---
 
@@ -35,13 +35,13 @@ gh auth refresh --scopes copilot
 - **Endpoint:** `https://api.devin.ai/v1` (default)
 - **Env:** `DEVIN_API_KEY`
 
-Devin runs asynchronously — Harness shows the session URL.
+Devin runs asynchronously — ToddSpect shows the session URL.
 
 ---
 
 ## Cursor AI
 
-Harness uses **Cursor SDK local** for **Agent** / **Spec+Agent** when you have a Cursor API key (`auto` or `local` execution). **Ask** and **`cloud`** use the Cloud Agents API.
+ToddSpect uses **Cursor SDK local** for **Agent** / **Spec+Agent** when you have a Cursor API key (`auto` or `local` execution). **Ask** and **`cloud`** use the Cloud Agents API.
 
 See [cursor-agent.md](../docs/cursor-agent.md) in the repo docs.
 
@@ -52,12 +52,12 @@ See [cursor-agent.md](../docs/cursor-agent.md) in the repo docs.
 ### Correct setup
 
 1. Create API key: [cursor.com/dashboard/integrations](https://cursor.com/dashboard/integrations)
-2. Set in Harness Configuration or environment:
+2. Set in ToddSpect Configuration or environment:
 
 ```json
 {
-  "harness.connectors.cursor.endpoint": "https://api.cursor.com",
-  "harness.connectors.cursor.apiKey": "your-key"
+  "toddspect.connectors.cursor.endpoint": "https://api.cursor.com",
+  "toddspect.connectors.cursor.apiKey": "your-key"
 }
 ```
 
@@ -66,11 +66,11 @@ export CURSOR_API_KEY=your-key
 export CURSOR_API_ENDPOINT=https://api.cursor.com   # optional
 ```
 
-### How Harness calls Cursor
+### How ToddSpect calls Cursor
 
 1. `POST https://api.cursor.com/v1/agents` — create cloud agent + first run
 2. `GET .../runs/{runId}/stream` — SSE assistant text
-3. Follow-up messages: `POST .../agents/{id}/runs` on the same Harness session
+3. Follow-up messages: `POST .../agents/{id}/runs` on the same ToddSpect session
 
 Basic authentication: `Authorization: Basic base64(apiKey:)`
 
@@ -78,16 +78,16 @@ Basic authentication: `Authorization: Basic base64(apiKey:)`
 
 ## Claude Code
 
-- **CLI:** `claude` must be on PATH (or set `harness.connectors.claude.path`)
+- **CLI:** `claude` must be on PATH (or set `toddspect.connectors.claude.path`)
 - **Optional:** `ANTHROPIC_API_KEY` for API auth
 
-Harness spawns `claude -p ... --output-format stream-json`.
+ToddSpect spawns `claude -p ... --output-format stream-json`.
 
 ---
 
 ## Kiro (AI-DLC)
 
-- **CLI:** `kiro-cli` (Harness can auto-download via `harness setup`)
+- **CLI:** `kiro-cli` (ToddSpect can auto-download via `toddspect setup`)
 - **Steering:** `.kiro/steering/` from AI-DLC rules
 - **Key:** `KIRO_API_KEY` from [kiro.dev](https://kiro.dev)
 
@@ -100,8 +100,8 @@ See [AI-DLC and Kiro](AI-DLC-and-Kiro).
 1. Live `gh auth token` (Copilot only)
 2. VS Code Secrets
 3. Environment variables
-4. `HARNESS_SETTINGS_JSON` (from extension)
-5. `.harness/config.yaml`
+4. `TODDSPECT_SETTINGS_JSON` (from extension)
+5. `.toddspect/config.yaml`
 6. Defaults
 
 Secrets never go in YAML.

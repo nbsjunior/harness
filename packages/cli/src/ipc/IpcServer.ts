@@ -35,7 +35,7 @@ import {
   clearChatSessionCancel,
   isChatSessionCancelled,
 } from '../session/cancel.js';
-import { harnessLog } from '../log.js';
+import { toddspectLog } from '../log.js';
 import {
   buildSddStepPrompt,
   collectSddContextPaths,
@@ -103,7 +103,7 @@ export async function startIpcServer(): Promise<void> {
   const router = new AgentRouter();
 
   // Signal readiness via stderr (never stdout — would break the JSON parser)
-  process.stderr.write('[harness-cli] IPC daemon started — listening on stdin\n');
+  process.stderr.write('[toddspect-cli] IPC daemon started — listening on stdin\n');
 
   let lineBuffer = '';
 
@@ -127,11 +127,11 @@ export async function startIpcServer(): Promise<void> {
   process.stdin.on('end', () => {
     // Do not process.exit() — on Windows, stdin EOF can be spurious while the
     // extension host is still running, which caused "CLI daemon exited unexpectedly".
-    process.stderr.write('[harness-cli] stdin end (daemon remains active until host disposes)\n');
+    process.stderr.write('[toddspect-cli] stdin end (daemon remains active until host disposes)\n');
   });
 
   process.stdin.on('error', (err: Error) => {
-    process.stderr.write(`[harness-cli] stdin error: ${err.message}\n`);
+    process.stderr.write(`[toddspect-cli] stdin error: ${err.message}\n`);
     process.exit(1);
   });
 
@@ -148,17 +148,17 @@ function parseAndDispatch(raw: string, router: AgentRouter): void {
   try {
     msg = JSON.parse(raw) as IPCMessage;
   } catch {
-    process.stderr.write(`[harness-cli] Received non-JSON frame: ${raw.slice(0, 200)}\n`);
+    process.stderr.write(`[toddspect-cli] Received non-JSON frame: ${raw.slice(0, 200)}\n`);
     return;
   }
 
   if (!msg.id || !msg.action) {
-    process.stderr.write(`[harness-cli] Malformed frame (missing id/action)\n`);
+    process.stderr.write(`[toddspect-cli] Malformed frame (missing id/action)\n`);
     return;
   }
 
   void dispatchMessage(msg, router).catch((err: Error) => {
-    process.stderr.write(`[harness-cli] Unhandled dispatch error for action=${msg.action}: ${err.message}\n`);
+    process.stderr.write(`[toddspect-cli] Unhandled dispatch error for action=${msg.action}: ${err.message}\n`);
     writeError(msg.id, msg.action, err.message);
   });
 }
@@ -184,7 +184,7 @@ async function dispatchMessage(msg: IPCMessage, router: AgentRouter): Promise<vo
           cursorCfg.apiKey,
           cursorCfg.endpoint,
         );
-        harnessLog(`[ipc] chat:cancel sessionId=${sessionId}`);
+        toddspectLog(`[ipc] chat:cancel sessionId=${sessionId}`);
       }
       writeFrame({ id: msg.id, action: 'chat:cancel', payload: { sessionId } });
       break;
@@ -356,7 +356,7 @@ async function dispatchMessage(msg: IPCMessage, router: AgentRouter): Promise<vo
     }
 
     default:
-      process.stderr.write(`[harness-cli] Unknown action: ${msg.action}\n`);
+      process.stderr.write(`[toddspect-cli] Unknown action: ${msg.action}\n`);
       writeError(msg.id, msg.action as IPCMessage['action'], `Unknown action: ${msg.action}`);
   }
 }
@@ -417,7 +417,7 @@ async function handleChatSend(
         id: crypto.randomUUID(),
         role: 'system',
         content:
-          `The following Harness Spec definitions are active for this task. ` +
+          `The following ToddSpect Spec definitions are active for this task. ` +
           `Follow them as authoritative guidance for agent behaviour, tools, and constraints:\n\n${specBlock}`,
         timestamp: Date.now(),
       });
@@ -431,7 +431,7 @@ async function handleChatSend(
     payload: { sessionId, messageId },
   });
 
-  harnessLog(
+  toddspectLog(
     `[ipc] chat:send agent=${agent} mode=${mode ?? 'ask'} context=${contextPaths.length} specs=${specPaths?.length ?? 0}`,
   );
 
@@ -542,7 +542,7 @@ async function handleContextBuild(msg: IPCMessage<ContextBuildPayload>): Promise
 }
 
 async function handleAidlcInstall(msg: IPCMessage<{ workspaceRoot?: string; force?: boolean }>): Promise<void> {
-  const workspace = msg.payload?.workspaceRoot ?? process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  const workspace = msg.payload?.workspaceRoot ?? process.env['TODDSPECT_WORKSPACE'] ?? process.cwd();
   try {
     const result = await installAidlcRules(workspace, { force: msg.payload?.force });
     writeFrame({
@@ -558,9 +558,9 @@ async function handleAidlcInstall(msg: IPCMessage<{ workspaceRoot?: string; forc
 async function handleSetupBootstrap(
   msg: IPCMessage<{ workspaceRoot?: string; quiet?: boolean }>,
 ): Promise<void> {
-  const workspace = msg.payload?.workspaceRoot ?? process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  const workspace = msg.payload?.workspaceRoot ?? process.env['TODDSPECT_WORKSPACE'] ?? process.cwd();
   try {
-    // Lightweight only — full setup (incl. Kiro download) must use `harness setup` subprocess.
+    // Lightweight only — full setup (incl. Kiro download) must use `toddspect setup` subprocess.
     await installAidlcRules(workspace);
     writeFrame({
       id: msg.id,
@@ -573,7 +573,7 @@ async function handleSetupBootstrap(
 }
 
 function handleAidlcStatus(msg: IPCMessage<{ workspaceRoot?: string }>): void {
-  const workspace = msg.payload?.workspaceRoot ?? process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  const workspace = msg.payload?.workspaceRoot ?? process.env['TODDSPECT_WORKSPACE'] ?? process.cwd();
   const status = getAidlcStatus(workspace);
   writeFrame({
     id: msg.id,
@@ -588,7 +588,7 @@ async function handleSpecParse(msg: IPCMessage<SpecParsePayload>): Promise<void>
 
     if (errors.length > 0) {
       process.stderr.write(
-        `[harness-cli] Spec parse warnings: ${errors.map((e) => e.message).join('; ')}\n`,
+        `[toddspect-cli] Spec parse warnings: ${errors.map((e) => e.message).join('; ')}\n`,
       );
     }
 
@@ -629,7 +629,7 @@ async function readContextFiles(
         results.push({ path: absPath, content: fs.readFileSync(absPath, 'utf-8') });
       }
     } catch (err) {
-      process.stderr.write(`[harness-cli] Cannot read context path "${absPath}": ${(err as Error).message}\n`);
+      process.stderr.write(`[toddspect-cli] Cannot read context path "${absPath}": ${(err as Error).message}\n`);
     }
   }
 

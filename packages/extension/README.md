@@ -1,4 +1,4 @@
-# harness-vscode
+# toddspect-vscode
 
 VS Code extension: chat sidebar, spec manager, configuration panel. Spawns the bundled CLI daemon for all agent I/O.
 
@@ -30,4 +30,4 @@ node ../../scripts/bundle-cli.mjs
 npx @vscode/vsce package --no-dependencies
 ```
 
-Output: `harness-vscode-0.1.0.vsix`
+Output: `toddspect-vscode-0.1.0.vsix`

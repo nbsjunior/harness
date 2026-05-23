@@ -13,7 +13,7 @@ function render(): void {
   root.className = 'manual-shell';
   root.innerHTML = /* html */`
     <header class="manual-toolbar">
-      <h1>Harness of AI — User Manual</h1>
+      <h1>ToddSpect — User Manual</h1>
       <button type="button" id="btn-open-chat" class="btn-primary">Open Chat</button>
     </header>
     <main class="manual-scroll" id="manual-scroll"></main>`;

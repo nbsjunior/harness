@@ -8,7 +8,7 @@ import type {
   SecretStatusPayload,
   UsageStatsPayload,
 } from '../types';
-import { resolveHarnessWorkspacePath } from '../workspacePath.js';
+import { resolveToddSpectWorkspacePath } from '../workspacePath.js';
 import { buildCopilotAuthHeaders, validateCopilotToken } from '../copilotAuth';
 import type { CliService } from '../services/CliService';
 import { UserManualPanel } from './UserManualPanel.js';
@@ -26,15 +26,15 @@ export interface ApiServerEntry {
 }
 
 const SECRET_KEYS: Record<AgentId, string> = {
-  copilot: 'harness.connectors.copilot.token',
-  claude:  'harness.connectors.claude.apiKey',
-  devin:   'harness.connectors.devin.apiKey',
-  cursor:  'harness.connectors.cursor.apiKey',
-  kiro:    'harness.connectors.kiro.apiKey',
+  copilot: 'toddspect.connectors.copilot.token',
+  claude:  'toddspect.connectors.claude.apiKey',
+  devin:   'toddspect.connectors.devin.apiKey',
+  cursor:  'toddspect.connectors.cursor.apiKey',
+  kiro:    'toddspect.connectors.kiro.apiKey',
 };
 
 export class ConfigurationPanel {
-  static readonly VIEW_TYPE = 'harness.configPanel';
+  static readonly VIEW_TYPE = 'toddspect.configPanel';
   private static instance?: ConfigurationPanel;
 
   private readonly panel: vscode.WebviewPanel;
@@ -46,7 +46,7 @@ export class ConfigurationPanel {
   ) {
     this.panel = vscode.window.createWebviewPanel(
       ConfigurationPanel.VIEW_TYPE,
-      'Harness of AI Configuration',
+      'ToddSpect Configuration',
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -124,7 +124,7 @@ export class ConfigurationPanel {
         const config = vscode.workspace.getConfiguration();
         await config.update(key, value, configurationTarget(key));
         if (
-          key === 'harness.defaultWorkspace' &&
+          key === 'toddspect.defaultWorkspace' &&
           this.cliService &&
           typeof value === 'string' &&
           value.trim()
@@ -176,7 +176,7 @@ export class ConfigurationPanel {
         break;
 
       case 'openChat':
-        await vscode.commands.executeCommand('harness.chatView.focus');
+        await vscode.commands.executeCommand('toddspect.chatView.focus');
         this.panel.dispose();
         break;
 
@@ -187,12 +187,12 @@ export class ConfigurationPanel {
       case 'openExtensionSettings':
         await vscode.commands.executeCommand(
           'workbench.action.openSettings',
-          '@ext:harness-ai.harness-vscode',
+          '@ext:toddspect.toddspect-vscode',
         );
         break;
 
       case 'initWorkspace':
-        await vscode.commands.executeCommand('harness.initWorkspace');
+        await vscode.commands.executeCommand('toddspect.initWorkspace');
         break;
 
       default:
@@ -253,7 +253,7 @@ export class ConfigurationPanel {
             return { agent, ok: false, error: 'KIRO_API_KEY is required for Kiro CLI headless mode' };
           }
           const cliPath = vscode.workspace
-            .getConfiguration('harness')
+            .getConfiguration('toddspect')
             .get<string>('connectors.kiro.cliPath', 'kiro-cli');
           return { agent, ok: true, model: `kiro-cli (${cliPath}) + AI-DLC steering` };
         }
@@ -292,12 +292,12 @@ export class ConfigurationPanel {
   // ---------------------------------------------------------------------------
 
   private async sendCurrentConfig(): Promise<void> {
-    const config = vscode.workspace.getConfiguration('harness');
+    const config = vscode.workspace.getConfiguration('toddspect');
     const cfg = {
-      specsDirectory: config.get<string>('specsDirectory', '.harness/specs'),
+      specsDirectory: config.get<string>('specsDirectory', '.toddspect/specs'),
       defaultAgent: config.get<string>('defaultAgent', 'copilot'),
       defaultWorkspace: config.get<string>('defaultWorkspace', ''),
-      resolvedWorkspace: resolveHarnessWorkspacePath() ?? '',
+      resolvedWorkspace: resolveToddSpectWorkspacePath() ?? '',
       cliPath: config.get<string>('cliPath', ''),
       promptOptimization: {
         enabled: config.get<boolean>('promptOptimization.enabled', true),
@@ -374,7 +374,7 @@ export class ConfigurationPanel {
              style-src ${this.panel.webview.cspSource} 'unsafe-inline';
              font-src ${this.panel.webview.cspSource};
              img-src ${this.panel.webview.cspSource} data:;" />
-  <title>Harness of AI Configuration</title>
+  <title>ToddSpect Configuration</title>
 </head>
 <body>
   <div id="root"></div>
@@ -391,11 +391,11 @@ export class ConfigurationPanel {
 
 function configurationTarget(key: string): vscode.ConfigurationTarget {
   if (
-    key === 'harness.cliPath' ||
-    key.startsWith('harness.connectors.') ||
-    key === 'harness.telemetry.enabled' ||
-    key === 'harness.mcp.enabled' ||
-    key.startsWith('harness.mcp.servers')
+    key === 'toddspect.cliPath' ||
+    key.startsWith('toddspect.connectors.') ||
+    key === 'toddspect.telemetry.enabled' ||
+    key === 'toddspect.mcp.enabled' ||
+    key.startsWith('toddspect.mcp.servers')
   ) {
     return vscode.ConfigurationTarget.Global;
   }

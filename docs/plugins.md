@@ -1,10 +1,10 @@
 # Community connector plugins (preview)
 
-Harness reads `.harness/plugins.json` in the workspace for **future** community connectors.
+ToddSpect reads `.toddspect/plugins.json` in the workspace for **future** community connectors.
 
 ## Manifest
 
-See [`.harness/plugins.example.json`](../.harness/plugins.example.json).
+See [`.toddspect/plugins.example.json`](../.toddspect/plugins.example.json).
 
 ```json
 {
@@ -13,7 +13,7 @@ See [`.harness/plugins.example.json`](../.harness/plugins.example.json).
     {
       "id": "my-connector",
       "label": "My Connector",
-      "module": "./tools/my-harness-connector.js",
+      "module": "./tools/my-toddspect-connector.js",
       "agentId": "copilot",
       "enabled": true
     }

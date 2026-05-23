@@ -1,12 +1,18 @@
 # Changelog
 
+## [0.2.0] — 2026-05-23
+
+### Changed
+
+- **Rebrand:** Harness / ToddSpec → **ToddSpect** (CLI `toddspect`, workspace `.toddspect/`, settings `toddspect.*`)
+
 ## [0.1.9] — 2026-05-23
 
 ### Added
 
 - **SDD view** with GitHub [spec-kit](https://github.com/github/spec-kit) workflow: constitution → specify → plan → tasks → implement
-- Feature wizard, scaffold artifacts in `.harness/sdd/`, **Run in chat** (Spec+Agent + SDD context)
-- Roadmap: session persistence, budget alerts, spec discovery, multi-agent fan-out, GitHub Actions example, plugin manifest, `harness web:serve` MVP
+- Feature wizard, scaffold artifacts in `.toddspect/sdd/`, **Run in chat** (Spec+Agent + SDD context)
+- Roadmap: session persistence, budget alerts, spec discovery, multi-agent fan-out, GitHub Actions example, plugin manifest, `toddspect web:serve` MVP
 
 ### Fixed
 
@@ -43,4 +49,4 @@
 - MCP client support (stdio and HTTP transports)
 - Auto-reconnect with exponential backoff for CLI daemon
 - Spec-Driven Development: Markdown-first spec format with YAML frontmatter
-- `harness init`, `agent:run`, `spec:parse`, `context:build` CLI commands
+- `toddspect init`, `agent:run`, `spec:parse`, `context:build` CLI commands

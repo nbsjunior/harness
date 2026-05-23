@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # Installation
@@ -8,15 +8,15 @@
 
 | Method | Steps |
 |--------|--------|
-| **VSIX release** | Download from [Releases](https://github.com/nbsjunior/harness/releases) → Install from VSIX → Reload window |
-| **Build from source** | `npm install` → `npm run package:vsix` → install `packages/extension/harness-vscode.vsix` |
+| **VSIX release** | Download from [Releases](https://github.com/nbsjunior/ToddSpect/releases) → Install from VSIX → Reload window |
+| **Build from source** | `npm install` → `npm run package:vsix` → install `packages/extension/toddspect-vscode.vsix` |
 
-After install, Harness runs `harness setup` automatically (workspace init, AI-DLC rules; Kiro download optional).
+After install, ToddSpect runs `toddspect setup` automatically (workspace init, AI-DLC rules; Kiro download optional).
 
 ## CLI only (no extension)
 
 ```bash
-cd harness
+cd toddspect
 npm install
 npm run build
 node packages/cli/dist/index.js check getGoat
@@ -28,9 +28,9 @@ See [Dual Mode](Dual-Mode) for when to use CLI vs extension.
 ## Workspace init
 
 ```bash
-harness init [path]    # creates .harness/config.yaml and specs/
-harness setup          # bootstrap + AI-DLC install
-harness check getGoat  # agent readiness
+toddspect init [path]    # creates .toddspect/config.yaml and specs/
+toddspect setup          # bootstrap + AI-DLC install
+toddspect check getGoat  # agent readiness
 ```
 
 ## Updating
@@ -43,6 +43,6 @@ The bundled CLI inside the extension updates with each VSIX — no separate CLI 
 
 ## Uninstall
 
-Extensions view → Harness → Uninstall → Reload.
+Extensions view → ToddSpect → Uninstall → Reload.
 
-Workspace data (`.harness/`, VS Code secrets) remains on disk until you delete them.
+Workspace data (`.toddspect/`, VS Code secrets) remains on disk until you delete them.

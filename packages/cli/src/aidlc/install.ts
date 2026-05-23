@@ -108,8 +108,8 @@ async function resolveAidlcSourceDir(): Promise<{ dir: string; source: 'bundled'
   }
 
   const cacheDir = path.join(
-    process.env['HARNESS_WORKSPACE'] ?? process.cwd(),
-    '.harness',
+    process.env['TODDSPECT_WORKSPACE'] ?? process.cwd(),
+    '.toddspect',
     'cache',
     `aidlc-rules-v${AIDLC_RULES_VERSION}`,
   );

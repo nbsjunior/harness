@@ -13,11 +13,11 @@ alwaysApply: false
 console.log('done');
 
 // ✅ GOOD — goes to stderr, safe in daemon mode
-import { harnessLog } from '../log.js';
-harnessLog('done');
+import { toddspectLog } from '../log.js';
+toddspectLog('done');
 ```
 
-`harnessLog()` routes to stderr when `HARNESS_IPC=1`, stdout otherwise.
+`toddspectLog()` routes to stderr when `TODDSPECT_IPC=1`, stdout otherwise.
 
 ## IPC Frame Writing
 
@@ -44,16 +44,16 @@ return;
 All CLI imports use `.js` extension (ESM):
 
 ```typescript
-import { loadHarnessConfig } from '../config.js';   // ✅
-import { loadHarnessConfig } from '../config';       // ❌
+import { loadToddSpectConfig } from '../config.js';   // ✅
+import { loadToddSpectConfig } from '../config';       // ❌
 ```
 
 ## Config Access
 
-Always use `loadHarnessConfig(specsDir?)` — never read env vars or files directly:
+Always use `loadToddSpectConfig(specsDir?)` — never read env vars or files directly:
 
 ```typescript
-const config = loadHarnessConfig(specsDir);
+const config = loadToddSpectConfig(specsDir);
 const token = config.connectors.copilot.token;
 ```
 

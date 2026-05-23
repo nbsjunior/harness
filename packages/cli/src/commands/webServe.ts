@@ -1,5 +1,5 @@
 /**
- * Minimal web UI for remote Harness instances (read-only dashboard).
+ * Minimal web UI for remote ToddSpect instances (read-only dashboard).
  */
 import http from 'http';
 import * as fs from 'fs';
@@ -68,7 +68,7 @@ export async function webServeCommand(options: {
   await new Promise<void>((resolve) => {
     server.listen(port, host, () => {
       process.stderr.write(
-        `[harness web] Dashboard http://${host}:${port}/ (workspace: ${getWorkspaceRoot()})\n`,
+        `[toddspect web] Dashboard http://${host}:${port}/ (workspace: ${getWorkspaceRoot()})\n`,
       );
       resolve();
     });

@@ -1,12 +1,12 @@
 /**
  * @module providers/ChatViewProvider
- * VS Code webview for the Harness chat sidebar.
+ * VS Code webview for the ToddSpect chat sidebar.
  *
  * **Why:** UI runs in an isolated webview; this provider is the extension-host bridge:
  * webview postMessage ↔ `AgentService` ↔ CLI IPC.
  *
  * **State:** conversation history, selected `AgentId`, selected `CopilotMode`.
- * For `spec+agent`, resolves `.harness/specs/*.{yaml,yml,json}` paths before each send.
+ * For `spec+agent`, resolves `.toddspect/specs/*.{yaml,yml,json}` paths before each send.
  *
  * @see webview/chat/main.ts — browser UI (mode bar, agent dropdown, streaming render)
  */
@@ -38,7 +38,7 @@ import type { AgentTerminalService } from '../services/AgentTerminalService';
 import { traceLog } from '../trace';
 
 export class ChatViewProvider implements vscode.WebviewViewProvider {
-  static readonly VIEW_ID = 'harness.chatView';
+  static readonly VIEW_ID = 'toddspect.chatView';
 
   private view?: vscode.WebviewView;
   private agentService: AgentService;
@@ -62,7 +62,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   ) {
     this.agentService = new AgentService(cliService, output);
     this.selectedAgent = vscode.workspace
-      .getConfiguration('harness')
+      .getConfiguration('toddspect')
       .get<AgentSelectionId>('defaultAgent', 'auto');
     this.modelByAgent.set(this.selectedAgent, 'auto');
   }
@@ -396,11 +396,11 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         break;
 
       case 'showContext':
-        await vscode.commands.executeCommand('harness.showContext');
+        await vscode.commands.executeCommand('toddspect.showContext');
         break;
 
       case 'openConfig':
-        await vscode.commands.executeCommand('harness.openConfig');
+        await vscode.commands.executeCommand('toddspect.openConfig');
         break;
 
       case 'openFile': {
@@ -482,10 +482,10 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         }
       }
       this.output.info(
-        `[Harness] Restored chat session (${this.history.length} messages) from .harness/chat-session.json`,
+        `[ToddSpect] Restored chat session (${this.history.length} messages) from .toddspect/chat-session.json`,
       );
     } catch (err) {
-      this.output.warn(`[Harness] Session restore skipped: ${(err as Error).message}`);
+      this.output.warn(`[ToddSpect] Session restore skipped: ${(err as Error).message}`);
     }
   }
 
@@ -530,8 +530,8 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   /** Resolve all spec YAML/JSON files from the configured specs directory. */
   private resolveSpecPaths(): string[] {
     const specsDir = vscode.workspace
-      .getConfiguration('harness')
-      .get<string>('specsDirectory', '.harness/specs');
+      .getConfiguration('toddspect')
+      .get<string>('specsDirectory', '.toddspect/specs');
 
     const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!workspaceRoot) return [];
@@ -620,7 +620,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
              style-src ${webview.cspSource} 'unsafe-inline';
              font-src ${webview.cspSource};
              img-src ${webview.cspSource} data:;" />
-  <title>Harness of AI Chat</title>
+  <title>ToddSpect Chat</title>
   <style>
     :root {
       --container-padding: 12px;

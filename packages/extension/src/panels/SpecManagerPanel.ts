@@ -13,10 +13,10 @@ import type { ChatViewProvider } from '../providers/ChatViewProvider';
 import type { ContextProvider } from '../providers/ContextProvider';
 
 /**
- * Webview panel for SDD: Harness specs (.harness/specs) + spec-kit workflow (.harness/sdd).
+ * Webview panel for SDD: ToddSpect specs (.toddspect/specs) + spec-kit workflow (.toddspect/sdd).
  */
 export class SpecManagerProvider implements vscode.WebviewViewProvider {
-  static readonly VIEW_ID = 'harness.specView';
+  static readonly VIEW_ID = 'toddspect.specView';
 
   private view?: vscode.WebviewView;
   private specs: SpecDefinition[] = [];
@@ -134,7 +134,7 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
       }
 
       case 'openConfig':
-        await vscode.commands.executeCommand('harness.openConfig');
+        await vscode.commands.executeCommand('toddspect.openConfig');
         break;
 
       default:
@@ -263,7 +263,7 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
         undefined,
         result.payload.mode,
       );
-      await vscode.commands.executeCommand('harness.chatView.focus');
+      await vscode.commands.executeCommand('toddspect.chatView.focus');
     } catch (err) {
       void vscode.window.showErrorMessage(
         `Run step failed: ${err instanceof Error ? err.message : String(err)}`,
@@ -293,7 +293,7 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
 
       const n = result.payload.suggestions?.length ?? 0;
       void vscode.window.showInformationMessage(
-        `Spec discovery: ${n} suggestion(s). Run \`harness spec:discover --write\` to materialize.`,
+        `Spec discovery: ${n} suggestion(s). Run \`toddspect spec:discover --write\` to materialize.`,
       );
     } catch (err) {
       void vscode.window.showErrorMessage(
@@ -320,8 +320,8 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
     }
 
     const specsDir = vscode.workspace
-      .getConfiguration('harness')
-      .get<string>('specsDirectory', '.harness/specs');
+      .getConfiguration('toddspect')
+      .get<string>('specsDirectory', '.toddspect/specs');
 
     const specsDirPath = path.join(workspaceFolder.uri.fsPath, specsDir);
 
@@ -364,8 +364,8 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
     }
 
     const specsDir = vscode.workspace
-      .getConfiguration('harness')
-      .get<string>('specsDirectory', '.harness/specs');
+      .getConfiguration('toddspect')
+      .get<string>('specsDirectory', '.toddspect/specs');
 
     const specsDirPath = path.join(workspaceFolder.uri.fsPath, specsDir);
 
@@ -449,7 +449,7 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
              style-src ${webview.cspSource} 'unsafe-inline';
              font-src ${webview.cspSource};
              img-src ${webview.cspSource} data:;" />
-  <title>Harness SDD</title>
+  <title>ToddSpect SDD</title>
 </head>
 <body>
   <div id="root"></div>

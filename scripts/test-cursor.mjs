@@ -43,5 +43,5 @@ console.log('Cursor API OK');
 console.log(`  endpoint: ${endpoint}`);
 console.log(`  user:     ${me.userEmail ?? '(unknown)'}`);
 console.log(`  key name: ${me.apiKeyName ?? '(unknown)'}`);
-console.log('\nHarness chat uses Cloud Agents (can take 1–3 min for first reply).');
-console.log('For instant chat, use Copilot or Auto in the Harness sidebar.');
+console.log('\nToddSpect chat uses Cloud Agents (can take 1–3 min for first reply).');
+console.log('For instant chat, use Copilot or Auto in the ToddSpect sidebar.');

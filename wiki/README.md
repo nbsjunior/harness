@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # Wiki source (GitHub Wiki)
 
-This folder is the **source of truth** for the [GitHub Wiki](https://github.com/nbsjunior/harness/wiki).
+This folder is the **source of truth** for the [GitHub Wiki](https://github.com/nbsjunior/ToddSpect/wiki).
 
 ## Branding
 
-Logo: `images/harness-icon.png`. After adding a new wiki page, run:
+Logo: `images/toddspect-icon.png`. After adding a new wiki page, run:
 
 ```bash
 node scripts/wiki-branding.mjs
@@ -22,14 +22,14 @@ node scripts/publish-wiki.mjs
 
 Requires:
 - Wiki enabled on the repository (Settings → Features → Wikis)
-- Push access to `https://github.com/nbsjunior/harness.wiki.git`
+- Push access to `https://github.com/nbsjunior/toddspect.wiki.git`
 
 ## Structure
 
 | Page | Description |
 |------|-------------|
 | `Home.md` | Wiki home |
-| `Why-Harness.md` | Value proposition — one IDE, multi-provider, SDD, context |
+| `Why-ToddSpect.md` | Value proposition — one IDE, multi-provider, SDD, context |
 | `_Sidebar.md` | Left navigation |
 | `Getting-Started.md` | Quick start |
 | `Agent-Connectors.md` | All agents including Cursor Cloud API |

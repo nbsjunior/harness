@@ -1,15 +1,15 @@
-### Harness of AI Wiki
+### ToddSpect Wiki
 
 **[Home](Home)**
 
 **Getting started**
 - **[User Manual](User-Manual)**
-- [Why Harness](Why-Harness)
+- [Why ToddSpect](Why-ToddSpect)
 - [Getting Started](Getting-Started)
 - [Installation](Installation)
 - [User Guide](User-Guide)
 
-**Using Harness of AI**
+**Using ToddSpect**
 - [Chat Interface](Chat-Interface)
 - [Auto Routing](Auto-Routing)
 - [Configuration](Configuration)

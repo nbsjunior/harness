@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 
-const SCHEME = 'harness-snapshot';
+const SCHEME = 'toddspect-snapshot';
 
 /** In-memory snapshots for diff (before agent write). */
-export class HarnessSnapshotProvider implements vscode.TextDocumentContentProvider {
+export class ToddSpectSnapshotProvider implements vscode.TextDocumentContentProvider {
   private readonly snapshots = new Map<string, string>();
 
-  static register(context: vscode.ExtensionContext): HarnessSnapshotProvider {
-    const provider = new HarnessSnapshotProvider();
+  static register(context: vscode.ExtensionContext): ToddSpectSnapshotProvider {
+    const provider = new ToddSpectSnapshotProvider();
     context.subscriptions.push(
       vscode.workspace.registerTextDocumentContentProvider(SCHEME, provider),
     );

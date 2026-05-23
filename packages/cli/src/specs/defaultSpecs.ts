@@ -7,7 +7,7 @@ export interface DefaultSpecFile {
 }
 
 /** SDD defaults — clean code, SOLID, OWASP, agent prompts, performance. Skips existing files. */
-export const DEFAULT_HARNESS_SPECS: DefaultSpecFile[] = [
+export const DEFAULT_TODDSPECT_SPECS: DefaultSpecFile[] = [
   {
     filename: 'skill-clean-code.md',
     content: `---
@@ -286,7 +286,7 @@ export function ensureDefaultSpecs(specsDir: string): string[] {
   }
 
   const created: string[] = [];
-  for (const spec of DEFAULT_HARNESS_SPECS) {
+  for (const spec of DEFAULT_TODDSPECT_SPECS) {
     const target = path.join(specsDir, spec.filename);
     if (fs.existsSync(target)) {
       continue;

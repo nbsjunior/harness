@@ -1,16 +1,16 @@
 /**
- * Resolve the Harness workspace root (CLI HARNESS_WORKSPACE).
+ * Resolve the ToddSpect workspace root (CLI TODDSPECT_WORKSPACE).
  */
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
 /**
- * Order: `harness.defaultWorkspace` (if path exists) → first VS Code workspace folder.
+ * Order: `toddspect.defaultWorkspace` (if path exists) → first VS Code workspace folder.
  */
-export function resolveHarnessWorkspacePath(): string | undefined {
-  const harness = vscode.workspace.getConfiguration('harness');
-  const override = harness.get<string>('defaultWorkspace', '').trim();
+export function resolveToddSpectWorkspacePath(): string | undefined {
+  const toddspect = vscode.workspace.getConfiguration('toddspect');
+  const override = toddspect.get<string>('defaultWorkspace', '').trim();
   if (override) {
     const resolved = path.resolve(override);
     if (fs.existsSync(resolved)) {

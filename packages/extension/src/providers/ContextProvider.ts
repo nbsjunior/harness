@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import type { ContextItem, ContextItemKind } from '../types';
 
-const CONTEXT_STATE_KEY = 'harness.contextItems';
+const CONTEXT_STATE_KEY = 'toddspect.contextItems';
 
 /**
  * Manages the set of files and directories included in the current agent context.

@@ -5,9 +5,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** User-wide Kiro CLI cache (shared by Harness CLI and Extension). */
+/** User-wide Kiro CLI cache (shared by ToddSpect CLI and Extension). */
 export function getKiroToolsRoot(): string {
-  return path.join(os.homedir(), '.harness', 'tools', 'kiro-cli');
+  return path.join(os.homedir(), '.toddspect', 'tools', 'kiro-cli');
 }
 
 export function getKiroPathMarkerFile(): string {
@@ -29,7 +29,7 @@ export function writeCachedKiroCliPath(cliPath: string): void {
   fs.writeFileSync(getKiroPathMarkerFile(), cliPath, 'utf-8');
 }
 
-/** Bundled with Harness CLI / .vsix (packages/cli/vendor/kiro-cli/...). */
+/** Bundled with ToddSpect CLI / .vsix (packages/cli/vendor/kiro-cli/...). */
 export function resolveBundledKiroCliPath(): string | null {
   const platform = `${process.platform}-${process.arch}`;
   const binName = process.platform === 'win32' ? 'kiro-cli.exe' : 'kiro-cli';

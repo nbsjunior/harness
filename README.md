@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/images/harness-icon.png" alt="Harness of AI logo" width="96" />
+  <img src="docs/images/toddspect-icon.png" alt="ToddSpect logo" width="96" />
 </p>
 
-# Harness of AI — Meta-Agent Orchestrator for VSCode
+# ToddSpect — Meta-Agent Orchestrator for VSCode
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20-green)](https://nodejs.org)
@@ -10,7 +10,7 @@
 [![VSCode](https://img.shields.io/badge/VSCode-%3E%3D1.85-007ACC)](https://code.visualstudio.com)
 
 > **One sidebar. Every agent. One conversation.**
-> Stop juggling Copilot in VS Code, Cursor in another IDE, Claude in a browser tab, and Devin in yet another panel. **Harness of AI** keeps chat, file context, specs, and provider routing in a **single interaction** — so you stay in flow.
+> Stop juggling Copilot in VS Code, Cursor in another IDE, Claude in a browser tab, and Devin in yet another panel. **ToddSpect** keeps chat, file context, specs, and provider routing in a **single interaction** — so you stay in flow.
 
 ---
 
@@ -18,42 +18,42 @@
 
 Today most teams use several AI tools. Each has its own window, login, and context. You re-attach the same files, re-explain the repo, and lose thread when you switch vendors.
 
-**Harness of AI** fixes that with one unified surface:
+**ToddSpect** fixes that with one unified surface:
 
 | Benefit | What you get |
 |---------|----------------|
 | **Single chat panel** | Copilot, Claude, Cursor, Devin, and Kiro from one composer — switch with a pill or **Auto** routing. |
-| **Shared context** | Attach files once (**Add to Harness of AI Context**). The same chips go to **every** provider on the next message. |
+| **Shared context** | Attach files once (**Add to ToddSpect Context**). The same chips go to **every** provider on the next message. |
 | **Spending dashboard** | See **requests**, **tokens in/out**, and **agent time** per provider — plus recent chat turns — in one **Spending** tab (workspace-local). |
 | **Prompt optimization** | Built-in pipeline trims history, dedupes messages, caps context files, and injects quality rules — **fewer tokens**, **better answers** on every provider. |
 | **One setup flow** | API keys, MCP servers, workspace defaults, and usage stats — one configuration panel (plus a dedicated **User Manual** tab in the app). |
-| **Spec-Driven Development** | Harness specs (`.harness/specs/`) + **spec-kit** workflow (`.harness/sdd/`) — constitution → specify → plan → tasks → implement in the **SDD** view. |
+| **Spec-Driven Development** | ToddSpect specs (`.toddspect/specs/`) + **spec-kit** workflow (`.toddspect/sdd/`) — constitution → specify → plan → tasks → implement in the **SDD** view. |
 | **Same CLI under the hood** | Extension and standalone CLI share routing, auth, and file I/O — no duplicate logic. |
 
-**[→ User Manual](docs/user-manual.md)** · [Wiki](https://github.com/nbsjunior/harness/wiki/User-Manual) · [Why Harness of AI?](docs/why-harness.md)
+**[→ User Manual](docs/user-manual.md)** · [Wiki](https://github.com/nbsjunior/ToddSpect/wiki/User-Manual) · [Why ToddSpect?](docs/why-toddspect.md)
 
 ---
 
 ## Contribute — we want your help
 
-Harness of AI is **open source** ([MIT](LICENSE)). Whether you fix a connector, improve docs, add a locale, or share UX feedback — **contributions are welcome**.
+ToddSpect is **open source** ([MIT](LICENSE)). Whether you fix a connector, improve docs, add a locale, or share UX feedback — **contributions are welcome**.
 
 | How to help | Link |
 |-------------|------|
-| Report bugs & ideas | [GitHub Issues](https://github.com/nbsjunior/harness/issues) |
+| Report bugs & ideas | [GitHub Issues](https://github.com/nbsjunior/ToddSpect/issues) |
 | Submit code | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Read the architecture | [docs/architecture.md](docs/architecture.md) · [AGENTS.md](AGENTS.md) |
 | Improve the Wiki | Edit [`wiki/`](wiki/) and run `node scripts/publish-wiki.mjs` |
 
 **Quick dev setup:** `npm install` → `npm run build` → `npm run package:vsix` → install the `.vsix` locally. See [docs/getting-started.md](docs/getting-started.md).
 
-If Harness of AI saves you time switching between AI tools, consider **starring the repo** and telling others — it helps the project grow.
+If ToddSpect saves you time switching between AI tools, consider **starring the repo** and telling others — it helps the project grow.
 
 ---
 
-## What is Harness of AI?
+## What is ToddSpect?
 
-Harness of AI is a VSCode extension that acts as a **Meta-Agent Orchestrator**: you interact through one sidebar panel; Harness of AI routes each request to the right agent using your provider choice (or **Auto**), your **SDD** specs, and the **context** you attached.
+ToddSpect is a VSCode extension that acts as a **Meta-Agent Orchestrator**: you interact through one sidebar panel; ToddSpect routes each request to the right agent using your provider choice (or **Auto**), your **SDD** specs, and the **context** you attached.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -89,9 +89,9 @@ Harness of AI is a VSCode extension that acts as a **Meta-Agent Orchestrator**: 
 | **Prompt optimization** | Pre-route pipeline for **efficiency** (dedupe, history trim, file caps) and **quality** (response contract, mode hints) — see [Prompt optimization](#prompt-optimization) |
 | **Multi-provider chat** | Copilot, Claude, Cursor, Devin, Kiro — one UI; switch with a pill or **Auto** routing |
 | **Chat Sidebar** | Conversational interface with streaming responses and message history |
-| **Context engineering** | Right-click → *Add to Harness of AI Context*; chips above composer; shared across providers |
+| **Context engineering** | Right-click → *Add to ToddSpect Context*; chips above composer; shared across providers |
 | **SDD view (spec-kit)** | Full spec-kit pipeline: `/speckit.*` steps, feature wizard, scaffold + **Run in chat** — [docs/sdd-speckit.md](docs/sdd-speckit.md) |
-| **Harness specs** | Skills, Tools, Workflows in `.harness/specs/` (Specs tab in SDD view) |
+| **ToddSpect specs** | Skills, Tools, Workflows in `.toddspect/specs/` (Specs tab in SDD view) |
 | **Spec+Agent mode** | Inject active specs + SDD artifacts as context before agent runs |
 | **Configuration Panel** | Agents, MCP, workspace, and **Spending** — API keys and endpoints in one place |
 | **CLI Orchestrator** | Node.js daemon: file I/O, spec parsing, agent routing (bundled in `.vsix`) |
@@ -102,9 +102,9 @@ Harness of AI is a VSCode extension that acts as a **Meta-Agent Orchestrator**: 
 
 ## Spending & usage tracking
 
-When you use multiple AI providers, it is easy to lose track of how much each one is used. Harness records usage **per workspace** after every chat turn and shows it in the configuration UI.
+When you use multiple AI providers, it is easy to lose track of how much each one is used. ToddSpect records usage **per workspace** after every chat turn and shows it in the configuration UI.
 
-**Open:** `Ctrl+Shift+P` → **Harness of AI: Open Configuration** → **Spending** tab.
+**Open:** `Ctrl+Shift+P` → **ToddSpect: Open Configuration** → **Spending** tab.
 
 | What you see | Details |
 |--------------|---------|
@@ -112,7 +112,7 @@ When you use multiple AI providers, it is easy to lose track of how much each on
 | **By provider** | Copilot, Cursor, Claude, Devin, Kiro — requests, tokens (total and in/out), cumulative duration |
 | **Recent turns** | Last messages with timestamp, provider, tokens, duration, and mode (Ask / Agent / Spec+Agent) |
 
-Data is stored in **`.harness/usage-stats.json`** (created on first chat). Token counts are **estimates** (~4 characters per token) from prompt and response text, so you can compare providers even when an API does not return official usage headers.
+Data is stored in **`.toddspect/usage-stats.json`** (created on first chat). Token counts are **estimates** (~4 characters per token) from prompt and response text, so you can compare providers even when an API does not return official usage headers.
 
 **Actions:** **Refresh** reloads stats from disk; **Reset stats** clears the workspace file (with confirmation).
 
@@ -124,9 +124,9 @@ Pair with **prompt optimization** (below) to reduce tokens before they show up h
 
 ## Prompt optimization
 
-Before any provider sees your message, Harness runs a **prompt engineering pipeline** (`optimizeMessagesForRouting`). It is **on by default** for every provider — not Copilot-only.
+Before any provider sees your message, ToddSpect runs a **prompt engineering pipeline** (`optimizeMessagesForRouting`). It is **on by default** for every provider — not Copilot-only.
 
-**Configure:** `Ctrl+Shift+P` → **Harness of AI: Open Configuration** → **Workspace** → *Prompt optimization (token efficiency)*.
+**Configure:** `Ctrl+Shift+P` → **ToddSpect: Open Configuration** → **Workspace** → *Prompt optimization (token efficiency)*.
 
 ### Efficiency (fewer tokens)
 
@@ -150,9 +150,9 @@ Before any provider sees your message, Harness runs a **prompt engineering pipel
 
 Because guidance is **provider-agnostic**, switching from Copilot to Claude or Cursor keeps the same efficiency and quality rules.
 
-**Settings:** `harness.promptOptimization.enabled`, `maxContextCharsPerFile`, `maxHistoryMessages`.
+**Settings:** `toddspect.promptOptimization.enabled`, `maxContextCharsPerFile`, `maxHistoryMessages`.
 
-Full reference: [docs/prompt-optimization.md](docs/prompt-optimization.md) · Wiki: [Prompt Optimization](https://github.com/nbsjunior/harness/wiki/Prompt-Optimization)
+Full reference: [docs/prompt-optimization.md](docs/prompt-optimization.md) · Wiki: [Prompt Optimization](https://github.com/nbsjunior/ToddSpect/wiki/Prompt-Optimization)
 
 ---
 
@@ -160,9 +160,9 @@ Full reference: [docs/prompt-optimization.md](docs/prompt-optimization.md) · Wi
 
 | Audience | Start here |
 |----------|------------|
-| **User Manual** | [docs/user-manual.md](docs/user-manual.md) · [Wiki: User-Manual](https://github.com/nbsjunior/harness/wiki/User-Manual) |
-| **Why Harness of AI?** | [docs/why-harness.md](docs/why-harness.md) · [Wiki: Why Harness](https://github.com/nbsjunior/harness/wiki/Why-Harness) |
-| **Wiki (users)** | **[GitHub Wiki](https://github.com/nbsjunior/harness/wiki)** · [Getting Started](https://github.com/nbsjunior/harness/wiki/Getting-Started) |
+| **User Manual** | [docs/user-manual.md](docs/user-manual.md) · [Wiki: User-Manual](https://github.com/nbsjunior/ToddSpect/wiki/User-Manual) |
+| **Why ToddSpect?** | [docs/why-toddspect.md](docs/why-toddspect.md) · [Wiki: Why ToddSpect](https://github.com/nbsjunior/ToddSpect/wiki/Why-ToddSpect) |
+| **Wiki (users)** | **[GitHub Wiki](https://github.com/nbsjunior/ToddSpect/wiki)** · [Getting Started](https://github.com/nbsjunior/ToddSpect/wiki/Getting-Started) |
 | **AI assistants** | [AGENTS.md](AGENTS.md) → [docs/ai-reference.md](docs/ai-reference.md) → [docs/code-map.md](docs/code-map.md) |
 | **End users** | [docs/starter-kit.md](docs/starter-kit.md) · [docs/user-guide.md](docs/user-guide.md) |
 | **Developers** | [docs/README.md](docs/README.md) · [docs/architecture.md](docs/architecture.md) · [docs/ipc-protocol.md](docs/ipc-protocol.md) |
@@ -177,7 +177,7 @@ Wiki source is in [`wiki/`](wiki/) — publish with `node scripts/publish-wiki.m
 
 **[→ docs/aidlc-kiro.md](docs/aidlc-kiro.md)** — **Kiro + AWS AI-DLC** (Kiro CLI auto-installed, steering rules, `aidlc-docs/`).
 
-The release `.vsix` includes the **compiled Harness CLI** (`cli/dist/index.js`) — no separate CLI install required.
+The release `.vsix` includes the **compiled ToddSpect CLI** (`cli/dist/index.js`) — no separate CLI install required.
 
 ---
 
@@ -185,18 +185,18 @@ The release `.vsix` includes the **compiled Harness CLI** (`cli/dist/index.js`) 
 
 ### Option A — Install from VSIX (end users)
 
-1. Download `harness-vscode-0.1.2.vsix` from the [**Releases**](https://github.com/nbsjunior/harness/releases) page.
+1. Download `toddspect-vscode-0.1.2.vsix` from the [**Releases**](https://github.com/nbsjunior/ToddSpect/releases) page.
 2. Open VSCode → `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
 3. Select the downloaded file and click **Reload**.
-4. Click the **Harness of AI** icon in the Activity Bar → follow [starter-kit.md](docs/starter-kit.md) or [user-manual.md](docs/user-manual.md).
+4. Click the **ToddSpect** icon in the Activity Bar → follow [starter-kit.md](docs/starter-kit.md) or [user-manual.md](docs/user-manual.md).
 
 Or from the terminal:.
 
 ```bash
-code --install-extension harness-vscode-0.1.2.vsix
+code --install-extension toddspect-vscode-0.1.2.vsix
 ```
 
-> The `.vsix` bundles the **Harness CLI** orchestrator (Copilot-first). Node.js 20+ must be on your `PATH`.
+> The `.vsix` bundles the **ToddSpect CLI** orchestrator (Copilot-first). Node.js 20+ must be on your `PATH`.
 
 > **[→ Full user guide: docs/user-guide.md](docs/user-guide.md)** — covers agent setup, chat, context, Spec Manager, CLI, and troubleshooting.
 
@@ -211,8 +211,8 @@ code --install-extension harness-vscode-0.1.2.vsix
 | VSCode | ≥ 1.85 |
 
 ```bash
-git clone https://github.com/nbsjunior/harness.git
-cd harness
+git clone https://github.com/nbsjunior/toddspect.git
+cd toddspect
 npm install
 npm run build:cli          # build the CLI daemon first
 ```
@@ -229,7 +229,7 @@ code packages/extension    # open only the extension folder
 
 ```bash
 npm run package:vsix       # from monorepo root
-# → packages/extension/harness-vscode-0.1.0.vsix
+# → packages/extension/toddspect-vscode-0.1.0.vsix
 ```
 
 This runs: `build:cli` → `bundle:cli` (copy into extension) → `build:prod` → `vsce package`.
@@ -241,37 +241,37 @@ This runs: `build:cli` → `bundle:cli` (copy into extension) → `build:prod` �
 
 ### 1. Initialize your workspace
 
-Open the project you want to use with Harness, then:
+Open the project you want to use with ToddSpect, then:
 
 ```
-Ctrl+Shift+P → Harness: Initialize Workspace
+Ctrl+Shift+P → ToddSpect: Initialize Workspace
 ```
 
-This creates `.harness/` with example specs and a configuration template.
+This creates `.toddspect/` with example specs and a configuration template.
 
 ### 2. Configure an agent
 
 ```
-Ctrl+Shift+P → Harness: Open Configuration
+Ctrl+Shift+P → ToddSpect: Open Configuration
 ```
 
 Set an API key for at least one agent. The easiest to start is **GitHub Copilot**:
 
 ```jsonc
 // settings.json
-{ "harness.connectors.copilot.token": "ghp_xxxxxxxxxxxxxxxxxxxx" }
+{ "toddspect.connectors.copilot.token": "ghp_xxxxxxxxxxxxxxxxxxxx" }
 ```
 
 ### 3. Chat
 
-Click the **Harness icon** in the Activity Bar, type a message, press **Enter**.
+Click the **ToddSpect icon** in the Activity Bar, type a message, press **Enter**.
 
 ### 4. Check usage (Spending)
 
 After a few messages:
 
 ```
-Ctrl+Shift+P → Harness of AI: Open Configuration → Spending
+Ctrl+Shift+P → ToddSpect: Open Configuration → Spending
 ```
 
 You will see request counts and estimated tokens **per provider**, plus a short history of recent turns.
@@ -281,7 +281,7 @@ You will see request counts and estimated tokens **per provider**, plus a short 
 ## Project Structure
 
 ```
-harness/
+toddspect/
 ├── packages/
 │   ├── extension/               # VSCode Extension (esbuild)
 │   │   ├── src/
@@ -309,10 +309,10 @@ harness/
 │       │   ├── ipc/
 │       │   │   └── IpcServer.ts       # stdin/stdout JSON frame server
 │       │   ├── commands/
-│       │   │   ├── init.ts            # harness init
-│       │   │   ├── agentRun.ts        # harness agent:run
-│       │   │   ├── specParse.ts       # harness spec:parse
-│       │   │   └── contextBuild.ts    # harness context:build
+│       │   │   ├── init.ts            # toddspect init
+│       │   │   ├── agentRun.ts        # toddspect agent:run
+│       │   │   ├── specParse.ts       # toddspect spec:parse
+│       │   │   └── contextBuild.ts    # toddspect context:build
 │       │   ├── router/
 │       │   │   └── AgentRouter.ts     # Routes to Copilot/Devin/Cursor/Claude/KIRO
 │       │   ├── parsers/
@@ -322,8 +322,8 @@ harness/
 │       │       └── McpConnection.ts   # MCP SDK client wrapper
 │       └── tsup.config.ts
 │
-├── .harness/                    # Workspace config (per project)
-│   ├── specs/                   # Harness Skills, Tools, Workflows
+├── .toddspect/                    # Workspace config (per project)
+│   ├── specs/                   # ToddSpect Skills, Tools, Workflows
 │   └── sdd/                     # spec-kit workflow (constitution, features)
 │   ├── config.yaml              # Agent connector configuration
 │   └── specs/                   # Skill and Workflow definitions
@@ -348,37 +348,37 @@ The CLI can be used standalone (outside VSCode) for scripting and automation.
 
 ```bash
 # Initialize a project
-harness init ./my-project
+toddspect init ./my-project
 
 # Run an agent with a one-shot prompt
-harness agent:run --agent copilot --prompt "Review the auth module for security issues"
+toddspect agent:run --agent copilot --prompt "Review the auth module for security issues"
 
 # Run with context directories
-harness agent:run --agent claude --prompt "Refactor for SOLID" --dirs src,lib
+toddspect agent:run --agent claude --prompt "Refactor for SOLID" --dirs src,lib
 
 # Parse and validate spec files
-harness spec:parse .harness/specs/
-harness spec:parse .harness/specs/skill-code-review.md --output json
+toddspect spec:parse .toddspect/specs/
+toddspect spec:parse .toddspect/specs/skill-code-review.md --output json
 
 # Build a context payload from directories
-harness context:build --dirs src,docs --output summary
-harness context:build --dirs src --max-tokens 50000 --output json
+toddspect context:build --dirs src,docs --output summary
+toddspect context:build --dirs src --max-tokens 50000 --output json
 ```
 
 ---
 
 ## Spec-Driven Development (SDD)
 
-Harness supports **two complementary SDD layers**:
+ToddSpect supports **two complementary SDD layers**:
 
 | Layer | Path | Use case |
 |-------|------|----------|
-| **Harness specs** | `.harness/specs/` | Reusable Skills, Tools, Workflows for chat (`spec+agent`) |
-| **spec-kit workflow** | `.harness/sdd/` | Product development: constitution → spec → plan → tasks → implement ([GitHub spec-kit](https://github.com/github/spec-kit)) |
+| **ToddSpect specs** | `.toddspect/specs/` | Reusable Skills, Tools, Workflows for chat (`spec+agent`) |
+| **spec-kit workflow** | `.toddspect/sdd/` | Product development: constitution → spec → plan → tasks → implement ([GitHub spec-kit](https://github.com/github/spec-kit)) |
 
-Open the **SDD** sidebar tab → **SDD Workflow** to initialize `.harness/sdd/`, create a feature, and run each `/speckit.*` step in chat. See **[docs/sdd-speckit.md](docs/sdd-speckit.md)**.
+Open the **SDD** sidebar tab → **SDD Workflow** to initialize `.toddspect/sdd/`, create a feature, and run each `/speckit.*` step in chat. See **[docs/sdd-speckit.md](docs/sdd-speckit.md)**.
 
-Harness specs use Markdown with YAML frontmatter:
+ToddSpect specs use Markdown with YAML frontmatter:
 
 ### Example Spec (`skill-code-review.md`)
 
@@ -418,19 +418,19 @@ Performs a thorough code review focused on correctness, security and SOLID princ
 
 ## Agent Connectors
 
-Configure connectors in `.harness/config.yaml` or VSCode Settings (`Ctrl+Shift+P → Harness: Open Configuration`).
+Configure connectors in `.toddspect/config.yaml` or VSCode Settings (`Ctrl+Shift+P → ToddSpect: Open Configuration`).
 
 | Agent | Protocol | Config Key | Env Variable |
 |---|---|---|---|
-| GitHub Copilot | REST / SSE | `harness.connectors.copilot.token` | `GITHUB_TOKEN` |
-| Devin | REST | `harness.connectors.devin.apiKey` | `DEVIN_API_KEY` |
-| Cursor AI | OpenAI-compat HTTP | `harness.connectors.cursor.endpoint` | `CURSOR_API_KEY` |
-| Claude Code | CLI subprocess | `harness.connectors.claude.path` | `ANTHROPIC_API_KEY` |
-| AWS KIRO | REST | `harness.connectors.kiro.endpoint` | `KIRO_API_KEY` |
+| GitHub Copilot | REST / SSE | `toddspect.connectors.copilot.token` | `GITHUB_TOKEN` |
+| Devin | REST | `toddspect.connectors.devin.apiKey` | `DEVIN_API_KEY` |
+| Cursor AI | OpenAI-compat HTTP | `toddspect.connectors.cursor.endpoint` | `CURSOR_API_KEY` |
+| Claude Code | CLI subprocess | `toddspect.connectors.claude.path` | `ANTHROPIC_API_KEY` |
+| AWS KIRO | REST | `toddspect.connectors.kiro.endpoint` | `KIRO_API_KEY` |
 
 ### MCP Servers
 
-Add MCP servers to `.harness/config.yaml`:
+Add MCP servers to `.toddspect/config.yaml`:
 
 ```yaml
 mcp:
@@ -511,12 +511,12 @@ npm run clean
 | Document | Description |
 |---|---|
 | **[docs/starter-kit.md](docs/starter-kit.md)** | **Quick start** — VSIX, Copilot setup, bundled CLI, update flow |
-| **[docs/user-guide.md](docs/user-guide.md)** | Install, configure, and use Harness (full reference) |
+| **[docs/user-guide.md](docs/user-guide.md)** | Install, configure, and use ToddSpect (full reference) |
 | [docs/getting-started.md](docs/getting-started.md) | Developer setup: clone, build, F5 hot-reload |
 | [docs/architecture.md](docs/architecture.md) | System design: extension ↔ CLI ↔ agents |
 | [docs/ipc-protocol.md](docs/ipc-protocol.md) | stdin/stdout newline-JSON protocol reference |
-| [docs/sdd-specs.md](docs/sdd-specs.md) | Harness specs: Skills, Tools, Workflows |
-| [docs/sdd-speckit.md](docs/sdd-speckit.md) | spec-kit aligned SDD workflow (`.harness/sdd/`) |
+| [docs/sdd-specs.md](docs/sdd-specs.md) | ToddSpect specs: Skills, Tools, Workflows |
+| [docs/sdd-speckit.md](docs/sdd-speckit.md) | spec-kit aligned SDD workflow (`.toddspect/sdd/`) |
 | [docs/backlog-features.md](docs/backlog-features.md) | Roadmap features: session, budgets, fan-out, web UI |
 | [docs/agent-connectors.md](docs/agent-connectors.md) | Per-agent configuration and protocol details |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to add connectors, commit conventions, PR checklist |
@@ -525,21 +525,21 @@ npm run clean
 
 ## Contributing
 
-We welcome PRs, docs, tests, and new agent connectors. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, commit conventions, and the connector checklist. Join the discussion on [Issues](https://github.com/nbsjunior/harness/issues) — especially if you have ideas for keeping **everything in one interaction**.
+We welcome PRs, docs, tests, and new agent connectors. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, commit conventions, and the connector checklist. Join the discussion on [Issues](https://github.com/nbsjunior/ToddSpect/issues) — especially if you have ideas for keeping **everything in one interaction**.
 
 ---
 
 ## Roadmap
 
-- [x] Session persistence across VSCode restarts — `.harness/chat-session.json` ([backlog-features.md](docs/backlog-features.md))
-- [x] Token and request usage tracking (Spending tab + `.harness/usage-stats.json`)
-- [x] Budget alerts and spending limits per provider — `harness.spending.*` settings
-- [x] Spec auto-discovery — `harness spec:discover`
-- [x] Multi-agent parallel execution — `harness agent:fanout`
+- [x] Session persistence across VSCode restarts — `.toddspect/chat-session.json` ([backlog-features.md](docs/backlog-features.md))
+- [x] Token and request usage tracking (Spending tab + `.toddspect/usage-stats.json`)
+- [x] Budget alerts and spending limits per provider — `toddspect.spending.*` settings
+- [x] Spec auto-discovery — `toddspect spec:discover`
+- [x] Multi-agent parallel execution — `toddspect agent:fanout`
 - [x] GitHub Actions integration — [docs/github-actions.md](docs/github-actions.md)
 - [x] Plugin marketplace (manifest preview) — [docs/plugins.md](docs/plugins.md)
-- [x] Web UI for remote instances (MVP) — `harness web:serve`
-- [x] GitHub spec-kit SDD workflow in UI — `.harness/sdd/` + SDD view wizard — [docs/sdd-speckit.md](docs/sdd-speckit.md)
+- [x] Web UI for remote instances (MVP) — `toddspect web:serve`
+- [x] GitHub spec-kit SDD workflow in UI — `.toddspect/sdd/` + SDD view wizard — [docs/sdd-speckit.md](docs/sdd-speckit.md)
 
 ---
 

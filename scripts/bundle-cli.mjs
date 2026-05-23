@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Copies the compiled Harness CLI into the extension package so it ships
+ * Copies the compiled ToddSpect CLI into the extension package so it ships
  * inside the .vsix (extension/cli/dist/index.js).
  *
  * Run from monorepo root after `npm run build:cli`.

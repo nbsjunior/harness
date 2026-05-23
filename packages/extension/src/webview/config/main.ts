@@ -58,8 +58,8 @@ const AGENTS: AgentInfo[] = [
     setupLabel: 'Open Fine-grained token settings',
     hasEndpoint: true,
     defaultEndpoint: 'https://api.githubcopilot.com',
-    endpointKey: 'harness.connectors.copilot.endpoint',
-    secretKey: 'harness.connectors.copilot.token',
+    endpointKey: 'toddspect.connectors.copilot.endpoint',
+    secretKey: 'toddspect.connectors.copilot.token',
   },
   {
     id: 'claude',
@@ -81,7 +81,7 @@ const AGENTS: AgentInfo[] = [
     hasEndpoint: false,
     defaultEndpoint: '',
     endpointKey: '',
-    secretKey: 'harness.connectors.claude.apiKey',
+    secretKey: 'toddspect.connectors.claude.apiKey',
   },
   {
     id: 'devin',
@@ -102,8 +102,8 @@ const AGENTS: AgentInfo[] = [
     setupLabel: 'Open Devin Settings',
     hasEndpoint: true,
     defaultEndpoint: 'https://api.devin.ai/v1',
-    endpointKey: 'harness.connectors.devin.endpoint',
-    secretKey: 'harness.connectors.devin.apiKey',
+    endpointKey: 'toddspect.connectors.devin.endpoint',
+    secretKey: 'toddspect.connectors.devin.apiKey',
   },
   {
     id: 'cursor',
@@ -124,8 +124,8 @@ const AGENTS: AgentInfo[] = [
     setupLabel: 'Open Cursor Integrations',
     hasEndpoint: true,
     defaultEndpoint: 'https://api.cursor.com',
-    endpointKey: 'harness.connectors.cursor.endpoint',
-    secretKey: 'harness.connectors.cursor.apiKey',
+    endpointKey: 'toddspect.connectors.cursor.endpoint',
+    secretKey: 'toddspect.connectors.cursor.apiKey',
   },
   {
     id: 'kiro',
@@ -139,7 +139,7 @@ const AGENTS: AgentInfo[] = [
     instructions: [
       'Install Kiro CLI: https://kiro.dev/docs/cli/',
       'Create an API key (Kiro Pro+) for headless mode',
-      'Run Harness of AI: Install AI-DLC Workflow — copies rules to .kiro/steering/',
+      'Run ToddSpect: Install AI-DLC Workflow — copies rules to .kiro/steering/',
       'In chat, start with: Using AI-DLC, &lt;your request&gt;',
       'Artifacts are written to aidlc-docs/',
     ],
@@ -147,8 +147,8 @@ const AGENTS: AgentInfo[] = [
     setupLabel: 'Kiro CLI authentication',
     hasEndpoint: false,
     defaultEndpoint: '',
-    endpointKey: 'harness.connectors.kiro.endpoint',
-    secretKey: 'harness.connectors.kiro.apiKey',
+    endpointKey: 'toddspect.connectors.kiro.endpoint',
+    secretKey: 'toddspect.connectors.kiro.apiKey',
   },
 ];
 
@@ -215,7 +215,7 @@ const state: WizardState = {
   secretStatus: { copilot: false, devin: false, cursor: false, claude: false, kiro: false },
   connectionResults: {} as Record<AgentId, { ok: boolean; error?: string; model?: string }>,
   pendingTestAgent: null,
-  specsDirectory: '.harness/specs',
+  specsDirectory: '.toddspect/specs',
   defaultAgent: 'auto',
   defaultWorkspace: '',
   resolvedWorkspace: '',
@@ -261,14 +261,14 @@ function render(): void {
 }
 
 // ---------------------------------------------------------------------------
-// Tabbed configuration (Harness: Open Configuration)
+// Tabbed configuration (ToddSpect: Open Configuration)
 // ---------------------------------------------------------------------------
 
 function renderTabsShell(): HTMLElement {
   const shell = div('tabs-shell');
   shell.innerHTML = /* html */`
     <header class="tabs-header">
-      <h1 class="tabs-title">Harness of AI Configuration</h1>
+      <h1 class="tabs-title">ToddSpect Configuration</h1>
       <button type="button" id="btn-run-wizard" class="btn-ghost btn-sm">Setup wizard</button>
     </header>
     <nav class="config-tabs" role="tablist">
@@ -396,7 +396,7 @@ function renderApiServersTab(): HTMLElement {
     btn.addEventListener('click', () => {
       const idx = Number((btn as HTMLElement).dataset['index']);
       state.apiServers.splice(idx, 1);
-      postMessage({ command: 'saveSetting', payload: { key: 'harness.apiServers', value: state.apiServers } });
+      postMessage({ command: 'saveSetting', payload: { key: 'toddspect.apiServers', value: state.apiServers } });
       render();
     });
   });
@@ -435,7 +435,7 @@ function renderApiServersTab(): HTMLElement {
         baseUrl,
         ...(apiKey ? { apiKey } : {}),
       });
-      postMessage({ command: 'saveSetting', payload: { key: 'harness.apiServers', value: state.apiServers } });
+      postMessage({ command: 'saveSetting', payload: { key: 'toddspect.apiServers', value: state.apiServers } });
       render();
     });
   });
@@ -512,7 +512,7 @@ function renderSpendingTabPanel(): HTMLElement {
     .join('');
 
   el.innerHTML = /* html */`
-    <p class="tab-intro">Token counts are <strong>estimates</strong> (~4 chars/token). Persisted in <code>.harness/usage-stats.json</code>.</p>
+    <p class="tab-intro">Token counts are <strong>estimates</strong> (~4 chars/token). Persisted in <code>.toddspect/usage-stats.json</code>.</p>
 
     <h3 class="spend-section-title">Budget alerts</h3>
     <label class="form-label"><input type="checkbox" id="sp-budget-enabled" ${state.budgetEnabled ? 'checked' : ''} /> Enable budget alerts</label>
@@ -570,7 +570,7 @@ function renderSpendingTabPanel(): HTMLElement {
     postMessage({ command: 'getUsageStats' });
   });
   el.querySelector('#btn-reset-usage')!.addEventListener('click', () => {
-    if (confirm('Reset all Harness of AI usage statistics for this workspace?')) {
+    if (confirm('Reset all ToddSpect usage statistics for this workspace?')) {
       postMessage({ command: 'resetUsageStats' });
     }
   });
@@ -586,10 +586,10 @@ function renderSpendingTabPanel(): HTMLElement {
       alert('Invalid JSON for per-provider caps');
       return;
     }
-    postMessage({ command: 'saveSetting', payload: { key: 'harness.spending.budgetEnabled', value: state.budgetEnabled } });
-    postMessage({ command: 'saveSetting', payload: { key: 'harness.spending.budgetTotalTokens', value: state.budgetTotalTokens } });
-    postMessage({ command: 'saveSetting', payload: { key: 'harness.spending.budgetWarnPercent', value: state.budgetWarnPercent } });
-    postMessage({ command: 'saveSetting', payload: { key: 'harness.spending.budgetTokensByAgent', value: byAgent } });
+    postMessage({ command: 'saveSetting', payload: { key: 'toddspect.spending.budgetEnabled', value: state.budgetEnabled } });
+    postMessage({ command: 'saveSetting', payload: { key: 'toddspect.spending.budgetTotalTokens', value: state.budgetTotalTokens } });
+    postMessage({ command: 'saveSetting', payload: { key: 'toddspect.spending.budgetWarnPercent', value: state.budgetWarnPercent } });
+    postMessage({ command: 'saveSetting', payload: { key: 'toddspect.spending.budgetTokensByAgent', value: byAgent } });
   });
 
   return el;
@@ -611,7 +611,7 @@ function renderWelcome(): HTMLElement {
   const el = div('screen screen--welcome');
   el.innerHTML = /* html */`
     <div class="welcome-logo">&#9670;</div>
-    <h1 class="welcome-title">Welcome to Harness of AI</h1>
+    <h1 class="welcome-title">Welcome to ToddSpect</h1>
     <p class="welcome-sub">Your meta-agent orchestrator for VSCode.</p>
 
     <ul class="welcome-features">
@@ -870,33 +870,33 @@ function saveWorkspaceFieldsFrom(container: HTMLElement): void {
     (container.querySelector('#ws-max-history') as HTMLInputElement).value,
   );
 
-  postMessage({ command: 'saveSetting', payload: { key: 'harness.defaultAgent', value: state.defaultAgent } });
+  postMessage({ command: 'saveSetting', payload: { key: 'toddspect.defaultAgent', value: state.defaultAgent } });
   postMessage({
     command: 'saveSetting',
-    payload: { key: 'harness.defaultWorkspace', value: state.defaultWorkspace },
+    payload: { key: 'toddspect.defaultWorkspace', value: state.defaultWorkspace },
   });
-  postMessage({ command: 'saveSetting', payload: { key: 'harness.specsDirectory', value: state.specsDirectory } });
+  postMessage({ command: 'saveSetting', payload: { key: 'toddspect.specsDirectory', value: state.specsDirectory } });
   if (state.cliPath) {
-    postMessage({ command: 'saveSetting', payload: { key: 'harness.cliPath', value: state.cliPath } });
+    postMessage({ command: 'saveSetting', payload: { key: 'toddspect.cliPath', value: state.cliPath } });
   }
   postMessage({
     command: 'saveSetting',
-    payload: { key: 'harness.promptOptimization.enabled', value: state.promptOptimizationEnabled },
+    payload: { key: 'toddspect.promptOptimization.enabled', value: state.promptOptimizationEnabled },
   });
   postMessage({
     command: 'saveSetting',
-    payload: { key: 'harness.promptOptimization.maxContextCharsPerFile', value: state.maxContextCharsPerFile },
+    payload: { key: 'toddspect.promptOptimization.maxContextCharsPerFile', value: state.maxContextCharsPerFile },
   });
   postMessage({
     command: 'saveSetting',
-    payload: { key: 'harness.promptOptimization.maxHistoryMessages', value: state.maxHistoryMessages },
+    payload: { key: 'toddspect.promptOptimization.maxHistoryMessages', value: state.maxHistoryMessages },
   });
 }
 
 function renderWorkspaceSettingsForm(wizardMode: boolean): HTMLElement {
   const el = div(wizardMode ? 'screen' : 'tab-content');
   const agentOptions =
-    `<option value="auto" ${state.defaultAgent === 'auto' ? 'selected' : ''}>Auto (Harness of AI picks)</option>` +
+    `<option value="auto" ${state.defaultAgent === 'auto' ? 'selected' : ''}>Auto (ToddSpect picks)</option>` +
     AGENTS.map(
       (a) =>
         `<option value="${a.id}" ${state.defaultAgent === a.id ? 'selected' : ''}>${a.label}</option>`,
@@ -925,7 +925,7 @@ function renderWorkspaceSettingsForm(wizardMode: boolean): HTMLElement {
       <label class="form-label">Default workspace path</label>
       <input type="text" id="ws-default-workspace" class="text-input" value="${escapeHtml(state.defaultWorkspace)}"
         placeholder="Absolute path — empty = VS Code folder" />
-      <div class="form-hint">CLI uses this as <code>HARNESS_WORKSPACE</code>. Active: <code>${escapeHtml(state.resolvedWorkspace || '(VS Code folder)')}</code></div>
+      <div class="form-hint">CLI uses this as <code>TODDSPECT_WORKSPACE</code>. Active: <code>${escapeHtml(state.resolvedWorkspace || '(VS Code folder)')}</code></div>
     </div>
 
     <div class="form-group">
@@ -1032,7 +1032,7 @@ function renderMcp(): HTMLElement {
 
   el.querySelector('#mcp-toggle')!.addEventListener('change', (e) => {
     state.mcpEnabled = (e.target as HTMLInputElement).checked;
-    postMessage({ command: 'saveSetting', payload: { key: 'harness.mcp.enabled', value: state.mcpEnabled } });
+    postMessage({ command: 'saveSetting', payload: { key: 'toddspect.mcp.enabled', value: state.mcpEnabled } });
   });
 
   el.querySelectorAll('.mcp-row__remove').forEach(btn => {
@@ -1089,7 +1089,7 @@ function renderMcp(): HTMLElement {
         server.url = (form.querySelector('#mcp-url') as HTMLInputElement).value.trim();
       }
       state.mcpServers.push(server);
-      postMessage({ command: 'saveSetting', payload: { key: 'harness.mcp.servers', value: state.mcpServers } });
+      postMessage({ command: 'saveSetting', payload: { key: 'toddspect.mcp.servers', value: state.mcpServers } });
       render();
     });
   });
@@ -1160,14 +1160,14 @@ function renderDone(): HTMLElement {
 
   const unconfigured = AGENTS.filter(a => !state.secretStatus[a.id]);
   const unconfiguredNote = unconfigured.length > 0
-    ? `<p class="done-note">Not configured: ${unconfigured.map(a => a.label).join(', ')}. You can add them anytime via <em>Harness of AI: Open Configuration</em>.</p>`
+    ? `<p class="done-note">Not configured: ${unconfigured.map(a => a.label).join(', ')}. You can add them anytime via <em>ToddSpect: Open Configuration</em>.</p>`
     : '';
 
   el.innerHTML = /* html */`
     <div class="done-hero">
       <div class="done-check">&#10003;</div>
       <h2>You're all set!</h2>
-      <p class="screen-sub">Harness of AI is configured and ready to use.</p>
+      <p class="screen-sub">ToddSpect is configured and ready to use.</p>
     </div>
 
     ${configuredCards.length > 0

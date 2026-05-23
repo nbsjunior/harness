@@ -32,7 +32,7 @@ node_modules/**
 # Keep in package:
 # dist/extension.js       ✓ extension host bundle
 # dist/webview/**         ✓ webview bundles
-# cli/dist/index.js       ✓ bundled Harness CLI (orchestrator daemon)
+# cli/dist/index.js       ✓ bundled ToddSpect CLI (orchestrator daemon)
 # resources/**            ✓ icons
 # package.json            ✓ manifest
 # README.md               ✓ marketplace page

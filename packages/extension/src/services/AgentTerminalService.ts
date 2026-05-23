@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-const TERMINAL_NAME = 'Harness of AI';
+const TERMINAL_NAME = 'ToddSpect';
 
 /**
  * Mirrors agent shell commands to the integrated terminal for debug visibility.
@@ -9,7 +9,7 @@ export class AgentTerminalService {
   private terminal?: vscode.Terminal;
 
   show(commandLine: string): void {
-    const cfg = vscode.workspace.getConfiguration('harness.agent');
+    const cfg = vscode.workspace.getConfiguration('toddspect.agent');
     if (!cfg.get<boolean>('mirrorCommandsToTerminal', true)) {
       return;
     }

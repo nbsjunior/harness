@@ -1,4 +1,4 @@
-# Harness — AI Agent Reference Guide
+# ToddSpect — AI Agent Reference Guide
 
 > This file is the authoritative quick-reference for any AI model (Cursor, Claude, Copilot,
 > Kiro, etc.) working on this codebase. Read it before reading any source file.
@@ -13,19 +13,19 @@
 
 ---
 
-## What is Harness?
+## What is ToddSpect?
 
-Harness is a **meta-agent orchestrator** — one **VS Code** sidebar (or CLI) for multiple AI
+ToddSpect is a **meta-agent orchestrator** — one **VS Code** sidebar (or CLI) for multiple AI
 providers (GitHub Copilot, Devin, Cursor AI, Claude Code, Kiro) so developers **do not switch
 IDEs per vendor**.
 
-**Product advantages** (documented in [docs/why-harness.md](docs/why-harness.md)):
+**Product advantages** (documented in [docs/why-toddspect.md](docs/why-toddspect.md)):
 
 1. **One IDE, many providers** — same chat UI; switch provider pills or use **Auto** routing.
-2. **Spec-Driven Development** — `.harness/specs/` + **Spec+Agent** mode injects specs as context.
+2. **Spec-Driven Development** — `.toddspect/specs/` + **Spec+Agent** mode injects specs as context.
 3. **Context engineering** — attached files are provider-agnostic; context survives agent switches.
 
-**Core idea:** pick an agent (or Auto), attach context and specs, send a prompt — Harness
+**Core idea:** pick an agent (or Auto), attach context and specs, send a prompt — ToddSpect
 handles auth, routing, streaming, and display.
 
 ---
@@ -33,13 +33,13 @@ handles auth, routing, streaming, and display.
 ## Project Layout
 
 ```
-harness/
+toddspect/
 ├── packages/
 │   ├── cli/          # Node.js CLI daemon + all agent connectors
 │   └── extension/    # VS Code Extension (UI + IPC client)
 ├── docs/             # Architecture, guides, ADRs
 ├── scripts/          # Build helpers (bundle-cli.mjs, smoke-ipc.mjs)
-├── .harness/         # Workspace config (config.yaml, specs/)
+├── .toddspect/         # Workspace config (config.yaml, specs/)
 └── AGENTS.md         # ← you are here
 ```
 
@@ -61,7 +61,7 @@ avoid cross-package runtime imports.
 └──────────────────────────────┘       └──────────────────────────────┘
          OR (standalone)
 ┌──────────────────────────────┐
-│  harness chat / run / check getGoat │  (CLI commands, no extension needed)
+│  toddspect chat / run / check getGoat │  (CLI commands, no extension needed)
 └──────────────────────────────┘
 ```
 
@@ -91,7 +91,7 @@ Each agent has a connector in `packages/cli/src/connectors/` or is routed inline
 Details: [docs/copilot-modes.md](docs/copilot-modes.md)
 
 ### Specs (SDD — Spec-Driven Development)
-YAML files in `.harness/specs/`. Each spec defines a `Skill`, `Tool` or `Workflow` with
+YAML files in `.toddspect/specs/`. Each spec defines a `Skill`, `Tool` or `Workflow` with
 a preferred agent, description and optional tool/parameter schema. In `spec+agent` mode
 the spec content is prepended to the conversation as authoritative guidance.
 
@@ -106,15 +106,15 @@ All human-readable logs go to **stderr only** — stdout is reserved for JSON fr
 
 **Copilot token (extension → CLI child env):**
 1. Live `gh auth token` (preferred — `configBridge.ts` refreshes VS Code secret if changed)
-2. VS Code Secrets (`harness.connectors.copilot.token`) — fallback only
+2. VS Code Secrets (`toddspect.connectors.copilot.token`) — fallback only
 3. `GH_TOKEN` / `COPILOT_GITHUB_TOKEN` env vars
 
 **All other settings:**
-4. `HARNESS_SETTINGS_JSON` (bridged from VS Code settings by `configBridge.ts`)
-5. `.harness/config.yaml`
+4. `TODDSPECT_SETTINGS_JSON` (bridged from VS Code settings by `configBridge.ts`)
+5. `.toddspect/config.yaml`
 6. Built-in defaults
 
-CLI `loadHarnessConfig()` also calls `getGhCliToken()` when no env token is set.
+CLI `loadToddSpectConfig()` also calls `getGhCliToken()` when no env token is set.
 
 ---
 
@@ -123,21 +123,21 @@ CLI `loadHarnessConfig()` also calls `getGhCliToken()` when no env token is set.
 | Path | Purpose |
 |------|---------|
 | `index.ts` | CLI entry-point. Registers all commands (`chat`, `run`, `check getGoat`, `init`, `setup`, `aidlc`). |
-| `config.ts` | `loadHarnessConfig()` — merges all config sources into `AgentConnectorConfig`. |
+| `config.ts` | `loadToddSpectConfig()` — merges all config sources into `AgentConnectorConfig`. |
 | `ipc/IpcServer.ts` | Daemon entry-point. Reads stdin frames, dispatches to handlers, writes stdout frames. |
 | `router/AgentRouter.ts` | Routes `AgentRequest` to the correct connector. Implements Ask/Agent/Spec+Agent loops. |
 | `router/agentReadiness.ts` | `checkAgentReadiness()` — validates tokens/keys before routing. Used by `check getGoat`. |
-| `connectors/cursorLocal.ts` | Cursor **SDK local** runtime (`@cursor/sdk`) — Agent/Spec+Agent edits `HARNESS_WORKSPACE` without Copilot. |
-| `connectors/cursorCloud.ts` | Cursor **Cloud Agents API** v1 — Ask mode and `harness.cursor.agentExecution: cloud`. |
+| `connectors/cursorLocal.ts` | Cursor **SDK local** runtime (`@cursor/sdk`) — Agent/Spec+Agent edits `TODDSPECT_WORKSPACE` without Copilot. |
+| `connectors/cursorCloud.ts` | Cursor **Cloud Agents API** v1 — Ask mode and `toddspect.cursor.agentExecution: cloud`. |
 | `connectors/copilotAuth.ts` | GitHub Copilot 2-step auth: `getCopilotApiToken()` exchanges `gho_` OAuth token → short-lived Copilot token (15 min TTL, in-process cache). Falls back to direct OAuth if exchange returns 404. |
 | `connectors/ghToken.ts` | `getGhCliToken()` — calls `gh auth token` subprocess; skips classic PATs (`ghp_`). |
 | `connectors/kiroCli.ts` | `runKiroCli()` — runs kiro-cli headless with AI-DLC steering prompt. |
 | `aidlc/` | AI-DLC (AI-Driven Development Life Cycle) integration: install/status/prompt helpers for Kiro steering rules. |
 | `kiro/bootstrap.ts` | `ensureKiroCli()` — downloads, installs and caches Kiro CLI binary for the current OS/arch. |
-| `parsers/specParser.ts` | Parses `.harness/specs/*.yaml` into `SpecDefinition` objects. |
-| `commands/getGoat.ts` | `harness check getGoat` — prints readiness status for all 5 agents. |
-| `commands/setup.ts` | `harness setup` — one-shot bootstrap: workspace init + Kiro CLI download + AI-DLC install. |
-| `log.ts` | `harnessLog()` / `harnessWarn()` — routes output to stderr in IPC mode, stdout otherwise. Prevents pollution of JSON frames. |
+| `parsers/specParser.ts` | Parses `.toddspect/specs/*.yaml` into `SpecDefinition` objects. |
+| `commands/getGoat.ts` | `toddspect check getGoat` — prints readiness status for all 5 agents. |
+| `commands/setup.ts` | `toddspect setup` — one-shot bootstrap: workspace init + Kiro CLI download + AI-DLC install. |
+| `log.ts` | `toddspectLog()` / `toddspectWarn()` — routes output to stderr in IPC mode, stdout otherwise. Prevents pollution of JSON frames. |
 
 ## Module Map (Extension — `packages/extension/src/`)
 
@@ -145,7 +145,7 @@ CLI `loadHarnessConfig()` also calls `getGhCliToken()` when no env token is set.
 |------|---------|
 | `extension.ts` | Activation entry-point. Starts CLI daemon, registers all VS Code commands. |
 | `types.ts` | **Shared types**: `AgentId`, `CopilotMode`, `IPCMessage`, `ChatSendPayload`, `WebviewCommand`, `ExtensionCommand`. Single source of truth for extension↔webview protocol. |
-| `configBridge.ts` | `buildHarnessProcessEnv()` — builds `process.env` for CLI subprocess: reads VS Code secrets, calls `gh auth token`, bridges VS Code settings via `HARNESS_SETTINGS_JSON`. |
+| `configBridge.ts` | `buildToddSpectProcessEnv()` — builds `process.env` for CLI subprocess: reads VS Code secrets, calls `gh auth token`, bridges VS Code settings via `TODDSPECT_SETTINGS_JSON`. |
 | `services/CliService.ts` | Manages CLI subprocess lifecycle: spawn, restart, send/receive IPC frames, `onCliMessage()` event emitter. |
 | `services/AgentService.ts` | High-level `chat()` method: registers streaming listeners, sends `chat:send` IPC frame, dispatches chunks/errors to callbacks. |
 | `providers/ChatViewProvider.ts` | Webview provider for the main chat panel. Tracks selected agent + mode. For `spec+agent`: resolves spec paths from workspace and passes them to AgentService. |
@@ -181,10 +181,10 @@ CLI `loadHarnessConfig()` also calls `getGhCliToken()` when no env token is set.
 
 ## Authentication — GitHub Copilot
 
-Copilot needs a GitHub OAuth token with the `copilot` scope. Harness resolves it in this order:
+Copilot needs a GitHub OAuth token with the `copilot` scope. ToddSpect resolves it in this order:
 
 1. **`gh auth token`** (live subprocess call — always fresh, preferred)
-2. VS Code Secrets (`harness.connectors.copilot.token`)
+2. VS Code Secrets (`toddspect.connectors.copilot.token`)
 3. Env var `GH_TOKEN` / `COPILOT_GITHUB_TOKEN`
 
 Once resolved, the raw `gho_` token is exchanged for a short-lived Copilot API token via
@@ -212,14 +212,14 @@ is present).
 | `aidlc:install` | ext→cli | `{ workspaceRoot, force? }` |
 | `aidlc:status` | ext→cli | `{ workspaceRoot }` |
 | `setup:bootstrap` | ext→cli | `{ workspaceRoot }` |
-| `session:load` / `session:loaded` | ext↔cli | Persisted chat in `.harness/chat-session.json` |
+| `session:load` / `session:loaded` | ext↔cli | Persisted chat in `.toddspect/chat-session.json` |
 | `session:save` / `session:saved` | ext↔cli | Save chat snapshot |
 | `session:clear` | ext→cli | Remove persisted session |
 | `usage:alerts` | cli→ext | Budget threshold push (after `usage:get` / `chat:usage`) |
 | `spec:discover` / `spec:discover:result` | ext↔cli | Repo-structure spec suggestions |
 | `chat:fanout` / `chat:fanout:result` | ext↔cli | Parallel multi-agent prompt |
 | `plugins:list` / `plugins:list:result` | ext↔cli | Community connector manifest (preview) |
-| `sdd:workflow:*` | ext↔cli | spec-kit aligned SDD in `.harness/sdd/` — [docs/sdd-speckit.md](docs/sdd-speckit.md) |
+| `sdd:workflow:*` | ext↔cli | spec-kit aligned SDD in `.toddspect/sdd/` — [docs/sdd-speckit.md](docs/sdd-speckit.md) |
 
 Roadmap details: [docs/backlog-features.md](docs/backlog-features.md).
 
@@ -230,7 +230,7 @@ Roadmap details: [docs/backlog-features.md](docs/backlog-features.md).
 1. Add `'myagent'` to `AgentId` union in both `types.ts` files.
 2. Add descriptor to `AGENT_DESCRIPTORS` in `packages/extension/src/types.ts`.
 3. Add config interface to `AgentConnectorConfig` in `packages/cli/src/config.ts`.
-4. Add config loading in `loadHarnessConfig()`.
+4. Add config loading in `loadToddSpectConfig()`.
 5. Add readiness check in `router/agentReadiness.ts`.
 6. Add `case 'myagent': await this.routeMyAgent(req)` in `AgentRouter.ts`.
 7. Add token/key entry in `configBridge.ts` `secretMap`.
@@ -256,7 +256,7 @@ Node built-ins (`fs`, `path`, `child_process`, …) remain external.
 ## Conventions
 
 - **stdout** = JSON IPC frames only. Never `console.log` in CLI daemon code.
-- **stderr** = human-readable logs. Use `harnessLog()` / `harnessWarn()` from `log.ts`.
+- **stderr** = human-readable logs. Use `toddspectLog()` / `toddspectWarn()` from `log.ts`.
 - **Secrets** never go to YAML config. Use VS Code Secrets or env vars.
 - **File I/O** is always done in the CLI process, never in the extension host.
 - **ESM only** — `"type": "module"` in both packages. No `.cjs` imports.

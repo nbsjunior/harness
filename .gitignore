@@ -26,10 +26,10 @@ Thumbs.db
 *.log
 npm-debug.log*
 
-# Harness runtime data
-.harness/context/
-.harness/.session/
-.harness/cache/
+# ToddSpect runtime data
+.toddspect/context/
+.toddspect/.session/
+.toddspect/cache/
 
 # AI-DLC / Kiro local install (use packages/cli/vendor/aidlc-rules in repo)
 .kiro/

@@ -1,20 +1,20 @@
 {
-  "name": "harness-vscode",
-  "displayName": "Harness of AI — Meta-Agent Orchestrator",
+  "name": "toddspect-vscode",
+  "displayName": "ToddSpect — Meta-Agent Orchestrator",
   "description": "One VS Code sidebar for Copilot, Claude, Cursor, Devin, and Kiro — with Spec-Driven Development and shared file context. No IDE switching per provider.",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "private": true,
-  "publisher": "harness-ai",
+  "publisher": "toddspect",
   "license": "MIT",
-  "icon": "resources/harness-icon.png",
+  "icon": "resources/toddspect-icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nbsjunior/harness"
+    "url": "https://github.com/nbsjunior/ToddSpect"
   },
   "bugs": {
-    "url": "https://github.com/nbsjunior/harness/issues"
+    "url": "https://github.com/nbsjunior/ToddSpect/issues"
   },
-  "homepage": "https://github.com/nbsjunior/harness#readme",
+  "homepage": "https://github.com/nbsjunior/ToddSpect#readme",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -34,241 +34,241 @@
     "spec-driven"
   ],
   "activationEvents": [
-    "onView:harness.chatView",
-    "onView:harness.specView",
-    "onCommand:harness.runAgent",
-    "onCommand:harness.initWorkspace",
-    "onCommand:harness.openConfig"
+    "onView:toddspect.chatView",
+    "onView:toddspect.specView",
+    "onCommand:toddspect.runAgent",
+    "onCommand:toddspect.initWorkspace",
+    "onCommand:toddspect.openConfig"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "harness-sidebar",
-          "title": "Harness of AI",
-          "icon": "resources/harness.svg"
+          "id": "toddspect-sidebar",
+          "title": "ToddSpect",
+          "icon": "resources/toddspect.svg"
         }
       ]
     },
     "views": {
-      "harness-sidebar": [
+      "toddspect-sidebar": [
         {
           "type": "webview",
-          "id": "harness.chatView",
+          "id": "toddspect.chatView",
           "name": "Chat",
-          "contextualTitle": "Harness of AI Chat"
+          "contextualTitle": "ToddSpect Chat"
         },
         {
           "type": "webview",
-          "id": "harness.liveEditsView",
+          "id": "toddspect.liveEditsView",
           "name": "Live Edits",
-          "contextualTitle": "Harness Live Edits"
+          "contextualTitle": "ToddSpect Live Edits"
         },
         {
           "type": "webview",
-          "id": "harness.specView",
+          "id": "toddspect.specView",
           "name": "SDD",
-          "contextualTitle": "Harness SDD (spec-kit + specs)"
+          "contextualTitle": "ToddSpect SDD (spec-kit + specs)"
         }
       ]
     },
     "commands": [
       {
-        "command": "harness.addToContext",
-        "title": "Add to Harness of AI Context",
-        "category": "Harness of AI",
+        "command": "toddspect.addToContext",
+        "title": "Add to ToddSpect Context",
+        "category": "ToddSpect",
         "icon": "$(add)"
       },
       {
-        "command": "harness.removeFromContext",
-        "title": "Remove from Harness of AI Context",
-        "category": "Harness of AI",
+        "command": "toddspect.removeFromContext",
+        "title": "Remove from ToddSpect Context",
+        "category": "ToddSpect",
         "icon": "$(remove)"
       },
       {
-        "command": "harness.runAgent",
+        "command": "toddspect.runAgent",
         "title": "Run Agent",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(play)"
       },
       {
-        "command": "harness.openConfig",
+        "command": "toddspect.openConfig",
         "title": "Open Configuration",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(settings-gear)"
       },
       {
-        "command": "harness.openUserManual",
+        "command": "toddspect.openUserManual",
         "title": "Open User Manual",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(book)"
       },
       {
-        "command": "harness.initWorkspace",
+        "command": "toddspect.initWorkspace",
         "title": "Initialize Workspace",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(new-folder)"
       },
       {
-        "command": "harness.newSpec",
+        "command": "toddspect.newSpec",
         "title": "New Spec / Skill",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(file-add)"
       },
       {
-        "command": "harness.clearContext",
+        "command": "toddspect.clearContext",
         "title": "Clear Chat & Context",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(clear-all)"
       },
       {
-        "command": "harness.revertAgentChanges",
+        "command": "toddspect.revertAgentChanges",
         "title": "Revert Agent File Changes",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(discard)"
       },
       {
-        "command": "harness.liveEdits.focus",
+        "command": "toddspect.liveEdits.focus",
         "title": "Focus Live Edits Panel",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(diff)"
       },
       {
-        "command": "harness.showContext",
+        "command": "toddspect.showContext",
         "title": "Show Current Context",
-        "category": "Harness of AI"
+        "category": "ToddSpect"
       },
       {
-        "command": "harness.check.getGoat",
+        "command": "toddspect.check.getGoat",
         "title": "Check getGoat",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(pulse)"
       },
       {
-        "command": "harness.copilotLogin",
+        "command": "toddspect.copilotLogin",
         "title": "Login: GitHub Copilot",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(account)"
       },
       {
-        "command": "harness.aidlcInstall",
+        "command": "toddspect.aidlcInstall",
         "title": "Install AI-DLC Workflow (Kiro)",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(cloud-download)"
       },
       {
-        "command": "harness.setup",
+        "command": "toddspect.setup",
         "title": "Run Setup (Kiro CLI + AI-DLC)",
-        "category": "Harness of AI",
+        "category": "ToddSpect",
         "icon": "$(rocket)"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "harness.addToContext",
+          "command": "toddspect.addToContext",
           "when": "explorerResourceIsFolder || resourceLangId",
           "group": "2_workspace@99"
         }
       ],
       "editor/context": [
         {
-          "command": "harness.addToContext",
-          "group": "harness@1"
+          "command": "toddspect.addToContext",
+          "group": "toddspect@1"
         }
       ],
       "editor/title": [
         {
-          "command": "harness.addToContext",
+          "command": "toddspect.addToContext",
           "group": "navigation",
           "when": "resourceLangId"
         }
       ],
       "view/title": [
         {
-          "command": "harness.openConfig",
-          "when": "view == harness.chatView",
+          "command": "toddspect.openConfig",
+          "when": "view == toddspect.chatView",
           "group": "navigation"
         },
         {
-          "command": "harness.openUserManual",
-          "when": "view == harness.chatView",
+          "command": "toddspect.openUserManual",
+          "when": "view == toddspect.chatView",
           "group": "navigation"
         },
         {
-          "command": "harness.clearContext",
-          "when": "view == harness.chatView",
+          "command": "toddspect.clearContext",
+          "when": "view == toddspect.chatView",
           "group": "navigation"
         },
         {
-          "command": "harness.newSpec",
-          "when": "view == harness.specView",
+          "command": "toddspect.newSpec",
+          "when": "view == toddspect.specView",
           "group": "navigation"
         }
       ],
       "commandPalette": [
         {
-          "command": "harness.addToContext",
+          "command": "toddspect.addToContext",
           "when": "explorerResourceIsFolder || resourceLangId"
         },
         {
-          "command": "harness.removeFromContext"
+          "command": "toddspect.removeFromContext"
         },
         {
-          "command": "harness.runAgent"
+          "command": "toddspect.runAgent"
         },
         {
-          "command": "harness.openConfig"
+          "command": "toddspect.openConfig"
         },
         {
-          "command": "harness.openUserManual"
+          "command": "toddspect.openUserManual"
         },
         {
-          "command": "harness.initWorkspace"
+          "command": "toddspect.initWorkspace"
         },
         {
-          "command": "harness.newSpec"
+          "command": "toddspect.newSpec"
         },
         {
-          "command": "harness.clearContext"
+          "command": "toddspect.clearContext"
         },
         {
-          "command": "harness.showContext"
+          "command": "toddspect.showContext"
         },
         {
-          "command": "harness.check.getGoat"
+          "command": "toddspect.check.getGoat"
         },
         {
-          "command": "harness.aidlcInstall"
+          "command": "toddspect.aidlcInstall"
         },
         {
-          "command": "harness.setup"
+          "command": "toddspect.setup"
         }
       ]
     },
     "configuration": {
-      "title": "Harness of AI",
+      "title": "ToddSpect",
       "properties": {
-        "harness.defaultWorkspace": {
+        "toddspect.defaultWorkspace": {
           "type": "string",
           "default": "",
-          "description": "Override workspace root for Harness of AI CLI and context (absolute path). Empty = use the opened VS Code workspace folder.",
+          "description": "Override workspace root for ToddSpect CLI and context (absolute path). Empty = use the opened VS Code workspace folder.",
           "scope": "resource"
         },
-        "harness.specsDirectory": {
+        "toddspect.specsDirectory": {
           "type": "string",
-          "default": ".harness/specs",
+          "default": ".toddspect/specs",
           "description": "Directory (relative to workspace root) where Spec-Driven Development YAML/Markdown files are stored.",
           "scope": "resource"
         },
-        "harness.promptOptimization.enabled": {
+        "toddspect.promptOptimization.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Inject provider-agnostic efficiency guidance and trim context/history to save tokens.",
           "scope": "resource"
         },
-        "harness.promptOptimization.maxContextCharsPerFile": {
+        "toddspect.promptOptimization.maxContextCharsPerFile": {
           "type": "number",
           "default": 12000,
           "minimum": 1000,
@@ -276,7 +276,7 @@
           "description": "Max characters per context file sent to agents (truncates with a notice).",
           "scope": "resource"
         },
-        "harness.promptOptimization.maxHistoryMessages": {
+        "toddspect.promptOptimization.maxHistoryMessages": {
           "type": "number",
           "default": 24,
           "minimum": 4,
@@ -284,20 +284,20 @@
           "description": "Max non-system chat messages kept in the prompt (recent turns only).",
           "scope": "resource"
         },
-        "harness.spending.budgetEnabled": {
+        "toddspect.spending.budgetEnabled": {
           "type": "boolean",
           "default": false,
           "description": "Enable token budget alerts in chat and the Spending tab.",
           "scope": "resource"
         },
-        "harness.spending.budgetTotalTokens": {
+        "toddspect.spending.budgetTotalTokens": {
           "type": "number",
           "default": 0,
           "minimum": 0,
           "description": "Workspace-wide estimated token budget (0 = no cap).",
           "scope": "resource"
         },
-        "harness.spending.budgetWarnPercent": {
+        "toddspect.spending.budgetWarnPercent": {
           "type": "number",
           "default": 80,
           "minimum": 1,
@@ -305,25 +305,25 @@
           "description": "Warn when usage reaches this percent of the budget.",
           "scope": "resource"
         },
-        "harness.spending.budgetTokensByAgent": {
+        "toddspect.spending.budgetTokensByAgent": {
           "type": "object",
           "default": {},
           "description": "Per-provider token caps, e.g. {\"copilot\": 500000, \"cursor\": 200000}.",
           "scope": "resource"
         },
-        "harness.context.includeOpenEditors": {
+        "toddspect.context.includeOpenEditors": {
           "type": "boolean",
           "default": true,
           "description": "Automatically attach visible editor files to each chat message (in addition to manual context chips).",
           "scope": "resource"
         },
-        "harness.context.includeWorkspaceRoot": {
+        "toddspect.context.includeWorkspaceRoot": {
           "type": "boolean",
           "default": true,
           "description": "Automatically include the workspace folder in context so agents can see the project (scanned as text files, same limits as manual folder context).",
           "scope": "resource"
         },
-        "harness.contextDirectories": {
+        "toddspect.contextDirectories": {
           "type": "array",
           "items": {
             "type": "string"
@@ -332,7 +332,7 @@
           "description": "Directories to include in agent context by default.",
           "scope": "resource"
         },
-        "harness.defaultAgent": {
+        "toddspect.defaultAgent": {
           "type": "string",
           "enum": [
             "auto",
@@ -343,28 +343,28 @@
             "kiro"
           ],
           "default": "auto",
-          "description": "Default provider in chat (auto = Harness of AI picks the best agent per message).",
+          "description": "Default provider in chat (auto = ToddSpect picks the best agent per message).",
           "scope": "resource"
         },
-        "harness.agent.showLiveDiff": {
+        "toddspect.agent.showLiveDiff": {
           "type": "boolean",
           "default": true,
           "description": "Open a side-by-side diff when the agent writes a file in Agent / Spec+Agent mode.",
           "scope": "resource"
         },
-        "harness.agent.openChangedFiles": {
+        "toddspect.agent.openChangedFiles": {
           "type": "boolean",
           "default": true,
           "description": "Open files in the editor when the agent modifies them.",
           "scope": "resource"
         },
-        "harness.agent.mirrorCommandsToTerminal": {
+        "toddspect.agent.mirrorCommandsToTerminal": {
           "type": "boolean",
           "default": true,
-          "description": "Mirror git/gh tool commands to the integrated Harness terminal.",
+          "description": "Mirror git/gh tool commands to the integrated ToddSpect terminal.",
           "scope": "resource"
         },
-        "harness.cursor.agentExecution": {
+        "toddspect.cursor.agentExecution": {
           "type": "string",
           "enum": [
             "auto",
@@ -375,104 +375,104 @@
           "description": "Cursor + Agent mode: auto = local file edits via Cursor SDK when API key is set (no Copilot); cloud = remote Cursor Cloud only (no local file changes).",
           "scope": "resource"
         },
-        "harness.cliPath": {
+        "toddspect.cliPath": {
           "type": "string",
           "default": "",
-          "description": "Absolute path to the Harness of AI CLI binary. Leave empty to use the bundled CLI.",
+          "description": "Absolute path to the ToddSpect CLI binary. Leave empty to use the bundled CLI.",
           "scope": "machine"
         },
-        "harness.connectors.copilot.token": {
+        "toddspect.connectors.copilot.token": {
           "type": "string",
           "default": "",
           "description": "GitHub personal access token for Copilot API access.",
           "scope": "machine"
         },
-        "harness.connectors.copilot.endpoint": {
+        "toddspect.connectors.copilot.endpoint": {
           "type": "string",
           "default": "https://api.githubcopilot.com",
           "description": "GitHub Copilot API endpoint.",
           "scope": "machine"
         },
-        "harness.connectors.devin.apiKey": {
+        "toddspect.connectors.devin.apiKey": {
           "type": "string",
           "default": "",
           "description": "Devin API key.",
           "scope": "machine"
         },
-        "harness.connectors.devin.endpoint": {
+        "toddspect.connectors.devin.endpoint": {
           "type": "string",
           "default": "https://api.devin.ai/v1",
           "description": "Devin API endpoint.",
           "scope": "machine"
         },
-        "harness.connectors.cursor.endpoint": {
+        "toddspect.connectors.cursor.endpoint": {
           "type": "string",
           "default": "https://api.cursor.com",
           "description": "Cursor Cloud Agents API base URL (https://api.cursor.com). Do not use api2.cursor.sh.",
           "scope": "machine"
         },
-        "harness.connectors.cursor.apiKey": {
+        "toddspect.connectors.cursor.apiKey": {
           "type": "string",
           "default": "",
           "description": "Cursor AI API key.",
           "scope": "machine"
         },
-        "harness.connectors.claude.path": {
+        "toddspect.connectors.claude.path": {
           "type": "string",
           "default": "claude",
           "description": "Path to the Claude Code CLI binary (e.g. 'claude' if on PATH).",
           "scope": "machine"
         },
-        "harness.connectors.claude.apiKey": {
+        "toddspect.connectors.claude.apiKey": {
           "type": "string",
           "default": "",
           "description": "Anthropic API key for Claude (used when not relying on Claude Code CLI auth).",
           "scope": "machine"
         },
-        "harness.connectors.kiro.cliPath": {
+        "toddspect.connectors.kiro.cliPath": {
           "type": "string",
           "default": "kiro-cli",
           "description": "Path to the Kiro CLI binary (AI-DLC via steering files).",
           "scope": "machine"
         },
-        "harness.connectors.kiro.apiKey": {
+        "toddspect.connectors.kiro.apiKey": {
           "type": "string",
           "default": "",
           "description": "Kiro Pro API key (KIRO_API_KEY) for headless CLI mode.",
           "scope": "machine"
         },
-        "harness.connectors.kiro.trustTools": {
+        "toddspect.connectors.kiro.trustTools": {
           "type": "string",
           "default": "read,grep,write",
           "description": "Tool categories auto-approved for kiro-cli (--trust-tools).",
           "scope": "machine"
         },
-        "harness.connectors.kiro.trustAllTools": {
+        "toddspect.connectors.kiro.trustAllTools": {
           "type": "boolean",
           "default": false,
           "description": "Pass --trust-all-tools to kiro-cli (use with caution).",
           "scope": "machine"
         },
-        "harness.connectors.kiro.mode": {
+        "toddspect.connectors.kiro.mode": {
           "type": "string",
           "enum": ["cli", "rest"],
           "default": "cli",
           "description": "Kiro connector mode: cli (AI-DLC steering) or legacy rest.",
           "scope": "machine"
         },
-        "harness.connectors.kiro.endpoint": {
+        "toddspect.connectors.kiro.endpoint": {
           "type": "string",
           "default": "",
-          "description": "Legacy REST endpoint (only when harness.connectors.kiro.mode is rest).",
+          "description": "Legacy REST endpoint (only when toddspect.connectors.kiro.mode is rest).",
           "scope": "machine"
         },
-        "harness.aidlc.autoInstall": {
+        "toddspect.aidlc.autoInstall": {
           "type": "boolean",
           "default": true,
           "description": "Auto-install AI-DLC rules into .kiro/steering before Kiro chat.",
           "scope": "resource"
         },
-        "harness.apiServers": {
+        "toddspect.apiServers": {
           "type": "array",
           "default": [],
           "description": "Additional OpenAI-compatible API servers (custom providers).",
@@ -489,13 +489,13 @@
             "required": ["id", "name", "baseUrl"]
           }
         },
-        "harness.mcp.enabled": {
+        "toddspect.mcp.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable MCP (Model Context Protocol) client for connecting to external MCP servers.",
           "scope": "resource"
         },
-        "harness.mcp.servers": {
+        "toddspect.mcp.servers": {
           "type": "array",
           "items": {
             "type": "object",
@@ -532,42 +532,42 @@
           "description": "List of MCP servers to connect to.",
           "scope": "resource"
         },
-        "harness.telemetry.enabled": {
+        "toddspect.telemetry.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Enable anonymous usage telemetry to help improve Harness of AI.",
+          "description": "Enable anonymous usage telemetry to help improve ToddSpect.",
           "scope": "machine"
         }
       }
     },
     "walkthroughs": [
       {
-        "id": "harness.gettingStarted",
-        "title": "Getting Started with Harness of AI",
+        "id": "toddspect.gettingStarted",
+        "title": "Getting Started with ToddSpect",
         "description": "Set up your AI agent orchestrator in minutes.",
         "steps": [
           {
-            "id": "harness.gettingStarted.init",
+            "id": "toddspect.gettingStarted.init",
             "title": "Initialize your workspace",
-            "description": "Run **Harness of AI: Initialize Workspace** to create the `.harness/` directory with example specs.\n[Initialize Workspace](command:harness.initWorkspace)",
+            "description": "Run **ToddSpect: Initialize Workspace** to create the `.toddspect/` directory with example specs.\n[Initialize Workspace](command:toddspect.initWorkspace)",
             "completionEvents": [
-              "onCommand:harness.initWorkspace"
+              "onCommand:toddspect.initWorkspace"
             ]
           },
           {
-            "id": "harness.gettingStarted.configure",
+            "id": "toddspect.gettingStarted.configure",
             "title": "Configure agent connectors",
-            "description": "Add your API keys in Harness of AI settings.\n[Open Configuration](command:harness.openConfig)",
+            "description": "Add your API keys in ToddSpect settings.\n[Open Configuration](command:toddspect.openConfig)",
             "completionEvents": [
-              "onCommand:harness.openConfig"
+              "onCommand:toddspect.openConfig"
             ]
           },
           {
-            "id": "harness.gettingStarted.chat",
+            "id": "toddspect.gettingStarted.chat",
             "title": "Start chatting with your agent",
-            "description": "Click the Harness of AI icon in the Activity Bar and start a conversation.",
+            "description": "Click the ToddSpect icon in the Activity Bar and start a conversation.",
             "completionEvents": [
-              "onView:harness.chatView"
+              "onView:toddspect.chatView"
             ]
           }
         ]

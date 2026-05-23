@@ -202,7 +202,7 @@ export function parseSpecDirectory(dirOrFile: string): {
       const msg = (err as Error).message;
       // Silently skip Markdown files without frontmatter (they may be plain docs)
       if (msg.includes('no YAML frontmatter')) {
-        process.stderr.write(`[harness-cli] Skipping non-spec markdown: ${path.basename(filePath)}\n`);
+        process.stderr.write(`[toddspect-cli] Skipping non-spec markdown: ${path.basename(filePath)}\n`);
         continue;
       }
       errors.push({ filePath, message: msg });

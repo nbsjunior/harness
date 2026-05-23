@@ -20,7 +20,7 @@ export type ContextItemKind = 'file' | 'directory' | 'snippet';
  * GitHub Copilot interaction mode.
  * - `ask`        — simple Q&A chat, no tool calls
  * - `agent`      — autonomous coding with tool-calling loop (read/write/list/search)
- * - `spec+agent` — agent mode with .harness/specs/ injected as system context
+ * - `spec+agent` — agent mode with .toddspect/specs/ injected as system context
  */
 export type CopilotMode = 'ask' | 'agent' | 'spec+agent';
 
@@ -117,7 +117,7 @@ export interface ChatSendPayload {
   /** Absolute paths to context files/dirs selected by the user. CLI reads them. */
   contextPaths: string[];
   agent: AgentSelectionId;
-  /** Relative or absolute path to the specs directory (default: .harness/specs). */
+  /** Relative or absolute path to the specs directory (default: .toddspect/specs). */
   specsDir?: string;
   /** Interaction mode — defaults to 'ask'. Only used for copilot agent today. */
   mode?: CopilotMode;
