@@ -29,7 +29,7 @@ Rules version bundled with Todd of AIDLC: **v0.1.8** (from [awslabs/aidlc-workfl
 
 Todd of AIDLC **installs and configures Kiro CLI automatically** when you:
 
-- Run `toddspect setup` or `toddspect init`
+- Run `todd setup` or `todd init`
 - Install the VS Code extension (bootstrap on activate)
 - First chat with agent **Kiro (AI-DLC)**
 
@@ -40,7 +40,7 @@ Kiro is cached at `~/.toddspect/tools/kiro-cli/` (Windows: `%USERPROFILE%\.todds
 ```bash
 npm run setup
 # or
-toddspect setup
+todd setup
 ```
 
 ### 2. API key (headless / Todd of AIDLC)
@@ -54,10 +54,10 @@ In VS Code: **Todd of AIDLC → Open Configuration → Kiro** and save the API k
 
 ### 3. AI-DLC rules
 
-Included in `toddspect setup` / extension bootstrap. Manual install:
+Included in `todd setup` / extension bootstrap. Manual install:
 
 ```bash
-toddspect aidlc install
+todd aidlc install
 ```
 
 **Extension:** `Ctrl+Shift+P` → **Todd of AIDLC: Install AI-DLC Workflow (Kiro)**

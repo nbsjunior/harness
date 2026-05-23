@@ -37,7 +37,7 @@ When Copilot **Spec+Agent** mode is active, Todd of AIDLC:
 ## CLI
 
 ```bash
-toddspect spec list
+todd spec list
 ```
 
 IPC: `spec:parse` from the extension Spec Manager panel.

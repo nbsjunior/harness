@@ -183,7 +183,7 @@ Version, steering rule names, release zip URL for AI-DLC rules.
 ### `commands/agentRun.ts`
 | Export | Purpose |
 |--------|---------|
-| `agentRunCommand()` | One-shot agent prompt from CLI (`toddspect run`). |
+| `agentRunCommand()` | One-shot agent prompt from CLI (`todd run`). |
 
 ### `commands/contextBuild.ts`
 | Export | Purpose |

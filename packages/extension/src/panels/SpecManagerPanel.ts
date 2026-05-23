@@ -293,7 +293,7 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
 
       const n = result.payload.suggestions?.length ?? 0;
       void vscode.window.showInformationMessage(
-        `Spec discovery: ${n} suggestion(s). Run \`toddspect spec:discover --write\` to materialize.`,
+        `Spec discovery: ${n} suggestion(s). Run \`todd spec:discover --write\` to materialize.`,
       );
     } catch (err) {
       void vscode.window.showErrorMessage(

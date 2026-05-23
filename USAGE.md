@@ -67,7 +67,7 @@ Press `Ctrl+Shift+P` → **Todd: Open Configuration** → **Agents** tab.
 | **Claude** | Install [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code), then set `ANTHROPIC_API_KEY` or paste the key in the panel |
 | **Cursor** | Paste your [Cursor API key](https://cursor.com/settings) |
 | **Devin** | Paste your [Devin API key](https://preview.devin.ai/settings) |
-| **Kiro** | Run `toddspect setup` in a terminal to auto-download the Kiro CLI |
+| **Kiro** | Run `todd setup` in a terminal to auto-download the Kiro CLI |
 
 ### 4. Verify readiness
 
@@ -198,26 +198,26 @@ Tokens and API keys are stored in **VS Code Secret Storage** (system keychain) �
 
 ## CLI standalone
 
-Todd also ships a standalone CLI (`toddspect`) for use without VS Code:
+Todd also ships a standalone CLI (`todd`) for use without VS Code:
 
 ```bash
 # One-shot chat
-toddspect run --agent copilot "Explain the AgentRouter class"
+todd run --agent copilot "Explain the AgentRouter class"
 
 # Interactive chat
-toddspect chat
+todd chat
 
 # Bootstrap workspace
-toddspect init
+todd init
 
 # Check agent readiness
-toddspect check getGoat
+todd check getGoat
 
 # Install AI-DLC rules (Kiro steering)
-toddspect aidlc install
+todd aidlc install
 
 # Full setup (Kiro CLI + AI-DLC + workspace init)
-toddspect setup
+todd setup
 ```
 
 The CLI reads `.toddspect/config.yaml` and environment variables for tokens. See [docs/getting-started.md](docs/getting-started.md) for CLI-only setup.

@@ -175,7 +175,7 @@ Fill in the API key for the agent(s) you want to use and click **Save**.
 
 ### 5.2 Via VSCode settings
 
-Open `File → Preferences → Settings`, search for `toddspect`, or edit `settings.json` directly:
+Open `File → Preferences → Settings`, search for `todd`, or edit `settings.json` directly:
 
 ```jsonc
 {
@@ -420,7 +420,7 @@ The **SDD Workflow** tab implements the spec-kit development flow inside Todd of
 
 Use **Notes for next step** to append context before **Run in chat**.
 
-**Discover** runs repo-based suggestions for Todd of AIDLC specs (`toddspect spec:discover`).
+**Discover** runs repo-based suggestions for Todd of AIDLC specs (`todd spec:discover`).
 
 Full reference: **[sdd-speckit.md](sdd-speckit.md)**.
 
@@ -511,21 +511,21 @@ npm link        # or: npm install -g .
 
 ### Commands
 
-#### `toddspect init`
+#### `todd init`
 
 Initialize `.toddspect/` in the current directory:
 
 ```bash
-toddspect init
-toddspect init --dir ./my-project
+todd init
+todd init --dir ./my-project
 ```
 
-#### `toddspect agent:run`
+#### `todd agent:run`
 
 One-shot agent call — sends a prompt and exits:
 
 ```bash
-toddspect agent:run \
+todd agent:run \
   --agent copilot \
   --prompt "Review this code for security issues" \
   --dirs ./src ./lib \
@@ -543,22 +543,22 @@ Output (JSON, stdout):
 }
 ```
 
-#### `toddspect spec:parse`
+#### `todd spec:parse`
 
 Parse and validate spec files in a directory:
 
 ```bash
-toddspect spec:parse .toddspect/specs/
-toddspect spec:parse .toddspect/specs/skill-code-review.md --output yaml
+todd spec:parse .toddspect/specs/
+todd spec:parse .toddspect/specs/skill-code-review.md --output yaml
 ```
 
-#### `toddspect context:build`
+#### `todd context:build`
 
 Read files from directories and output a consolidated context:
 
 ```bash
-toddspect context:build ./src ./lib --output json
-toddspect context:build ./src --format prompt
+todd context:build ./src ./lib --output json
+todd context:build ./src --format prompt
 ```
 
 ### Scripting example
@@ -568,7 +568,7 @@ toddspect context:build ./src --format prompt
 # pr-review.sh — run a security review on changed files
 
 CHANGED=$(git diff --name-only HEAD~1)
-echo "$CHANGED" | xargs -I{} toddspect agent:run \
+echo "$CHANGED" | xargs -I{} todd agent:run \
   --agent claude \
   --prompt "Security review" \
   --dirs {} \

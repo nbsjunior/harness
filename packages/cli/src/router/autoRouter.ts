@@ -64,7 +64,7 @@ export const AUTO_ROUTING_RULES: ReadonlyArray<{
       'ai dlc',
       'steering',
       '.kiro',
-      'toddspect spec',
+      'todd spec',
       'spec-driven',
       'sdd',
       'workflow spec',
@@ -357,7 +357,7 @@ export function resolveAutoAgent(input: AutoRouteInput): AutoRouteResult {
     agent: 'copilot',
     ruleId: winningRuleId,
     reason:
-      `${winningReason} (no agent configured — run toddspect check getGoat; configure Cursor, Copilot, etc.).`,
+      `${winningReason} (no agent configured — run todd check getGoat; configure Cursor, Copilot, etc.).`,
     scores,
     fallbackUsed: true,
     requestedFallbackFrom: topScored,

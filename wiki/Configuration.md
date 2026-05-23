@@ -63,7 +63,7 @@ Never commit API keys in YAML.
 ## Check getGoat
 
 ```bash
-toddspect check getGoat
+todd check getGoat
 ```
 
 Or **Todd of AIDLC: Check getGoat** — shows which agents are ready and hints for missing config.

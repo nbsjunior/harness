@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * `toddspect check getGoat` — diagnose Todd setup: config, agents, AI-DLC.
+ * `todd check getGoat` — diagnose Todd setup: config, agents, AI-DLC.
  * All output goes to stderr except JSON mode.
  */
 export async function getGoatCommand(options: {
@@ -57,12 +57,12 @@ export async function getGoatCommand(options: {
   process.stderr.write('\nToddSpect getGoat\n');
   process.stderr.write('═'.repeat(50) + '\n\n');
   process.stderr.write(`Workspace: ${workspace}\n`);
-  process.stderr.write(`.toddspect/: ${hasToddSpectDir ? 'found' : 'missing (run: toddspect init)'}\n`);
+  process.stderr.write(`.toddspect/: ${hasToddSpectDir ? 'found' : 'missing (run: todd init)'}\n`);
   process.stderr.write(
     `Config bridge (VS Code): ${envHints.TODDSPECT_SETTINGS_JSON ? 'yes' : 'no (CLI-only mode)'}\n`,
   );
   process.stderr.write(
-    `AI-DLC (Kiro steering): ${aidlc.installed ? `installed (v${aidlc.bundledVersion})` : 'not installed (run: toddspect aidlc install)'}\n`,
+    `AI-DLC (Kiro steering): ${aidlc.installed ? `installed (v${aidlc.bundledVersion})` : 'not installed (run: todd aidlc install)'}\n`,
   );
   if (aidlc.installed) {
     process.stderr.write(`  aidlc-docs/: ${aidlc.aidlcDocsPresent ? 'found' : 'will be created on first workflow'}\n`);
@@ -98,7 +98,7 @@ export async function getGoatCommand(options: {
   process.stderr.write(`\n${ready.length}/5 agent(s) ready.\n`);
 
   if (!hasToddSpectDir) {
-    process.stderr.write('\nTip: run `toddspect init` in your project root.\n');
+    process.stderr.write('\nTip: run `todd init` in your project root.\n');
   }
   if (!ready.some((r) => r.agent === 'copilot')) {
     process.stderr.write(
@@ -108,7 +108,7 @@ export async function getGoatCommand(options: {
 
   process.stderr.write('\nModes:\n');
   process.stderr.write('  • VS Code Extension — sidebar Chat (spawns CLI daemon automatically)\n');
-  process.stderr.write('  • CLI — `toddspect agent:run --agent copilot --prompt "..."`\n\n');
+  process.stderr.write('  • CLI — `todd agent:run --agent copilot --prompt "..."`\n\n');
 
   return ready.length > 0 ? 0 : 1;
 }

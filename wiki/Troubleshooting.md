@@ -49,5 +49,5 @@
 Always check **View → Output → Todd of AIDLC** first.
 
 ```bash
-toddspect check getGoat    # CLI-side readiness
+todd check getGoat    # CLI-side readiness
 ```

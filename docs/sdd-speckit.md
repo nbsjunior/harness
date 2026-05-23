@@ -33,7 +33,7 @@ Open **View → SDD** in the activity bar. Use **SDD Workflow** tab:
 
 - Multi-provider routing (Copilot, Cursor, Claude, Kiro, …) for every step
 - Same workspace as VS Code chat, context chips, and Live Edits
-- `toddspect spec:discover` for repo-based Todd of AIDLC spec suggestions
+- `todd spec:discover` for repo-based Todd of AIDLC spec suggestions
 - Optional `specify` CLI install remains compatible (external)
 
 ## IPC

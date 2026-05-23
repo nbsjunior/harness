@@ -3,7 +3,7 @@
  * Merges Todd configuration from YAML, environment variables, and the VS Code settings bridge.
  *
  * **Why:** Connectors need a single `AgentConnectorConfig` whether the CLI runs as a daemon
- * (extension) or standalone (`toddspect chat`). Secrets come from env; endpoints often from
+ * (extension) or standalone (`todd chat`). Secrets come from env; endpoints often from
  * `TODDSPECT_SETTINGS_JSON`.
  *
  * **Copilot token order:** YAML token → env vars → `getGhCliToken()` (live `gh auth token`).

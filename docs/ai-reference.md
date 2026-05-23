@@ -43,10 +43,10 @@ User → Webview → Extension Host → stdin/stdout JSON → CLI Daemon → Age
 
 - **Extension host** is sandboxed and should stay responsive.
 - **CLI daemon** does blocking I/O (read files, HTTP, subprocesses for Claude/Kiro).
-- Same CLI runs standalone (`toddspect chat`) without the extension — one router, two entry points.
+- Same CLI runs standalone (`todd chat`) without the extension — one router, two entry points.
 
 **Daemon stability (Windows):** `IpcServer` must **not** `process.exit(0)` on stdin `end` — spurious EOF
-on Windows caused "CLI daemon exited unexpectedly". Heavy work (Kiro download, `toddspect setup`) runs in a
+on Windows caused "CLI daemon exited unexpectedly". Heavy work (Kiro download, `todd setup`) runs in a
 **separate** `CliService.runCommand('setup')` subprocess, not inside the IPC daemon.
 
 ---

@@ -68,7 +68,7 @@ export async function webServeCommand(options: {
   await new Promise<void>((resolve) => {
     server.listen(port, host, () => {
       process.stderr.write(
-        `[toddspect web] Dashboard http://${host}:${port}/ (workspace: ${getWorkspaceRoot()})\n`,
+        `[todd web] Dashboard http://${host}:${port}/ (workspace: ${getWorkspaceRoot()})\n`,
       );
       resolve();
     });

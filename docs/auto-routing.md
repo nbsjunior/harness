@@ -33,14 +33,14 @@ Implementation: `packages/cli/src/router/autoRouter.ts` (documented in source).
 
 ## Fallback chain
 
-If the winning agent is not configured (`toddspect check getGoat` shows ✗), Todd of AIDLC tries:
+If the winning agent is not configured (`todd check getGoat` shows ✗), Todd of AIDLC tries:
 
 `copilot` → `claude` → `cursor` → `devin` → `kiro`
 
 ## CLI
 
 ```bash
-toddspect agent:run --agent auto --prompt "refactor the auth module for SOLID"
+todd agent:run --agent auto --prompt "refactor the auth module for SOLID"
 ```
 
 Stderr logs the routing decision; stdout is the agent response only.

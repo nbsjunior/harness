@@ -30,12 +30,12 @@ if (process.argv.includes('--ipc')) {
   // ---------------------------------------------------------------------------
 
   program
-    .name('toddspect')
-    .description('Todd — Meta-Agent Orchestrator CLI')
+    .name('todd')
+    .description('Todd of AIDLC — Meta-Agent Orchestrator CLI')
     .version('0.1.0');
 
   // ---------------------------------------------------------------------------
-  // toddspect init [dir]
+  // todd init [dir]
   // ---------------------------------------------------------------------------
 
   program
@@ -52,7 +52,7 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // toddspect agent:run
+  // todd agent:run
   // ---------------------------------------------------------------------------
 
   program
@@ -90,7 +90,7 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // toddspect spec:parse
+  // todd spec:parse
   // ---------------------------------------------------------------------------
 
   program
@@ -112,7 +112,7 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // toddspect check getGoat
+  // todd check getGoat
   // ---------------------------------------------------------------------------
 
   program
@@ -131,14 +131,14 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // toddspect setup — Kiro CLI + AI-DLC + workspace
+  // todd setup — Kiro CLI + AI-DLC + workspace
   // ---------------------------------------------------------------------------
 
   program
     .command('setup')
     .description('Bootstrap Kiro CLI, AI-DLC rules, and Todd workspace (run after install)')
     .argument('[dir]', 'Workspace directory', '.')
-    .option('--skip-init', 'Do not run toddspect init')
+    .option('--skip-init', 'Do not run todd init')
     .option('--skip-kiro', 'Do not install or locate Kiro CLI')
     .option('--skip-aidlc', 'Do not install AI-DLC steering rules')
     .option('-q, --quiet', 'Minimal output', false)
@@ -164,7 +164,7 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // toddspect aidlc install | status
+  // todd aidlc install | status
   // ---------------------------------------------------------------------------
 
   const aidlc = program.command('aidlc').description('AI-DLC workflow rules (Kiro steering)');
@@ -233,7 +233,7 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // toddspect context:build
+  // todd context:build
   // ---------------------------------------------------------------------------
 
   program

@@ -11,7 +11,7 @@
 | **VSIX release** | Download from [Releases](https://github.com/nbsjunior/todd/releases) → Install from VSIX → Reload window |
 | **Build from source** | `npm install` → `npm run package:vsix` → install `packages/extension/toddspect-vscode.vsix` |
 
-After install, Todd of AIDLC runs `toddspect setup` automatically (workspace init, AI-DLC rules; Kiro download optional).
+After install, Todd of AIDLC runs `todd setup` automatically (workspace init, AI-DLC rules; Kiro download optional).
 
 ## CLI only (no extension)
 
@@ -28,9 +28,9 @@ See [Dual Mode](Dual-Mode) for when to use CLI vs extension.
 ## Workspace init
 
 ```bash
-toddspect init [path]    # creates .toddspect/config.yaml and specs/
-toddspect setup          # bootstrap + AI-DLC install
-toddspect check getGoat  # agent readiness
+todd init [path]    # creates .toddspect/config.yaml and specs/
+todd setup          # bootstrap + AI-DLC install
+todd check getGoat  # agent readiness
 ```
 
 ## Updating

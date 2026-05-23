@@ -13,7 +13,7 @@ Todd of AIDLC offers **two ways** to use the same orchestrator. Pick one — bot
               ┌─────────────────────┴─────────────────────┐
               ▼                                           ▼
    ┌──────────────────────┐                 ┌──────────────────────┐
-   │  VS Code Extension   │                 │   CLI (`toddspect`)    │
+   │  VS Code Extension   │                 │   CLI (`todd`)    │
    │  Sidebar Chat UI     │                 │   Terminal / CI      │
    │  Config wizard       │                 │   Scripts / pipes      │
    └──────────┬───────────┘                 └──────────┬───────────┘
@@ -76,8 +76,8 @@ Or link globally after build:
 
 ```bash
 cd packages/cli && npm link
-toddspect check getGoat
-toddspect agent:run -a copilot -p "Hello"
+todd check getGoat
+todd agent:run -a copilot -p "Hello"
 ```
 
 ---
@@ -91,7 +91,7 @@ toddspect agent:run -a copilot -p "Hello"
 | Project config | `.toddspect/config.yaml` | `.toddspect/config.yaml` |
 | Shell env | `GH_TOKEN`, `ANTHROPIC_API_KEY`, … | Same |
 
-**Tip:** Run **`Todd of AIDLC: Check getGoat`** or `toddspect check getGoat` before your first chat to see which agents are ready.
+**Tip:** Run **`Todd of AIDLC: Check getGoat`** or `todd check getGoat` before your first chat to see which agents are ready.
 
 ---
 
@@ -132,4 +132,4 @@ Reload VSCode. CLI inside the `.vsix` updates automatically with the extension.
 | getGoat shows 0/5 agents | `gh auth login` → `export GH_TOKEN=$(gh auth token)` |
 | Copilot HTTP 400 PAT | Do not use `ghp_` tokens — use `gh auth token` |
 | CLI works, Extension does not | Reload window; **Todd of AIDLC: Check getGoat** |
-| Extension works, CLI does not | Run CLI from project root; `toddspect init` |
+| Extension works, CLI does not | Run CLI from project root; `todd init` |

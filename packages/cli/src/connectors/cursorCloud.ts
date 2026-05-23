@@ -46,7 +46,7 @@ export interface CursorApiProbeResult {
   error?: string;
 }
 
-/** Live check: GET /v1/me — used by `toddspect check getGoat` and scripts/test-cursor.mjs */
+/** Live check: GET /v1/me — used by `todd check getGoat` and scripts/test-cursor.mjs */
 export async function probeCursorApi(
   apiKey: string,
   endpoint: string,

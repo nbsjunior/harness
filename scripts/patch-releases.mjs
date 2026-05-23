@@ -24,12 +24,12 @@ function rebrand(text) {
     // settings keys
     .replace(/harness\.(defaultWorkspace|cursor|agent|promptOptimization)/g, (m, k) => `toddspect.${k}`)
     // CLI commands
-    .replace(/`harness check getGoat`/g, '`toddspect check getGoat`')
-    .replace(/`harness web:serve`/g, '`toddspect web:serve`')
-    .replace(/`harness setup`/g, '`toddspect setup`')
-    .replace(/`harness init`/g, '`toddspect init`')
-    .replace(/`harness `/g, '`toddspect `')
-    .replace(/run harness /g, 'run toddspect ')
+    .replace(/`harness check getGoat`/g, '`todd check getGoat`')
+    .replace(/`harness web:serve`/g, '`todd web:serve`')
+    .replace(/`harness setup`/g, '`todd setup`')
+    .replace(/`harness init`/g, '`todd init`')
+    .replace(/`harness `/g, '`todd `')
+    .replace(/run harness /g, 'run todd ')
     // .harness/ folder
     .replace(/\.harness\//g, '.toddspect/')
     .replace(/\.harness\\`/g, '.toddspect\\`')
@@ -51,7 +51,7 @@ const releases = [
 - **Default workspace path** — toddspect.defaultWorkspace setting
 - **Chat UX** — Clear all, New chat, Clear Chat & Context
 - **Cursor** — API probe, SSE reconnect, improved auto-router readiness
-- **Diagnostics** — \`node scripts/test-cursor.mjs\` and live check in \`toddspect check getGoat\`
+- **Diagnostics** — \`node scripts/test-cursor.mjs\` and live check in \`todd check getGoat\`
 
 Install: download \`toddspect-vscode-0.1.0.vsix\` below, then **Extensions: Install from VSIX...** and reload the window.`,
   },
@@ -118,7 +118,7 @@ Download **\`toddspect-vscode-0.1.4.vsix\`** below → VS Code: **Extensions →
 
 - **Toolbar:** Revert and Terminal moved next to **Clear all** (+ New chat).
 - **Model dropdown:** Updates when you change **Provider** (Copilot, Cursor, Claude, …); resets to **LLM Auto** per provider.
-- **Default SDD specs** on \`toddspect init\` / \`toddspect setup\` (skip if file already exists):
+- **Default SDD specs** on \`todd init\` / \`todd setup\` (skip if file already exists):
   - Clean Code, SOLID architecture, OWASP security, Agent engineering prompts, Modern performance workflow, Code review, Refactor-to-SOLID.
 - **Prompt engineering pipeline:** normalize whitespace, dedupe user turns, merge guidance, CoT hints for Agent/Spec+Agent modes.
 
@@ -128,7 +128,7 @@ Download **\`toddspect-vscode-0.1.5.vsix\`** → Extensions → Install from VSI
 
 ## Spec+Agent
 
-Run **Todd: Initialize Workspace** or \`toddspect setup\` to get default specs in \`.toddspect/specs/\`. Remove any file you do not need.`,
+Run **Todd: Initialize Workspace** or \`todd setup\` to get default specs in \`.toddspect/specs/\`. Remove any file you do not need.`,
   },
   {
     tag: 'v0.1.6',
@@ -200,7 +200,7 @@ After install, reload VS Code. Cursor + Agent with a Cursor API key should show 
     body: `## Summary
 
 - **SDD view** — GitHub spec-kit workflow (constitution → specify → plan → tasks → implement)
-- **Roadmap** — session persistence, budget alerts, spec discovery, multi-agent fan-out, GitHub Actions example, plugin manifest, \`toddspect web:serve\` MVP
+- **Roadmap** — session persistence, budget alerts, spec discovery, multi-agent fan-out, GitHub Actions example, plugin manifest, \`todd web:serve\` MVP
 - **Security** — npm overrides fix Dependabot alerts (undici, tar, @tootallnate/once)
 
 ## Install
@@ -240,7 +240,7 @@ Prefer \`%LOCALAPPDATA%\\ToddSpectRelease\\\` after \`npm run package:vsix:relea
 
 1. Uninstall old Todd / ToddSpec VSIX (optional)
 2. Install \`toddspect-vscode-0.2.0.vsix\`
-3. Rename \`.harness/\` → \`.toddspect/\` in your projects (or run \`toddspect init\`)`,
+3. Rename \`.harness/\` → \`.toddspect/\` in your projects (or run \`todd init\`)`,
   },
 ];
 

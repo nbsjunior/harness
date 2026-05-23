@@ -560,7 +560,7 @@ async function handleSetupBootstrap(
 ): Promise<void> {
   const workspace = msg.payload?.workspaceRoot ?? process.env['TODDSPECT_WORKSPACE'] ?? process.cwd();
   try {
-    // Lightweight only — full setup (incl. Kiro download) must use `toddspect setup` subprocess.
+    // Lightweight only — full setup (incl. Kiro download) must use `todd setup` subprocess.
     await installAidlcRules(workspace);
     writeFrame({
       id: msg.id,

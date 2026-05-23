@@ -137,7 +137,7 @@ export function checkAgentReadiness(
           ready: false,
           hint:
             'Set KIRO_API_KEY (Kiro Pro API key from https://kiro.dev/docs/cli/authentication). ' +
-            'Install kiro-cli and run `toddspect aidlc install`.',
+            'Install kiro-cli and run `todd aidlc install`.',
         };
       }
       return {

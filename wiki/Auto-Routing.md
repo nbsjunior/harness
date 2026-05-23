@@ -35,13 +35,13 @@ Then the response streams from that provider.
 ## Configure
 
 1. Open **Todd of AIDLC → Configuration** and set up the agents you want in the rotation.
-2. Run **`Todd of AIDLC: Check getGoat`** (or `toddspect check getGoat`) to see which agents are ready.
+2. Run **`Todd of AIDLC: Check getGoat`** (or `todd check getGoat`) to see which agents are ready.
 3. Optional: set **Default agent** to `auto` in workspace settings.
 
 ## CLI
 
 ```bash
-toddspect agent:run --agent auto --prompt "integrate Stripe webhooks"
+todd agent:run --agent auto --prompt "integrate Stripe webhooks"
 ```
 
 ## Learn more

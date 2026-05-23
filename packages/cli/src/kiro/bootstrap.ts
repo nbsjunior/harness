@@ -150,7 +150,7 @@ async function installFromZip(pkg: KiroPackage, version: string): Promise<string
 
   if (!fs.existsSync(installDir)) {
     fs.mkdirSync(toolsRoot, { recursive: true });
-    process.stderr.write(`[toddspect] Downloading Kiro CLI ${version} (~${Math.round(pkg.size / 1048576)} MB)...\n`);
+    process.stderr.write(`[todd] Downloading Kiro CLI ${version} (~${Math.round(pkg.size / 1048576)} MB)...\n`);
     await downloadFile(url, zipPath);
     await verifySha256(zipPath, pkg.sha256);
     await extractZip(zipPath, installDir);
@@ -176,7 +176,7 @@ async function installFromMsi(pkg: KiroPackage, version: string): Promise<string
 
   fs.mkdirSync(toolsRoot, { recursive: true });
   if (!fs.existsSync(msiPath)) {
-    process.stderr.write(`[toddspect] Downloading Kiro CLI ${version} (~${Math.round(pkg.size / 1048576)} MB)...\n`);
+    process.stderr.write(`[todd] Downloading Kiro CLI ${version} (~${Math.round(pkg.size / 1048576)} MB)...\n`);
     await downloadFile(url, msiPath);
     await verifySha256(msiPath, pkg.sha256);
   }
@@ -248,7 +248,7 @@ export async function ensureKiroCli(options: {
 
   if (!allowDownload) {
     throw new Error(
-      'Kiro CLI not found. Run `toddspect setup` or install from https://kiro.dev/docs/cli/installation',
+      'Kiro CLI not found. Run `todd setup` or install from https://kiro.dev/docs/cli/installation',
     );
   }
 
@@ -269,11 +269,11 @@ export async function ensureKiroCli(options: {
     }
 
     writeCachedKiroCliPath(cliPath);
-    process.stderr.write(`[toddspect] Kiro CLI ready: ${cliPath}\n`);
+    process.stderr.write(`[todd] Kiro CLI ready: ${cliPath}\n`);
     return { cliPath, source: 'installed', version: manifest.version };
   } catch (err) {
     process.stderr.write(
-      `[toddspect] Kiro auto-install failed: ${(err as Error).message}. Trying official installer...\n`,
+      `[todd] Kiro auto-install failed: ${(err as Error).message}. Trying official installer...\n`,
     );
     const fromScript = await installViaOfficialScript();
     if (fromScript) {

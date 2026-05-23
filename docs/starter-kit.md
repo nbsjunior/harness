@@ -6,7 +6,7 @@
 
 **Choose CLI or Extension?** See [dual-mode.md](dual-mode.md) — most developers use the **VS Code Extension**; use the **CLI** for terminal/CI.
 
-**Kiro + AI-DLC:** See [aidlc-kiro.md](aidlc-kiro.md) — Kiro CLI is installed automatically by Todd of AIDLC (`toddspect setup` or on extension activate).
+**Kiro + AI-DLC:** See [aidlc-kiro.md](aidlc-kiro.md) — Kiro CLI is installed automatically by Todd of AIDLC (`todd setup` or on extension activate).
 
 ---
 

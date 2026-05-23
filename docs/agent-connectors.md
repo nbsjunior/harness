@@ -229,13 +229,13 @@ aidlc:
 
 ```bash
 export KIRO_API_KEY=...   # Kiro Pro API key — see kiro.dev/docs/cli/authentication
-toddspect aidlc install
-toddspect agent:run -a kiro -p "Using AI-DLC, add user authentication"
+todd aidlc install
+todd agent:run -a kiro -p "Using AI-DLC, add user authentication"
 ```
 
 #### Notes
 
-- Install rules: `toddspect aidlc install` or **Todd of AIDLC: Install AI-DLC Workflow (Kiro)**
+- Install rules: `todd aidlc install` or **Todd of AIDLC: Install AI-DLC Workflow (Kiro)**
 - Verify in Kiro CLI: `/context show` → `.kiro/steering/aws-aidlc-rules`
 - Full guide: [aidlc-kiro.md](aidlc-kiro.md)
 - Legacy `mode: rest` + `endpoint` still supported for custom REST gateways

@@ -14,7 +14,7 @@ Todd of AIDLC routes chat to five agents via the CLI `AgentRouter`.
 | **Claude Code** | CLI subprocess | `claude` on PATH + optional `ANTHROPIC_API_KEY` |
 | **Kiro (AI-DLC)** | kiro-cli + steering | `KIRO_API_KEY` |
 
-Run `toddspect check getGoat` or **Todd of AIDLC: Check getGoat** to see readiness.
+Run `todd check getGoat` or **Todd of AIDLC: Check getGoat** to see readiness.
 
 ---
 
@@ -87,7 +87,7 @@ Todd of AIDLC spawns `claude -p ... --output-format stream-json`.
 
 ## Kiro (AI-DLC)
 
-- **CLI:** `kiro-cli` (Todd of AIDLC can auto-download via `toddspect setup`)
+- **CLI:** `kiro-cli` (Todd of AIDLC can auto-download via `todd setup`)
 - **Steering:** `.kiro/steering/` from AI-DLC rules
 - **Key:** `KIRO_API_KEY` from [kiro.dev](https://kiro.dev)
 

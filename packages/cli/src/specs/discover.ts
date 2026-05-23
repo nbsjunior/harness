@@ -130,7 +130,7 @@ export function discoverSpecsFromRepo(workspaceRoot?: string): SpecDiscoveryResu
         'ci-toddspect-agent',
         'Todd agent in CI',
         'workflow',
-        'Use `toddspect agent:run` in CI for automated reviews (see docs/github-actions.md).',
+        'Use `todd agent:run` in CI for automated reviews (see docs/github-actions.md).',
         'cursor',
       ),
     });

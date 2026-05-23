@@ -135,8 +135,8 @@ CLI `loadToddSpectConfig()` also calls `getGhCliToken()` when no env token is se
 | `aidlc/` | AI-DLC (AI-Driven Development Life Cycle) integration: install/status/prompt helpers for Kiro steering rules. |
 | `kiro/bootstrap.ts` | `ensureKiroCli()` — downloads, installs and caches Kiro CLI binary for the current OS/arch. |
 | `parsers/specParser.ts` | Parses `.toddspect/specs/*.yaml` into `SpecDefinition` objects. |
-| `commands/getGoat.ts` | `toddspect check getGoat` — prints readiness status for all 5 agents. |
-| `commands/setup.ts` | `toddspect setup` — one-shot bootstrap: workspace init + Kiro CLI download + AI-DLC install. |
+| `commands/getGoat.ts` | `todd check getGoat` — prints readiness status for all 5 agents. |
+| `commands/setup.ts` | `todd setup` — one-shot bootstrap: workspace init + Kiro CLI download + AI-DLC install. |
 | `log.ts` | `toddspectLog()` / `toddspectWarn()` — routes output to stderr in IPC mode, stdout otherwise. Prevents pollution of JSON frames. |
 
 ## Module Map (Extension — `packages/extension/src/`)

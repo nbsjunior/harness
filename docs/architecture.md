@@ -164,7 +164,7 @@ specPaths ──▶ readContextFiles(specPaths)
 ## Kiro + AI-DLC Integration
 
 ```
-toddspect chat --agent kiro "implement feature X"
+todd chat --agent kiro "implement feature X"
         ↓
 AgentRouter.routeKiro()
         ↓

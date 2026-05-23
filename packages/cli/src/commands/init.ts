@@ -124,7 +124,7 @@ export async function initCommand(dir: string = process.cwd()): Promise<void> {
     toddspectLog(
       `  warn      Kiro CLI: ${err instanceof Error ? err.message : String(err)}`,
     );
-    toddspectLog('            Run: toddspect setup');
+    toddspectLog('            Run: todd setup');
   }
 
   try {
@@ -139,7 +139,7 @@ export async function initCommand(dir: string = process.cwd()): Promise<void> {
     toddspectLog(
       `\n  warn     AI-DLC install skipped: ${err instanceof Error ? err.message : String(err)}`,
     );
-    toddspectLog('           Run later: toddspect aidlc install');
+    toddspectLog('           Run later: todd aidlc install');
   }
 
   toddspectLog(`\nToddSpect workspace initialized in ${targetDir}`);

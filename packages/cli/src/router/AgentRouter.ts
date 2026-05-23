@@ -570,7 +570,7 @@ export class AgentRouter {
     const aidlcOk = await ensureAidlcInstalled(workspace, cfg.aidlcAutoInstall);
     if (!aidlcOk) {
       req.onError(
-        'AI-DLC rules not installed. Run `toddspect aidlc install` or enable toddspect.aidlc.autoInstall.',
+        'AI-DLC rules not installed. Run `todd aidlc install` or enable toddspect.aidlc.autoInstall.',
       );
       return;
     }

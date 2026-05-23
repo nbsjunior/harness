@@ -208,11 +208,11 @@ todd/
 - [x] Session persistence — `.toddspect/chat-session.json`
 - [x] Token and request usage tracking (Spending tab)
 - [x] Budget alerts and spending limits per provider
-- [x] Spec auto-discovery — `toddspect spec:discover`
-- [x] Multi-agent parallel execution — `toddspect agent:fanout`
+- [x] Spec auto-discovery — `todd spec:discover`
+- [x] Multi-agent parallel execution — `todd agent:fanout`
 - [x] GitHub Actions integration
 - [x] Plugin marketplace (manifest preview)
-- [x] Web UI for remote instances — `toddspect web:serve`
+- [x] Web UI for remote instances — `todd web:serve`
 - [x] GitHub spec-kit SDD workflow in UI
 - [ ] VS Code Marketplace publish
 - [ ] Gemini / Mistral connectors

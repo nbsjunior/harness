@@ -1,7 +1,7 @@
 {
   "name": "@toddspect/cli",
   "version": "0.1.0",
-  "description": "ToddSpect CLI — local orchestrator for AI agent calls and SDD spec management",
+  "description": "Todd of AIDLC CLI — local orchestrator for AI agent calls and SDD spec management",
   "private": true,
   "type": "module",
   "main": "./dist/index.cjs",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "toddspect": "./dist/index.js"
+    "todd": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup",

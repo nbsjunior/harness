@@ -17,7 +17,7 @@ export interface SetupOptions {
 
 /**
  * One-shot bootstrap: Todd workspace + Kiro CLI + AI-DLC rules.
- * Called on `toddspect setup`, extension activate, and optional postinstall.
+ * Called on `todd setup`, extension activate, and optional postinstall.
  */
 export async function setupCommand(options: SetupOptions = {}): Promise<number> {
   const dir = path.resolve(options.dir ?? process.env['TODDSPECT_WORKSPACE'] ?? process.cwd());

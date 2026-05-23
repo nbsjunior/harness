@@ -14,7 +14,7 @@ export async function specDiscoverCommand(options: {
   }
 
   if (result.suggestions.length === 0) {
-    process.stderr.write('[toddspect] No spec suggestions for this repository layout.\n');
+    process.stderr.write('[todd] No spec suggestions for this repository layout.\n');
     return 0;
   }
 

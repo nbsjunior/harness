@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2] — 2026-05-23
+
+### Changed
+
+- **CLI command renamed**: `toddspect` → `todd` (all user-facing commands now use `todd <subcommand>`)
+- Workspace folder `.toddspect/`, VS Code settings `toddspect.*`, and env vars `TODDSPECT_*` are unchanged for backward compatibility
+
 ## [0.2.1] — 2026-05-18
 
 ### Changed
@@ -10,7 +17,7 @@
 
 ### Changed
 
-- **Rebrand:** product name **Todd of AIDLC** (formerly Todd / Todd). CLI `toddspect`, workspace `.toddspect/`, settings `toddspect.*` unchanged.
+- **Rebrand:** product name **Todd of AIDLC** (formerly Todd / Todd). CLI `todd`, workspace `.toddspect/`, settings `toddspect.*` unchanged.
 
 ## [0.1.9] — 2026-05-23
 
@@ -18,7 +25,7 @@
 
 - **SDD view** with GitHub [spec-kit](https://github.com/github/spec-kit) workflow: constitution → specify → plan → tasks → implement
 - Feature wizard, scaffold artifacts in `.toddspect/sdd/`, **Run in chat** (Spec+Agent + SDD context)
-- Roadmap: session persistence, budget alerts, spec discovery, multi-agent fan-out, GitHub Actions example, plugin manifest, `toddspect web:serve` MVP
+- Roadmap: session persistence, budget alerts, spec discovery, multi-agent fan-out, GitHub Actions example, plugin manifest, `todd web:serve` MVP
 
 ### Fixed
 
@@ -55,4 +62,4 @@
 - MCP client support (stdio and HTTP transports)
 - Auto-reconnect with exponential backoff for CLI daemon
 - Spec-Driven Development: Markdown-first spec format with YAML frontmatter
-- `toddspect init`, `agent:run`, `spec:parse`, `context:build` CLI commands
+- `todd init`, `agent:run`, `spec:parse`, `context:build` CLI commands

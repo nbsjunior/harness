@@ -224,7 +224,7 @@ Refactors a module step-by-step to comply with SOLID design principles.
 
 ```bash
 # Via CLI
-toddspect init
+todd init
 
 # Via VSCode
 Ctrl+Shift+P → Todd of AIDLC: Initialize Workspace
@@ -238,26 +238,26 @@ This creates the directory structure with example specs.
 
 ```bash
 # Parse a single spec
-toddspect spec:parse .toddspect/specs/skill-code-review.md
+todd spec:parse .toddspect/specs/skill-code-review.md
 
 # Parse all specs in a directory (table output)
-toddspect spec:parse .toddspect/specs/
+todd spec:parse .toddspect/specs/
 
 # JSON output
-toddspect spec:parse .toddspect/specs/ --output json
+todd spec:parse .toddspect/specs/ --output json
 
 # YAML output (re-serialized)
-toddspect spec:parse .toddspect/specs/ --output yaml
+todd spec:parse .toddspect/specs/ --output yaml
 
 # Validate and exit non-zero on errors
-toddspect spec:parse .toddspect/specs/ --validate
+todd spec:parse .toddspect/specs/ --validate
 ```
 
 ---
 
 ## Using Specs in Agent Calls
 
-When you run `toddspect agent:run` or send a message via the chat interface with a `specsDir`, the CLI loads all specs from that directory and uses them to:
+When you run `todd agent:run` or send a message via the chat interface with a `specsDir`, the CLI loads all specs from that directory and uses them to:
 
 1. Determine the preferred/fallback agent for the request
 2. Inject tool definitions into the system prompt

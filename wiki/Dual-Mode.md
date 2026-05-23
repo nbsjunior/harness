@@ -19,12 +19,12 @@ Extension UI  ←IPC→  CLI daemon (--ipc)  ←→  Agents
 ## Standalone CLI
 
 ```bash
-toddspect chat -a copilot "Explain this repo"
-toddspect run -a claude "Refactor utils"
-toddspect check getGoat
-toddspect init
-toddspect setup
-toddspect aidlc install
+todd chat -a copilot "Explain this repo"
+todd run -a claude "Refactor utils"
+todd check getGoat
+todd init
+todd setup
+todd aidlc install
 ```
 
 No extension required. Uses the same `AgentRouter` and config layering.
@@ -35,8 +35,8 @@ No extension required. Uses the same `AgentRouter` and config layering.
 |----------|------|
 | Daily coding in VS Code | Extension |
 | CI/CD, scripts, servers | CLI |
-| Debugging agents | CLI `toddspect chat` + stderr logs |
-| Kiro bootstrap / AI-DLC | Either (`toddspect setup`) |
+| Debugging agents | CLI `todd chat` + stderr logs |
+| Kiro bootstrap / AI-DLC | Either (`todd setup`) |
 
 ## Config
 
