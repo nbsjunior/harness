@@ -18,7 +18,8 @@
     "watch": "npm run watch --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "clean": "npm run clean --workspaces --if-present && rimraf node_modules"
+    "clean": "npm run clean --workspaces --if-present && rimraf node_modules",
+    "audit:ci": "npm audit --audit-level=high"
   },
   "devDependencies": {
     "rimraf": "^6.0.1",
@@ -27,5 +28,43 @@
   "engines": {
     "node": ">=20.0.0",
     "npm": ">=10.0.0"
+  },
+  "overrides": {
+    "tar": "7.5.15",
+    "@tootallnate/once": "2.0.1",
+    "@connectrpc/connect-node": {
+      "undici": "6.25.0"
+    },
+    "http-proxy-agent": {
+      "@tootallnate/once": "2.0.1"
+    },
+    "make-fetch-happen": {
+      "cacache": {
+        "tar": "7.5.15"
+      },
+      "http-proxy-agent": {
+        "@tootallnate/once": "2.0.1"
+      }
+    },
+    "cacache": {
+      "tar": "7.5.15"
+    },
+    "node-gyp": {
+      "tar": "7.5.15",
+      "make-fetch-happen": {
+        "cacache": {
+          "tar": "7.5.15"
+        },
+        "http-proxy-agent": {
+          "@tootallnate/once": "2.0.1"
+        }
+      }
+    },
+    "sqlite3": {
+      "tar": "7.5.15",
+      "node-gyp": {
+        "tar": "7.5.15"
+      }
+    }
   }
 }
