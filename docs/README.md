@@ -23,6 +23,7 @@ Use this index to find the right doc without reading the whole repository.
 | [sdd-specs.md](sdd-specs.md) | Developers | Harness spec format (Skill / Tool / Workflow). |
 | [sdd-speckit.md](sdd-speckit.md) | **Everyone** | **spec-kit** SDD workflow — constitution → implement in `.harness/sdd/`. |
 | [backlog-features.md](backlog-features.md) | Everyone | Roadmap items: session, budgets, fan-out, Actions, web UI. |
+| [releases/v0.1.9.md](releases/v0.1.9.md) | Everyone | Release notes and VSIX install tips for v0.1.9. |
 | [copilot-modes.md](copilot-modes.md) | Developers | Copilot Ask / Agent / Spec+Agent behaviour and flow. |
 | [cursor-agent.md](cursor-agent.md) | Developers & users | Cursor Agent local (SDK) vs Cloud; `agentExecution` setting. |
 | [prompt-optimization.md](prompt-optimization.md) | Everyone | Pre-route pipeline — token efficiency and answer quality. |
