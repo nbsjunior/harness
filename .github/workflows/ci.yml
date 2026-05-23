@@ -30,7 +30,12 @@ jobs:
 
       - name: Check for leftover console.log in CLI daemon
         run: |
-          if grep -rn "console\.log" packages/cli/src/ipc/ packages/cli/src/router/ packages/cli/src/connectors/ 2>/dev/null | grep -v "\.map$"; then
+          # Exclude comment lines (// ...) and JSDoc lines (* ...) to avoid false positives
+          if grep -rn "console\.log" packages/cli/src/ipc/ packages/cli/src/router/ packages/cli/src/connectors/ 2>/dev/null \
+            | grep -v "\.map$" \
+            | grep -v "^\s*//" \
+            | grep -v "^\s*\*" \
+            | grep -Pv ":\s*(//|/\*).*console\.log"; then
             echo "::error::console.log found in CLI daemon code — use process.stderr.write or toddspectLog()"
             exit 1
           fi

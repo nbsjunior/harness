@@ -12,7 +12,7 @@
  * - Delegate agent work to `AgentRouter`
  * - Stream `chat:chunk` push events until `done: true`
  *
- * **Invariants:** Never `console.log` to stdout. Never `process.exit(0)` on stdin `end` (Windows).
+ * **Invariants:** Never write to stdout (use stderr). Never `process.exit(0)` on stdin `end` (Windows).
  *
  * @see docs/ipc-protocol.md
  * @see docs/ai-reference.md
