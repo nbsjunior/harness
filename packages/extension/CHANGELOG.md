@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.9] — 2026-05-23
+
+### Added
+
+- **SDD view** with GitHub [spec-kit](https://github.com/github/spec-kit) workflow: constitution → specify → plan → tasks → implement
+- Feature wizard, scaffold artifacts in `.harness/sdd/`, **Run in chat** (Spec+Agent + SDD context)
+- Roadmap: session persistence, budget alerts, spec discovery, multi-agent fan-out, GitHub Actions example, plugin manifest, `harness web:serve` MVP
+
+### Fixed
+
+- Dependabot/npm audit: overrides for `undici`, `tar`, `@tootallnate/once` (transitive `@cursor/sdk` deps)
+
 ## [0.1.8] — 2026-05-19
 
 ### Fixed
