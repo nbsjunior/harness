@@ -37,5 +37,5 @@ The CLI is bundled as a single ESM file inside the `.vsix` (`extension/cli/dist/
 
 ## More detail
 
-- Repository: [docs/architecture.md](https://github.com/nbsjunior/ToddSpect/blob/main/docs/architecture.md)
-- AI reference: [AGENTS.md](https://github.com/nbsjunior/ToddSpect/blob/main/AGENTS.md)
+- Repository: [docs/architecture.md](https://github.com/nbsjunior/todd/blob/main/docs/architecture.md)
+- AI reference: [AGENTS.md](https://github.com/nbsjunior/todd/blob/main/AGENTS.md)

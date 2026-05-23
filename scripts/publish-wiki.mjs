@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
 const wikiSrc = path.join(root, 'wiki');
-const wikiRemote = 'https://github.com/nbsjunior/toddspect.wiki.git';
+const wikiRemote = 'https://github.com/nbsjunior/todd.wiki.git';
 const workDir = path.join(root, '.wiki-publish');
 
 const gitEnv = {

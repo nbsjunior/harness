@@ -49,7 +49,7 @@ VS Code Extension (UI)  ←→  CLI daemon (IPC)  ←→  Agent connectors
 - **CLI** — all file I/O, authentication, agent routing (bundled inside the `.vsix`)
 - **Specs** — YAML skills/tools/workflows in `.toddspect/specs/`
 
-Repository: [github.com/nbsjunior/ToddSpect](https://github.com/nbsjunior/ToddSpect)
+Repository: [github.com/nbsjunior/todd](https://github.com/nbsjunior/todd)
 
 ---
 
@@ -83,4 +83,4 @@ Repository: [github.com/nbsjunior/ToddSpect](https://github.com/nbsjunior/ToddSp
 
 ## AI assistants
 
-If you are an AI model working on this codebase, read **[AGENTS.md](https://github.com/nbsjunior/ToddSpect/blob/main/AGENTS.md)** in the repository first.
+If you are an AI model working on this codebase, read **[AGENTS.md](https://github.com/nbsjunior/todd/blob/main/AGENTS.md)** in the repository first.

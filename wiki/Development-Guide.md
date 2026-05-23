@@ -7,7 +7,7 @@
 ## Clone and build
 
 ```bash
-git clone https://github.com/nbsjunior/toddspect.git
+git clone https://github.com/nbsjunior/todd.git
 cd toddspect
 npm install
 npm run build
@@ -43,7 +43,7 @@ node scripts/smoke-ipc.mjs
 | `packages/extension/src/services/CliService.ts` | Subprocess + IPC client |
 | `packages/extension/src/webview/chat/main.ts` | Chat UI |
 
-Full map: [docs/code-map.md](https://github.com/nbsjunior/ToddSpect/blob/main/docs/code-map.md)
+Full map: [docs/code-map.md](https://github.com/nbsjunior/todd/blob/main/docs/code-map.md)
 
 ## Conventions
 
@@ -59,4 +59,4 @@ Wiki source lives in `wiki/` in the repo. To push to GitHub Wiki:
 node scripts/publish-wiki.mjs
 ```
 
-Or see [wiki/README.md](https://github.com/nbsjunior/ToddSpect/blob/main/wiki/README.md).
+Or see [wiki/README.md](https://github.com/nbsjunior/todd/blob/main/wiki/README.md).

@@ -79,7 +79,7 @@ For a guided flow (install `.vsix`, open extension, configure **GitHub Copilot**
 
 ### Option A — Install from VSIX (recommended)
 
-1. Download `toddspect-vscode-0.1.0.vsix` from the [Releases page](https://github.com/nbsjunior/ToddSpect/releases).
+1. Download `toddspect-vscode-0.1.0.vsix` from the [Releases page](https://github.com/nbsjunior/todd/releases).
 2. In VSCode, open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P` on macOS).
 3. Run **Extensions: Install from VSIX...**
 4. Select the downloaded `.vsix` file.
@@ -94,7 +94,7 @@ code --install-extension toddspect-vscode-0.1.0.vsix
 ### Option B — Build from source (developers)
 
 ```bash
-git clone https://github.com/nbsjunior/toddspect.git
+git clone https://github.com/nbsjunior/todd.git
 cd toddspect
 npm install
 npm run build:cli          # build the CLI daemon

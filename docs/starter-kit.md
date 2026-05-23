@@ -38,7 +38,7 @@ The CLI is compiled and **included in the `.vsix`** at `extension/cli/dist/index
 
 ### From a release
 
-1. Download `toddspect-vscode-*.vsix` from [Releases](https://github.com/nbsjunior/ToddSpect/releases) (latest: **v0.1.9**).
+1. Download `toddspect-vscode-*.vsix` from [Releases](https://github.com/nbsjunior/todd/releases) (latest: **v0.1.9**).
 2. Confirm the file size on disk is about **18.8 MB** (~19 748 096 bytes). Smaller files are incomplete downloads.
 3. `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
 4. Select the file → **Reload**.
@@ -48,7 +48,7 @@ The CLI is compiled and **included in the `.vsix`** at `extension/cli/dist/index
 ### From the repository (build locally)
 
 ```bash
-git clone https://github.com/nbsjunior/toddspect.git
+git clone https://github.com/nbsjunior/todd.git
 cd toddspect
 npm install
 npm run package:vsix

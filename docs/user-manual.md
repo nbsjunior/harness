@@ -4,7 +4,7 @@
 
 # User Manual — ToddSpect
 
-> Wiki copy (same content): [User-Manual](https://github.com/nbsjunior/ToddSpect/wiki/User-Manual)
+> Wiki copy (same content): [User-Manual](https://github.com/nbsjunior/todd/wiki/User-Manual)
 
 **ToddSpect** is a meta-agent orchestrator for VS Code: one sidebar for **Copilot**, **Claude**, **Cursor**, **Devin**, and **Kiro**, with shared file context and Spec-Driven Development (SDD).
 
@@ -14,7 +14,7 @@
 
 ## 1. Install
 
-1. Download `toddspect-vscode-*.vsix` from [Releases](https://github.com/nbsjunior/ToddSpect/releases).
+1. Download `toddspect-vscode-*.vsix` from [Releases](https://github.com/nbsjunior/todd/releases).
 2. `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
 3. **Developer: Reload Window**
 4. Click the **ToddSpect** icon in the Activity Bar.

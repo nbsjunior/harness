@@ -30,7 +30,7 @@ Today most teams use several AI tools. Each has its own window, login, and conte
 | **Spec-Driven Development** | ToddSpect specs (`.toddspect/specs/`) + **spec-kit** workflow (`.toddspect/sdd/`) — constitution → specify → plan → tasks → implement in the **SDD** view. |
 | **Same CLI under the hood** | Extension and standalone CLI share routing, auth, and file I/O — no duplicate logic. |
 
-**[→ User Manual](docs/user-manual.md)** · [Wiki](https://github.com/nbsjunior/ToddSpect/wiki/User-Manual) · [Why ToddSpect?](docs/why-toddspect.md)
+**[→ User Manual](docs/user-manual.md)** · [Wiki](https://github.com/nbsjunior/todd/wiki/User-Manual) · [Why ToddSpect?](docs/why-toddspect.md)
 
 ---
 
@@ -40,7 +40,7 @@ ToddSpect is **open source** ([MIT](LICENSE)). Whether you fix a connector, impr
 
 | How to help | Link |
 |-------------|------|
-| Report bugs & ideas | [GitHub Issues](https://github.com/nbsjunior/ToddSpect/issues) |
+| Report bugs & ideas | [GitHub Issues](https://github.com/nbsjunior/todd/issues) |
 | Submit code | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Read the architecture | [docs/architecture.md](docs/architecture.md) · [AGENTS.md](AGENTS.md) |
 | Improve the Wiki | Edit [`wiki/`](wiki/) and run `node scripts/publish-wiki.mjs` |
@@ -152,7 +152,7 @@ Because guidance is **provider-agnostic**, switching from Copilot to Claude or C
 
 **Settings:** `toddspect.promptOptimization.enabled`, `maxContextCharsPerFile`, `maxHistoryMessages`.
 
-Full reference: [docs/prompt-optimization.md](docs/prompt-optimization.md) · Wiki: [Prompt Optimization](https://github.com/nbsjunior/ToddSpect/wiki/Prompt-Optimization)
+Full reference: [docs/prompt-optimization.md](docs/prompt-optimization.md) · Wiki: [Prompt Optimization](https://github.com/nbsjunior/todd/wiki/Prompt-Optimization)
 
 ---
 
@@ -160,9 +160,9 @@ Full reference: [docs/prompt-optimization.md](docs/prompt-optimization.md) · Wi
 
 | Audience | Start here |
 |----------|------------|
-| **User Manual** | [docs/user-manual.md](docs/user-manual.md) · [Wiki: User-Manual](https://github.com/nbsjunior/ToddSpect/wiki/User-Manual) |
-| **Why ToddSpect?** | [docs/why-toddspect.md](docs/why-toddspect.md) · [Wiki: Why ToddSpect](https://github.com/nbsjunior/ToddSpect/wiki/Why-ToddSpect) |
-| **Wiki (users)** | **[GitHub Wiki](https://github.com/nbsjunior/ToddSpect/wiki)** · [Getting Started](https://github.com/nbsjunior/ToddSpect/wiki/Getting-Started) |
+| **User Manual** | [docs/user-manual.md](docs/user-manual.md) · [Wiki: User-Manual](https://github.com/nbsjunior/todd/wiki/User-Manual) |
+| **Why ToddSpect?** | [docs/why-toddspect.md](docs/why-toddspect.md) · [Wiki: Why ToddSpect](https://github.com/nbsjunior/todd/wiki/Why-ToddSpect) |
+| **Wiki (users)** | **[GitHub Wiki](https://github.com/nbsjunior/todd/wiki)** · [Getting Started](https://github.com/nbsjunior/todd/wiki/Getting-Started) |
 | **AI assistants** | [AGENTS.md](AGENTS.md) → [docs/ai-reference.md](docs/ai-reference.md) → [docs/code-map.md](docs/code-map.md) |
 | **End users** | [docs/starter-kit.md](docs/starter-kit.md) · [docs/user-guide.md](docs/user-guide.md) |
 | **Developers** | [docs/README.md](docs/README.md) · [docs/architecture.md](docs/architecture.md) · [docs/ipc-protocol.md](docs/ipc-protocol.md) |
@@ -185,7 +185,7 @@ The release `.vsix` includes the **compiled ToddSpect CLI** (`cli/dist/index.js`
 
 ### Option A — Install from VSIX (end users)
 
-1. Download `toddspect-vscode-0.1.2.vsix` from the [**Releases**](https://github.com/nbsjunior/ToddSpect/releases) page.
+1. Download `toddspect-vscode-0.1.2.vsix` from the [**Releases**](https://github.com/nbsjunior/todd/releases) page.
 2. Open VSCode → `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
 3. Select the downloaded file and click **Reload**.
 4. Click the **ToddSpect** icon in the Activity Bar → follow [starter-kit.md](docs/starter-kit.md) or [user-manual.md](docs/user-manual.md).
@@ -211,7 +211,7 @@ code --install-extension toddspect-vscode-0.1.2.vsix
 | VSCode | ≥ 1.85 |
 
 ```bash
-git clone https://github.com/nbsjunior/toddspect.git
+git clone https://github.com/nbsjunior/todd.git
 cd toddspect
 npm install
 npm run build:cli          # build the CLI daemon first
@@ -525,7 +525,7 @@ npm run clean
 
 ## Contributing
 
-We welcome PRs, docs, tests, and new agent connectors. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, commit conventions, and the connector checklist. Join the discussion on [Issues](https://github.com/nbsjunior/ToddSpect/issues) — especially if you have ideas for keeping **everything in one interaction**.
+We welcome PRs, docs, tests, and new agent connectors. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, commit conventions, and the connector checklist. Join the discussion on [Issues](https://github.com/nbsjunior/todd/issues) — especially if you have ideas for keeping **everything in one interaction**.
 
 ---
 

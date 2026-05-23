@@ -64,4 +64,4 @@ Before `AgentRouter` sends your message:
 - [Why ToddSpect](Why-ToddSpect) — product advantages
 - [Context and Specs](Context-and-Specs) — what gets attached before optimization
 - [Copilot Modes](Copilot-Modes) — Ask / Agent / Spec+Agent
-- Repo doc: [docs/prompt-optimization.md](https://github.com/nbsjunior/ToddSpect/blob/main/docs/prompt-optimization.md)
+- Repo doc: [docs/prompt-optimization.md](https://github.com/nbsjunior/todd/blob/main/docs/prompt-optimization.md)

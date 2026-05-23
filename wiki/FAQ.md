@@ -34,4 +34,4 @@ See [Dual Mode](Dual-Mode). Same router; extension adds UI and IPC.
 
 ## How do I contribute?
 
-See [Development Guide](Development-Guide) and [AGENTS.md](https://github.com/nbsjunior/ToddSpect/blob/main/AGENTS.md).
+See [Development Guide](Development-Guide) and [AGENTS.md](https://github.com/nbsjunior/todd/blob/main/AGENTS.md).

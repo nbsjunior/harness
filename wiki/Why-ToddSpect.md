@@ -88,4 +88,4 @@ All four in the ToddSpect sidebar — no IDE hopping.
 - [Getting Started](Getting-Started)
 - [Chat Interface](Chat-Interface)
 - [User Guide](User-Guide)
-- Repository: [docs/why-toddspect.md](https://github.com/nbsjunior/ToddSpect/blob/main/docs/why-toddspect.md)
+- Repository: [docs/why-toddspect.md](https://github.com/nbsjunior/todd/blob/main/docs/why-toddspect.md)

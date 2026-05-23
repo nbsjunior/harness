@@ -46,4 +46,4 @@ toddspect agent:run --agent auto --prompt "integrate Stripe webhooks"
 
 ## Learn more
 
-Full algorithm and rule list: [auto-routing.md](https://github.com/nbsjunior/ToddSpect/blob/main/docs/auto-routing.md) in the repository.
+Full algorithm and rule list: [auto-routing.md](https://github.com/nbsjunior/todd/blob/main/docs/auto-routing.md) in the repository.

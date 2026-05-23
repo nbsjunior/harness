@@ -9,12 +9,12 @@
   "icon": "resources/toddspect-icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/nbsjunior/ToddSpect"
+    "url": "https://github.com/nbsjunior/todd"
   },
   "bugs": {
-    "url": "https://github.com/nbsjunior/ToddSpect/issues"
+    "url": "https://github.com/nbsjunior/todd/issues"
   },
-  "homepage": "https://github.com/nbsjunior/ToddSpect#readme",
+  "homepage": "https://github.com/nbsjunior/todd#readme",
   "engines": {
     "vscode": "^1.85.0"
   },

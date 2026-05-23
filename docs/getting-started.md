@@ -20,7 +20,7 @@ This guide is for **contributors and developers** who want to clone the reposito
 ## Step 1 — Clone and install
 
 ```bash
-git clone https://github.com/nbsjunior/toddspect.git
+git clone https://github.com/nbsjunior/todd.git
 cd toddspect
 npm install
 ```

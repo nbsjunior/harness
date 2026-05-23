@@ -8,7 +8,7 @@
 
 | Method | Steps |
 |--------|--------|
-| **VSIX release** | Download from [Releases](https://github.com/nbsjunior/ToddSpect/releases) → Install from VSIX → Reload window |
+| **VSIX release** | Download from [Releases](https://github.com/nbsjunior/todd/releases) → Install from VSIX → Reload window |
 | **Build from source** | `npm install` → `npm run package:vsix` → install `packages/extension/toddspect-vscode.vsix` |
 
 After install, ToddSpect runs `toddspect setup` automatically (workspace init, AI-DLC rules; Kiro download optional).

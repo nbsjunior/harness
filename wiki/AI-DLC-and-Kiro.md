@@ -35,4 +35,4 @@ From VS Code: extension bootstrap calls `setup --skip-kiro` for workspace only; 
 
 ToddSpect builds a prompt with AI-DLC context and runs `kiro-cli` headless, streaming output to the chat.
 
-See repository [docs/aidlc-kiro.md](https://github.com/nbsjunior/ToddSpect/blob/main/docs/aidlc-kiro.md).
+See repository [docs/aidlc-kiro.md](https://github.com/nbsjunior/todd/blob/main/docs/aidlc-kiro.md).

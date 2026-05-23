@@ -27,7 +27,7 @@ Thank you for your interest in contributing! This document covers the developmen
 ### First-time setup
 
 ```bash
-git clone https://github.com/nbsjunior/toddspect.git
+git clone https://github.com/nbsjunior/todd.git
 cd toddspect
 npm install
 npm run build:cli         # Build CLI first (extension depends on it)

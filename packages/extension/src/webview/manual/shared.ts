@@ -15,7 +15,7 @@ export function renderManualBody(): string {
         <h2>1. Install</h2>
         <ol>
           <li>Download <code>toddspect-vscode-*.vsix</code> from
-            <a href="https://github.com/nbsjunior/ToddSpect/releases">Releases</a>.</li>
+            <a href="https://github.com/nbsjunior/todd/releases">Releases</a>.</li>
           <li><code>Ctrl+Shift+P</code> → <strong>Extensions: Install from VSIX...</strong></li>
           <li><strong>Developer: Reload Window</strong></li>
           <li>Click the <strong>ToddSpect</strong> icon (fox) in the Activity Bar.</li>
@@ -67,9 +67,9 @@ export function renderManualBody(): string {
       <section class="manual-section">
         <h2>7. Help</h2>
         <ul>
-          <li><a href="https://github.com/nbsjunior/ToddSpect/wiki/Troubleshooting">Wiki: Troubleshooting</a></li>
-          <li><a href="https://github.com/nbsjunior/ToddSpect/wiki/Auto-Routing">Wiki: Auto Routing</a></li>
-          <li><a href="https://github.com/nbsjunior/ToddSpect/blob/main/docs/user-manual.md">docs/user-manual.md</a></li>
+          <li><a href="https://github.com/nbsjunior/todd/wiki/Troubleshooting">Wiki: Troubleshooting</a></li>
+          <li><a href="https://github.com/nbsjunior/todd/wiki/Auto-Routing">Wiki: Auto Routing</a></li>
+          <li><a href="https://github.com/nbsjunior/todd/blob/main/docs/user-manual.md">docs/user-manual.md</a></li>
         </ul>
       </section>
     </article>`;

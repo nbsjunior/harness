@@ -12,7 +12,7 @@
 
 ## 1. Install
 
-1. Download `toddspect-vscode-*.vsix` from [Releases](https://github.com/nbsjunior/ToddSpect/releases).
+1. Download `toddspect-vscode-*.vsix` from [Releases](https://github.com/nbsjunior/todd/releases).
 2. `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
 3. **Developer: Reload Window**
 4. Click the **ToddSpect** icon (fox) in the Activity Bar.
@@ -122,4 +122,4 @@ See [Prompt Optimization](Prompt-Optimization) and use **Spending** to compare e
 - [Auto Routing](Auto-Routing)
 - [Getting Started](Getting-Started)
 
-Repository: [github.com/nbsjunior/ToddSpect](https://github.com/nbsjunior/ToddSpect)
+Repository: [github.com/nbsjunior/todd](https://github.com/nbsjunior/todd)

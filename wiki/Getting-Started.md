@@ -18,12 +18,12 @@ ToddSpect lets you use **Copilot, Claude, Cursor, Devin, and Kiro from one VS Co
 
 ## 1. Install the extension
 
-**From release:** Download `toddspect-vscode.vsix` from [Releases](https://github.com/nbsjunior/ToddSpect/releases) → `Ctrl+Shift+P` → **Extensions: Install from VSIX...** → Reload.
+**From release:** Download `toddspect-vscode.vsix` from [Releases](https://github.com/nbsjunior/todd/releases) → `Ctrl+Shift+P` → **Extensions: Install from VSIX...** → Reload.
 
 **From source:**
 
 ```bash
-git clone https://github.com/nbsjunior/toddspect.git
+git clone https://github.com/nbsjunior/todd.git
 cd toddspect
 npm install
 npm run package:vsix

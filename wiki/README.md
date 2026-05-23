@@ -4,7 +4,7 @@
 
 # Wiki source (GitHub Wiki)
 
-This folder is the **source of truth** for the [GitHub Wiki](https://github.com/nbsjunior/ToddSpect/wiki).
+This folder is the **source of truth** for the [GitHub Wiki](https://github.com/nbsjunior/todd/wiki).
 
 ## Branding
 
@@ -22,7 +22,7 @@ node scripts/publish-wiki.mjs
 
 Requires:
 - Wiki enabled on the repository (Settings → Features → Wikis)
-- Push access to `https://github.com/nbsjunior/toddspect.wiki.git`
+- Push access to `https://github.com/nbsjunior/todd.wiki.git`
 
 ## Structure
 
