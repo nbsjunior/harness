@@ -156,6 +156,72 @@ export interface SpecDefinition {
 }
 
 // ---------------------------------------------------------------------------
+// SDD workflow (GitHub spec-kit aligned — .harness/sdd/)
+// ---------------------------------------------------------------------------
+
+export type SddStepId =
+  | 'constitution'
+  | 'specify'
+  | 'clarify'
+  | 'plan'
+  | 'tasks'
+  | 'analyze'
+  | 'checklist'
+  | 'implement'
+  | 'taskstoissues';
+
+export type SddStepStatus = 'locked' | 'ready' | 'done' | 'optional';
+
+export interface SddWorkflowStepInfo {
+  id: SddStepId;
+  slashCommand: string;
+  label: string;
+  description: string;
+  phase: string;
+  optional: boolean;
+  requires: SddStepId[];
+  artifactPattern?: string;
+}
+
+export interface SddFeatureSummary {
+  id: string;
+  dirName: string;
+  hasSpec: boolean;
+  hasPlan: boolean;
+  hasTasks: boolean;
+}
+
+export interface SddStepState {
+  id: SddStepId;
+  status: SddStepStatus;
+  artifactPath?: string;
+}
+
+export interface SddWorkflowStatus {
+  workspaceRoot: string;
+  sddRoot: string;
+  initialized: boolean;
+  constitutionPath: string;
+  constitutionExists: boolean;
+  activeFeatureId: string | null;
+  features: SddFeatureSummary[];
+  steps: SddStepState[];
+}
+
+/** Canonical spec-kit steps (UI metadata; status comes from CLI). */
+export const SDD_WORKFLOW_STEPS: SddWorkflowStepInfo[] = [
+  { id: 'constitution', slashCommand: '/speckit.constitution', label: 'Constitution', description: 'Governing principles', phase: 'foundation', optional: false, requires: [] },
+  { id: 'specify', slashCommand: '/speckit.specify', label: 'Specify', description: 'Requirements & user stories', phase: 'specification', optional: false, requires: ['constitution'] },
+  { id: 'clarify', slashCommand: '/speckit.clarify', label: 'Clarify', description: 'Structured clarification', phase: 'specification', optional: true, requires: ['specify'] },
+  { id: 'plan', slashCommand: '/speckit.plan', label: 'Plan', description: 'Technical implementation plan', phase: 'planning', optional: false, requires: ['specify'] },
+  { id: 'tasks', slashCommand: '/speckit.tasks', label: 'Tasks', description: 'Actionable task breakdown', phase: 'planning', optional: false, requires: ['plan'] },
+  { id: 'analyze', slashCommand: '/speckit.analyze', label: 'Analyze', description: 'Cross-artifact consistency', phase: 'quality', optional: true, requires: ['tasks'] },
+  { id: 'checklist', slashCommand: '/speckit.checklist', label: 'Checklist', description: 'Requirements quality gates', phase: 'quality', optional: true, requires: ['specify'] },
+  { id: 'implement', slashCommand: '/speckit.implement', label: 'Implement', description: 'Execute tasks in Agent mode', phase: 'execution', optional: false, requires: ['tasks'] },
+  { id: 'taskstoissues', slashCommand: '/speckit.taskstoissues', label: 'Tasks → Issues', description: 'GitHub issues from tasks', phase: 'execution', optional: true, requires: ['tasks'] },
+];
+
+// ---------------------------------------------------------------------------
 // IPC Protocol
 //
 // All communication between the Extension Host (broker) and the CLI (daemon)
@@ -210,7 +276,17 @@ export type IpcAction =
   | 'chat:fanout'
   | 'chat:fanout:result'
   | 'plugins:list'
-  | 'plugins:list:result';
+  | 'plugins:list:result'
+  | 'sdd:workflow:status'
+  | 'sdd:workflow:status:result'
+  | 'sdd:workflow:init'
+  | 'sdd:workflow:init:result'
+  | 'sdd:workflow:createFeature'
+  | 'sdd:workflow:createFeature:result'
+  | 'sdd:workflow:writeArtifact'
+  | 'sdd:workflow:writeArtifact:result'
+  | 'sdd:workflow:stepPrompt'
+  | 'sdd:workflow:stepPrompt:result';
 
 /**
  * Base IPC message envelope. All extension ↔ CLI communication uses this shape.
@@ -351,7 +427,15 @@ export type WebviewCommand =
   | 'openExtensionSettings'
   | 'initWorkspace'
   | 'getUsageStats'
-  | 'resetUsageStats';
+  | 'resetUsageStats'
+  | 'loadSddWorkflow'
+  | 'initSddWorkflow'
+  | 'createSddFeature'
+  | 'writeSddArtifact'
+  | 'runSddStep'
+  | 'selectSddFeature'
+  | 'openSddFile'
+  | 'discoverSpecsRepo';
 
 export interface WebviewMessage<T = unknown> {
   command: WebviewCommand;
@@ -387,7 +471,9 @@ export type ExtensionCommand =
   | 'connectionResult'
   | 'secretStatus'
   | 'usageStats'
-  | 'budgetAlert';
+  | 'budgetAlert'
+  | 'sddWorkflowLoaded'
+  | 'sddWorkflowUpdated';
 
 export interface ExtensionMessage<T = unknown> {
   command: ExtensionCommand;

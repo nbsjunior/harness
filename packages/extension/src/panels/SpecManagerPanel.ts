@@ -1,12 +1,19 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import type { SpecDefinition, WebviewMessage, ExtensionMessage } from '../types';
+import type {
+  SpecDefinition,
+  SddStepId,
+  SddWorkflowStatus,
+  WebviewMessage,
+  ExtensionMessage,
+} from '../types';
 import type { CliService } from '../services/CliService';
+import type { ChatViewProvider } from '../providers/ChatViewProvider';
+import type { ContextProvider } from '../providers/ContextProvider';
 
 /**
- * Webview panel for browsing, creating, and editing Spec-Driven Development
- * (SDD) spec files (.yaml / .md) stored in the workspace `.harness/specs/` directory.
+ * Webview panel for SDD: Harness specs (.harness/specs) + spec-kit workflow (.harness/sdd).
  */
 export class SpecManagerProvider implements vscode.WebviewViewProvider {
   static readonly VIEW_ID = 'harness.specView';
@@ -17,12 +24,10 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
   constructor(
     private readonly extensionUri: vscode.Uri,
     private readonly cliService: CliService,
+    private readonly chatViewProvider: ChatViewProvider,
+    private readonly contextProvider: ContextProvider,
     private readonly output: vscode.LogOutputChannel,
   ) {}
-
-  // ---------------------------------------------------------------------------
-  // WebviewViewProvider
-  // ---------------------------------------------------------------------------
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -46,33 +51,74 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
     webviewView.onDidChangeVisibility(() => {
       if (webviewView.visible) {
         void this.loadAndSendSpecs();
+        void this.loadAndSendSddWorkflow();
       }
     });
 
     void this.loadAndSendSpecs();
+    void this.loadAndSendSddWorkflow();
   }
-
-  // ---------------------------------------------------------------------------
-  // Public API
-  // ---------------------------------------------------------------------------
 
   createNewSpec(): void {
     this.post({ command: 'specSaved', payload: { action: 'new' } });
     this.view?.show(true);
   }
 
-  // ---------------------------------------------------------------------------
-  // Private
-  // ---------------------------------------------------------------------------
-
   private async handleMessage(msg: WebviewMessage): Promise<void> {
     switch (msg.command) {
       case 'ready':
         await this.loadAndSendSpecs();
+        await this.loadAndSendSddWorkflow();
         break;
 
       case 'loadSpecs':
         await this.loadAndSendSpecs();
+        break;
+
+      case 'loadSddWorkflow':
+        await this.loadAndSendSddWorkflow(
+          (msg.payload as { activeFeatureId?: string | null })?.activeFeatureId,
+        );
+        break;
+
+      case 'initSddWorkflow':
+        await this.initSddWorkflow();
+        break;
+
+      case 'createSddFeature':
+        await this.createSddFeature(msg.payload as { name: string; description?: string });
+        break;
+
+      case 'writeSddArtifact': {
+        const p = msg.payload as { stepId: SddStepId; featureId: string | null };
+        await this.writeSddArtifact(p.stepId, p.featureId);
+        break;
+      }
+
+      case 'runSddStep': {
+        const p = msg.payload as {
+          stepId: SddStepId;
+          featureId: string | null;
+          userNotes?: string;
+        };
+        await this.runSddStep(p.stepId, p.featureId, p.userNotes);
+        break;
+      }
+
+      case 'selectSddFeature':
+        await this.loadAndSendSddWorkflow(
+          (msg.payload as { featureId: string | null }).featureId,
+        );
+        break;
+
+      case 'openSddFile': {
+        const filePath = (msg.payload as { filePath: string }).filePath;
+        await this.openSddFile(filePath);
+        break;
+      }
+
+      case 'discoverSpecsRepo':
+        await this.discoverSpecsRepo();
         break;
 
       case 'saveSpec': {
@@ -93,6 +139,166 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
 
       default:
         this.output.warn(`SpecManagerPanel: unknown command "${msg.command}"`);
+    }
+  }
+
+  private async loadAndSendSddWorkflow(activeFeatureId?: string | null): Promise<void> {
+    try {
+      const result = await this.cliService.send<
+        { activeFeatureId?: string | null },
+        SddWorkflowStatus
+      >({
+        id: crypto.randomUUID(),
+        action: 'sdd:workflow:status',
+        payload: { activeFeatureId: activeFeatureId ?? undefined },
+      }, { expectResponse: 'sdd:workflow:status:result', timeoutMs: 15_000 });
+
+      this.post({
+        command: 'sddWorkflowLoaded',
+        payload: { status: result.payload },
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.post({ command: 'error', payload: `SDD workflow: ${msg}` });
+    }
+  }
+
+  private async initSddWorkflow(): Promise<void> {
+    try {
+      const result = await this.cliService.send<
+        Record<string, never>,
+        { status: SddWorkflowStatus; created: string[]; sddRoot: string }
+      >({
+        id: crypto.randomUUID(),
+        action: 'sdd:workflow:init',
+        payload: {},
+      }, { expectResponse: 'sdd:workflow:init:result', timeoutMs: 15_000 });
+
+      void vscode.window.showInformationMessage(
+        `SDD workspace initialized (${result.payload.created.length} item(s)).`,
+      );
+      this.post({
+        command: 'sddWorkflowUpdated',
+        payload: { status: result.payload.status },
+      });
+    } catch (err) {
+      void vscode.window.showErrorMessage(
+        `SDD init failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  private async createSddFeature(payload: { name: string; description?: string }): Promise<void> {
+    try {
+      const result = await this.cliService.send<
+        { name: string; description?: string },
+        { featureId: string; status: SddWorkflowStatus }
+      >({
+        id: crypto.randomUUID(),
+        action: 'sdd:workflow:createFeature',
+        payload,
+      }, { expectResponse: 'sdd:workflow:createFeature:result', timeoutMs: 15_000 });
+
+      void vscode.window.showInformationMessage(`Feature created: ${result.payload.featureId}`);
+      this.post({
+        command: 'sddWorkflowUpdated',
+        payload: { status: result.payload.status },
+      });
+    } catch (err) {
+      void vscode.window.showErrorMessage(
+        `Create feature failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  private async writeSddArtifact(stepId: SddStepId, featureId: string | null): Promise<void> {
+    try {
+      const result = await this.cliService.send<
+        { stepId: SddStepId; featureId: string | null },
+        { path: string; created: boolean; status: SddWorkflowStatus }
+      >({
+        id: crypto.randomUUID(),
+        action: 'sdd:workflow:writeArtifact',
+        payload: { stepId, featureId },
+      }, { expectResponse: 'sdd:workflow:writeArtifact:result', timeoutMs: 15_000 });
+
+      const doc = await vscode.workspace.openTextDocument(result.payload.path);
+      await vscode.window.showTextDocument(doc, { preview: false });
+      this.post({
+        command: 'sddWorkflowUpdated',
+        payload: { status: result.payload.status },
+      });
+    } catch (err) {
+      void vscode.window.showErrorMessage(
+        `Scaffold failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  private async runSddStep(
+    stepId: SddStepId,
+    featureId: string | null,
+    userNotes?: string,
+  ): Promise<void> {
+    try {
+      const result = await this.cliService.send<
+        { stepId: SddStepId; featureId: string | null; userNotes?: string },
+        { prompt: string; contextPaths: string[]; mode: 'spec+agent' }
+      >({
+        id: crypto.randomUUID(),
+        action: 'sdd:workflow:stepPrompt',
+        payload: { stepId, featureId, userNotes },
+      }, { expectResponse: 'sdd:workflow:stepPrompt:result', timeoutMs: 15_000 });
+
+      for (const p of result.payload.contextPaths) {
+        try {
+          await this.contextProvider.add(vscode.Uri.file(p));
+        } catch {
+          // skip invalid paths
+        }
+      }
+
+      await this.chatViewProvider.sendChatMessage(
+        result.payload.prompt,
+        undefined,
+        result.payload.mode,
+      );
+      await vscode.commands.executeCommand('harness.chatView.focus');
+    } catch (err) {
+      void vscode.window.showErrorMessage(
+        `Run step failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
+
+  private async openSddFile(filePath: string): Promise<void> {
+    if (!fs.existsSync(filePath)) {
+      void vscode.window.showWarningMessage('File does not exist yet. Create scaffold first.');
+      return;
+    }
+    const doc = await vscode.workspace.openTextDocument(filePath);
+    await vscode.window.showTextDocument(doc, { preview: false });
+  }
+
+  private async discoverSpecsRepo(): Promise<void> {
+    try {
+      const result = await this.cliService.send<
+        Record<string, never>,
+        { suggestions: { suggestedFile: string; title: string }[] }
+      >({
+        id: crypto.randomUUID(),
+        action: 'spec:discover',
+        payload: {},
+      }, { expectResponse: 'spec:discover:result', timeoutMs: 20_000 });
+
+      const n = result.payload.suggestions?.length ?? 0;
+      void vscode.window.showInformationMessage(
+        `Spec discovery: ${n} suggestion(s). Run \`harness spec:discover --write\` to materialize.`,
+      );
+    } catch (err) {
+      void vscode.window.showErrorMessage(
+        `Discovery failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
   }
 
@@ -133,7 +339,6 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
       });
       results.push(...(result.payload.specs ?? []));
     } catch {
-      // Fallback: read files directly if CLI is not available
       const files = fs
         .readdirSync(specsDirPath)
         .filter((f) => f.endsWith('.yaml') || f.endsWith('.yml') || f.endsWith('.md'));
@@ -244,7 +449,7 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
              style-src ${webview.cspSource} 'unsafe-inline';
              font-src ${webview.cspSource};
              img-src ${webview.cspSource} data:;" />
-  <title>Harness of AI Spec Manager</title>
+  <title>Harness SDD</title>
 </head>
 <body>
   <div id="root"></div>

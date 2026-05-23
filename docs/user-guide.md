@@ -14,12 +14,13 @@
 5. [Configuring agents](#5-configuring-agents)
 6. [Using the Chat](#6-using-the-chat)
 7. [Adding context](#7-adding-context)
-8. [Spec Manager](#8-spec-manager)
-9. [Agent Menu](#9-agent-menu)
-10. [Configuration Panel](#10-configuration-panel)
-11. [Standalone CLI](#11-standalone-cli)
-12. [Keyboard shortcuts](#12-keyboard-shortcuts)
-13. [Troubleshooting](#13-troubleshooting)
+8. [SDD & Spec Manager](#8-sdd--spec-manager)
+9. [SDD Workflow (spec-kit)](#9-sdd-workflow-spec-kit)
+10. [Agent Menu](#10-agent-menu)
+11. [Configuration Panel](#11-configuration-panel)
+12. [Standalone CLI](#12-standalone-cli)
+13. [Keyboard shortcuts](#13-keyboard-shortcuts)
+14. [Troubleshooting](#14-troubleshooting)
 
 ---
 
@@ -310,17 +311,26 @@ Ctrl+Shift+P → Harness: Add Current File to Context
 
 ---
 
-## 8. Spec Manager
+## 8. SDD & Spec Manager
 
-The **Spec Manager** lets you define reusable **Skills**, **Tools**, and **Workflows** that guide how the AI agent responds.
+The **SDD** sidebar view has two tabs:
 
-### Opening the Spec Manager
+| Tab | Purpose |
+|-----|---------|
+| **SDD Workflow** | Full [GitHub spec-kit](https://github.com/github/spec-kit) pipeline — see [§9](#9-sdd-workflow-spec-kit) |
+| **Specs** | Harness Skills, Tools, and Workflows in `.harness/specs/` |
 
-Click the **Harness icon** → switch to the **Specs** tab, or:
+### Opening SDD
+
+Click the **Harness icon** → **SDD** view, or:
 
 ```
 Ctrl+Shift+P → Harness: Open Spec Manager
 ```
+
+### Specs tab — Harness specs
+
+Define reusable **Skills**, **Tools**, and **Workflows** that guide how the AI agent responds.
 
 ### Understanding specs
 
@@ -380,7 +390,43 @@ You can also explicitly reference a spec:
 
 ---
 
-## 9. Agent Menu
+## 9. SDD Workflow (spec-kit)
+
+The **SDD Workflow** tab implements the spec-kit development flow inside Harness — without leaving VS Code.
+
+### Quick start
+
+1. Open **SDD** → **SDD Workflow**
+2. Click **Initialize SDD** — creates `.harness/sdd/` (constitution, `specs/`, templates)
+3. Click **+ New feature** — enter name and optional description → folder `001-<slug>/`
+4. For each step (`/speckit.constitution` … `/speckit.implement`):
+   - **Scaffold** — create or refresh the artifact template
+   - **Open** — edit in VS Code
+   - **Run in chat** — sends the spec-kit prompt with SDD files in context (**Spec+Agent** mode)
+
+### Workflow steps
+
+| Step | spec-kit command | Artifact |
+|------|------------------|----------|
+| Constitution | `/speckit.constitution` | `memory/constitution.md` |
+| Specify | `/speckit.specify` | `specs/<id>/spec.md` |
+| Clarify | `/speckit.clarify` | `clarifications.md` (optional) |
+| Plan | `/speckit.plan` | `plan.md` |
+| Tasks | `/speckit.tasks` | `tasks.md` |
+| Analyze | `/speckit.analyze` | prompt-only (optional) |
+| Checklist | `/speckit.checklist` | `checklist.md` (optional) |
+| Implement | `/speckit.implement` | executes via Agent |
+| Tasks → Issues | `/speckit.taskstoissues` | GitHub issues (optional) |
+
+Use **Notes for next step** to append context before **Run in chat**.
+
+**Discover** runs repo-based suggestions for Harness specs (`harness spec:discover`).
+
+Full reference: **[sdd-speckit.md](sdd-speckit.md)**.
+
+---
+
+## 10. Agent Menu
 
 Switch between agents without leaving the conversation.
 
@@ -407,7 +453,7 @@ The selected agent applies to all subsequent messages in the session.
 
 ---
 
-## 10. Configuration Panel
+## 11. Configuration Panel
 
 ```
 Ctrl+Shift+P → Harness: Open Configuration
@@ -452,7 +498,7 @@ Add external Model Context Protocol servers:
 
 ---
 
-## 11. Standalone CLI
+## 12. Standalone CLI
 
 The Harness CLI can be used independently of the VSCode extension — useful in CI/CD pipelines, terminal workflows, or scripting.
 
@@ -531,7 +577,7 @@ echo "$CHANGED" | xargs -I{} harness agent:run \
 
 ---
 
-## 12. Keyboard shortcuts
+## 13. Keyboard shortcuts
 
 | Action | Windows / Linux | macOS |
 |---|---|---|
@@ -546,7 +592,7 @@ echo "$CHANGED" | xargs -I{} harness agent:run \
 
 ---
 
-## 13. Troubleshooting
+## 14. Troubleshooting
 
 ### "Harness CLI not found"
 
@@ -635,7 +681,8 @@ All CLI stderr output appears in the **Harness** output channel (`View → Outpu
 |---|---|
 | [getting-started.md](getting-started.md) | Developer setup: clone, build, and run with F5 |
 | [architecture.md](architecture.md) | How the extension, CLI, and agents fit together |
-| [sdd-specs.md](sdd-specs.md) | Deep dive into Spec-Driven Development |
+| [sdd-specs.md](sdd-specs.md) | Harness specs (Skills, Tools, Workflows) |
+| [sdd-speckit.md](sdd-speckit.md) | spec-kit SDD workflow in `.harness/sdd/` |
 | [agent-connectors.md](agent-connectors.md) | All configuration options per agent |
 | [ipc-protocol.md](ipc-protocol.md) | The stdin/stdout JSON protocol between extension and CLI |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | How to add new agent connectors or fix bugs |

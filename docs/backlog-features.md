@@ -9,3 +9,4 @@
 | **GitHub Actions** | Implemented | [github-actions.md](github-actions.md) + example workflow |
 | **Plugin marketplace** | Preview | [plugins.md](plugins.md) — manifest only |
 | **Web UI (remote)** | Implemented (MVP) | `harness web:serve` → http://127.0.0.1:3847 |
+| **spec-kit SDD workflow** | Implemented | SDD view → **SDD Workflow** tab — [sdd-speckit.md](sdd-speckit.md) |

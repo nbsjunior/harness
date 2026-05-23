@@ -68,8 +68,8 @@
         {
           "type": "webview",
           "id": "harness.specView",
-          "name": "Spec Manager",
-          "contextualTitle": "Harness of AI Spec Manager"
+          "name": "SDD",
+          "contextualTitle": "Harness SDD (spec-kit + specs)"
         }
       ]
     },

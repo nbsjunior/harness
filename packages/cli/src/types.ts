@@ -66,7 +66,17 @@ export type IpcAction =
   | 'chat:fanout'
   | 'chat:fanout:result'
   | 'plugins:list'
-  | 'plugins:list:result';
+  | 'plugins:list:result'
+  | 'sdd:workflow:status'
+  | 'sdd:workflow:status:result'
+  | 'sdd:workflow:init'
+  | 'sdd:workflow:init:result'
+  | 'sdd:workflow:createFeature'
+  | 'sdd:workflow:createFeature:result'
+  | 'sdd:workflow:writeArtifact'
+  | 'sdd:workflow:writeArtifact:result'
+  | 'sdd:workflow:stepPrompt'
+  | 'sdd:workflow:stepPrompt:result';
 
 /**
  * Base IPC message envelope used for all stdin/stdout newline-delimited JSON

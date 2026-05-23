@@ -20,7 +20,9 @@ Use this index to find the right doc without reading the whole repository.
 | [dual-mode.md](dual-mode.md) | End users | Extension vs standalone CLI. |
 | [agent-connectors.md](agent-connectors.md) | Developers | Per-agent setup (tokens, endpoints). |
 | [aidlc-kiro.md](aidlc-kiro.md) | Developers | Kiro CLI + AWS AI-DLC steering rules. |
-| [sdd-specs.md](sdd-specs.md) | Developers | Spec YAML format (Skill / Tool / Workflow). |
+| [sdd-specs.md](sdd-specs.md) | Developers | Harness spec format (Skill / Tool / Workflow). |
+| [sdd-speckit.md](sdd-speckit.md) | **Everyone** | **spec-kit** SDD workflow — constitution → implement in `.harness/sdd/`. |
+| [backlog-features.md](backlog-features.md) | Everyone | Roadmap items: session, budgets, fan-out, Actions, web UI. |
 | [copilot-modes.md](copilot-modes.md) | Developers | Copilot Ask / Agent / Spec+Agent behaviour and flow. |
 | [cursor-agent.md](cursor-agent.md) | Developers & users | Cursor Agent local (SDK) vs Cloud; `agentExecution` setting. |
 | [prompt-optimization.md](prompt-optimization.md) | Everyone | Pre-route pipeline — token efficiency and answer quality. |
