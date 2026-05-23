@@ -8,7 +8,7 @@ src/**
 # Config files
 tsconfig*.json
 esbuild.mjs
-.vscode/tasks.json
+.vscode/**
 
 # Tests
 test/**
