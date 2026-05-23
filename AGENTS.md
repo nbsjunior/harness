@@ -219,6 +219,7 @@ is present).
 | `spec:discover` / `spec:discover:result` | ext↔cli | Repo-structure spec suggestions |
 | `chat:fanout` / `chat:fanout:result` | ext↔cli | Parallel multi-agent prompt |
 | `plugins:list` / `plugins:list:result` | ext↔cli | Community connector manifest (preview) |
+| `sdd:workflow:*` | ext↔cli | spec-kit aligned SDD in `.harness/sdd/` — [docs/sdd-speckit.md](docs/sdd-speckit.md) |
 
 Roadmap details: [docs/backlog-features.md](docs/backlog-features.md).
 

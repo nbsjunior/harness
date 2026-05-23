@@ -76,6 +76,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const specManagerProvider = new SpecManagerProvider(
     context.extensionUri,
     cliService,
+    chatViewProvider,
+    contextProvider,
     outputChannel,
   );
 

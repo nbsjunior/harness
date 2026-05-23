@@ -247,10 +247,21 @@ Canonical types for extension + webview: `AGENT_DESCRIPTORS`, `CopilotMode`, IPC
 |--------|---------|
 | `ConfigurationPanel` | Webview for tokens, test connection, save secrets. |
 
+### `sdd/speckitWorkflow.ts`
+
+| Export | Purpose |
+|--------|---------|
+| `initSddWorkspace()` | Bootstrap `.harness/sdd/` (spec-kit layout). |
+| `getSddWorkflowStatus()` | Step states (locked/ready/done) per feature. |
+| `createSddFeature()` | New `specs/001-slug/` with spec + clarifications templates. |
+| `writeSddArtifact()` | Scaffold constitution, spec, plan, tasks, checklist. |
+| `buildSddStepPrompt()` | `/speckit.*` prompts for chat. |
+| `collectSddContextPaths()` | Paths to attach when running a step. |
+
 ### `panels/SpecManagerPanel.ts`
 | Export | Purpose |
 |--------|---------|
-| `SpecManagerProvider` | Webview to list/edit/create spec YAML files. |
+| `SpecManagerProvider` | SDD webview: spec-kit workflow + Harness specs editor; IPC `sdd:workflow:*`. |
 
 ### `mcp/McpClientManager.ts`
 | Export | Purpose |

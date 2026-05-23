@@ -36,6 +36,16 @@ import {
   isChatSessionCancelled,
 } from '../session/cancel.js';
 import { harnessLog } from '../log.js';
+import {
+  buildSddStepPrompt,
+  collectSddContextPaths,
+  createSddFeature,
+  getSddWorkflowStatus,
+  initSddWorkspace,
+  writeSddArtifact,
+  type SddCreateFeaturePayload,
+  type SddStepId,
+} from '../sdd/speckitWorkflow.js';
 import { cancelCursorCloudSession } from '../connectors/cursorCloud.js';
 import { cancelCursorLocalSession } from '../connectors/cursorLocal.js';
 import {
@@ -284,6 +294,64 @@ async function dispatchMessage(msg: IPCMessage, router: AgentRouter): Promise<vo
     case 'plugins:list': {
       const registry = loadPluginRegistry(getWorkspaceRoot());
       writeFrame({ id: msg.id, action: 'plugins:list:result', payload: registry });
+      break;
+    }
+
+    case 'sdd:workflow:status': {
+      const p = (msg.payload ?? {}) as { activeFeatureId?: string | null };
+      const status = getSddWorkflowStatus(getWorkspaceRoot(), p.activeFeatureId ?? null);
+      writeFrame({ id: msg.id, action: 'sdd:workflow:status:result', payload: status });
+      break;
+    }
+
+    case 'sdd:workflow:init': {
+      const result = initSddWorkspace(getWorkspaceRoot());
+      const status = getSddWorkflowStatus(getWorkspaceRoot());
+      writeFrame({
+        id: msg.id,
+        action: 'sdd:workflow:init:result',
+        payload: { ...result, status },
+      });
+      break;
+    }
+
+    case 'sdd:workflow:createFeature': {
+      const p = msg.payload as SddCreateFeaturePayload;
+      const result = createSddFeature(p, getWorkspaceRoot());
+      const status = getSddWorkflowStatus(getWorkspaceRoot(), result.featureId);
+      writeFrame({
+        id: msg.id,
+        action: 'sdd:workflow:createFeature:result',
+        payload: { ...result, status },
+      });
+      break;
+    }
+
+    case 'sdd:workflow:writeArtifact': {
+      const p = msg.payload as { stepId: SddStepId; featureId: string | null };
+      const written = writeSddArtifact(p.stepId, p.featureId, getWorkspaceRoot());
+      const status = getSddWorkflowStatus(getWorkspaceRoot(), p.featureId);
+      writeFrame({
+        id: msg.id,
+        action: 'sdd:workflow:writeArtifact:result',
+        payload: { ...written, status },
+      });
+      break;
+    }
+
+    case 'sdd:workflow:stepPrompt': {
+      const p = msg.payload as {
+        stepId: SddStepId;
+        featureId: string | null;
+        userNotes?: string;
+      };
+      const prompt = buildSddStepPrompt(p.stepId, p.featureId, p.userNotes);
+      const contextPaths = collectSddContextPaths(p.featureId, getWorkspaceRoot());
+      writeFrame({
+        id: msg.id,
+        action: 'sdd:workflow:stepPrompt:result',
+        payload: { prompt, contextPaths, mode: 'spec+agent' as const },
+      });
       break;
     }
 

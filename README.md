@@ -27,7 +27,7 @@ Today most teams use several AI tools. Each has its own window, login, and conte
 | **Spending dashboard** | See **requests**, **tokens in/out**, and **agent time** per provider — plus recent chat turns — in one **Spending** tab (workspace-local). |
 | **Prompt optimization** | Built-in pipeline trims history, dedupes messages, caps context files, and injects quality rules — **fewer tokens**, **better answers** on every provider. |
 | **One setup flow** | API keys, MCP servers, workspace defaults, and usage stats — one configuration panel (plus a dedicated **User Manual** tab in the app). |
-| **Spec-Driven Development** | Skills and workflows in `.harness/specs/`; **Spec+Agent** injects them before the agent runs. |
+| **Spec-Driven Development** | Harness specs (`.harness/specs/`) + **spec-kit** workflow (`.harness/sdd/`) — constitution → specify → plan → tasks → implement in the **SDD** view. |
 | **Same CLI under the hood** | Extension and standalone CLI share routing, auth, and file I/O — no duplicate logic. |
 
 **[→ User Manual](docs/user-manual.md)** · [Wiki](https://github.com/nbsjunior/harness/wiki/User-Manual) · [Why Harness of AI?](docs/why-harness.md)
@@ -59,7 +59,7 @@ Harness of AI is a VSCode extension that acts as a **Meta-Agent Orchestrator**: 
 ┌──────────────────────────────────────────────────────────┐
 │                     VSCode Sidebar                        │
 │  ┌──────────────┐  ┌──────────────┐  ┌───────────────┐  │
-│  │  Chat View   │  │ Spec Manager │  │  Agent Menu   │  │
+│  │  Chat View   │  │  SDD View    │  │  Agent Menu   │  │
 │  └──────┬───────┘  └──────┬───────┘  └───────┬───────┘  │
 └─────────┼─────────────────┼──────────────────┼──────────┘
           │                 │                  │
@@ -90,8 +90,9 @@ Harness of AI is a VSCode extension that acts as a **Meta-Agent Orchestrator**: 
 | **Multi-provider chat** | Copilot, Claude, Cursor, Devin, Kiro — one UI; switch with a pill or **Auto** routing |
 | **Chat Sidebar** | Conversational interface with streaming responses and message history |
 | **Context engineering** | Right-click → *Add to Harness of AI Context*; chips above composer; shared across providers |
-| **Spec Manager (SDD)** | Browse, create and edit specs (Skills, Tools, Workflows) in `.harness/specs/` |
-| **Spec+Agent mode** | Inject active specs as system context before agent runs (Copilot) |
+| **SDD view (spec-kit)** | Full spec-kit pipeline: `/speckit.*` steps, feature wizard, scaffold + **Run in chat** — [docs/sdd-speckit.md](docs/sdd-speckit.md) |
+| **Harness specs** | Skills, Tools, Workflows in `.harness/specs/` (Specs tab in SDD view) |
+| **Spec+Agent mode** | Inject active specs + SDD artifacts as context before agent runs |
 | **Configuration Panel** | Agents, MCP, workspace, and **Spending** — API keys and endpoints in one place |
 | **CLI Orchestrator** | Node.js daemon: file I/O, spec parsing, agent routing (bundled in `.vsix`) |
 | **MCP Support** | Connect Model Context Protocol servers (stdio or HTTP) |
@@ -321,7 +322,9 @@ harness/
 │       │       └── McpConnection.ts   # MCP SDK client wrapper
 │       └── tsup.config.ts
 │
-├── .harness/                    # Workspace SDD directory (per project)
+├── .harness/                    # Workspace config (per project)
+│   ├── specs/                   # Harness Skills, Tools, Workflows
+│   └── sdd/                     # spec-kit workflow (constitution, features)
 │   ├── config.yaml              # Agent connector configuration
 │   └── specs/                   # Skill and Workflow definitions
 │       ├── skill-code-review.md
@@ -366,7 +369,16 @@ harness context:build --dirs src --max-tokens 50000 --output json
 
 ## Spec-Driven Development (SDD)
 
-Harness uses Markdown files with YAML frontmatter as the primary spec format. Specs define reusable **Skills**, **Tools**, and **Workflows** that guide agent behavior.
+Harness supports **two complementary SDD layers**:
+
+| Layer | Path | Use case |
+|-------|------|----------|
+| **Harness specs** | `.harness/specs/` | Reusable Skills, Tools, Workflows for chat (`spec+agent`) |
+| **spec-kit workflow** | `.harness/sdd/` | Product development: constitution → spec → plan → tasks → implement ([GitHub spec-kit](https://github.com/github/spec-kit)) |
+
+Open the **SDD** sidebar tab → **SDD Workflow** to initialize `.harness/sdd/`, create a feature, and run each `/speckit.*` step in chat. See **[docs/sdd-speckit.md](docs/sdd-speckit.md)**.
+
+Harness specs use Markdown with YAML frontmatter:
 
 ### Example Spec (`skill-code-review.md`)
 
@@ -503,7 +515,9 @@ npm run clean
 | [docs/getting-started.md](docs/getting-started.md) | Developer setup: clone, build, F5 hot-reload |
 | [docs/architecture.md](docs/architecture.md) | System design: extension ↔ CLI ↔ agents |
 | [docs/ipc-protocol.md](docs/ipc-protocol.md) | stdin/stdout newline-JSON protocol reference |
-| [docs/sdd-specs.md](docs/sdd-specs.md) | Spec-Driven Development: Skills, Tools, Workflows |
+| [docs/sdd-specs.md](docs/sdd-specs.md) | Harness specs: Skills, Tools, Workflows |
+| [docs/sdd-speckit.md](docs/sdd-speckit.md) | spec-kit aligned SDD workflow (`.harness/sdd/`) |
+| [docs/backlog-features.md](docs/backlog-features.md) | Roadmap features: session, budgets, fan-out, web UI |
 | [docs/agent-connectors.md](docs/agent-connectors.md) | Per-agent configuration and protocol details |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to add connectors, commit conventions, PR checklist |
 
@@ -525,6 +539,7 @@ We welcome PRs, docs, tests, and new agent connectors. See [CONTRIBUTING.md](CON
 - [x] GitHub Actions integration — [docs/github-actions.md](docs/github-actions.md)
 - [x] Plugin marketplace (manifest preview) — [docs/plugins.md](docs/plugins.md)
 - [x] Web UI for remote instances (MVP) — `harness web:serve`
+- [x] GitHub spec-kit SDD workflow in UI — `.harness/sdd/` + SDD view wizard — [docs/sdd-speckit.md](docs/sdd-speckit.md)
 
 ---
 

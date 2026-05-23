@@ -6,7 +6,11 @@ import type {
   SpecTool,
   ExtensionMessage,
   WebviewMessage,
+  SddWorkflowStatus,
+  SddStepId,
+  SddStepState,
 } from '../../types';
+import { SDD_WORKFLOW_STEPS } from '../../types';
 
 marked.setOptions({ breaks: true, gfm: true });
 
@@ -17,6 +21,7 @@ const vscode = acquireVsCodeApi();
 // ---------------------------------------------------------------------------
 
 type FilterKind = 'All' | SpecKind;
+type ViewMode = 'specs' | 'workflow';
 
 interface State {
   specs: SpecDefinition[];
@@ -25,6 +30,12 @@ interface State {
   filterKind: FilterKind;
   expandedPath: string | null;
   validationError: string | null;
+  viewMode: ViewMode;
+  sddStatus: SddWorkflowStatus | null;
+  showFeatureWizard: boolean;
+  wizardName: string;
+  wizardDescription: string;
+  sddNotes: string;
 }
 
 const state: State = {
@@ -34,6 +45,12 @@ const state: State = {
   filterKind: 'All',
   expandedPath: null,
   validationError: null,
+  viewMode: 'workflow',
+  sddStatus: null,
+  showFeatureWizard: false,
+  wizardName: '',
+  wizardDescription: '',
+  sddNotes: '',
 };
 
 const FILTER_KINDS: FilterKind[] = ['All', 'Skill', 'Tool', 'Workflow'];
@@ -77,8 +94,185 @@ function render(): void {
   root.innerHTML = '';
   if (state.editingSpec) {
     root.appendChild(renderEditor(state.editingSpec));
+    return;
+  }
+  const shell = document.createElement('div');
+  shell.className = 'pane';
+  shell.appendChild(renderMainTabs());
+  if (state.viewMode === 'workflow') {
+    shell.appendChild(renderWorkflowPane());
   } else {
-    root.appendChild(renderList());
+    const list = renderList();
+    list.classList.remove('pane');
+    list.classList.add('pane-body');
+    shell.appendChild(list);
+  }
+  root.appendChild(shell);
+}
+
+function renderMainTabs(): HTMLElement {
+  const bar = document.createElement('div');
+  bar.className = 'main-tabs';
+  bar.innerHTML = `
+    <button class="main-tab ${state.viewMode === 'workflow' ? 'main-tab--active' : ''}" data-mode="workflow">SDD Workflow</button>
+    <button class="main-tab ${state.viewMode === 'specs' ? 'main-tab--active' : ''}" data-mode="specs">Specs</button>
+    <a class="main-tab-link" href="https://github.com/github/spec-kit" title="GitHub spec-kit">spec-kit ↗</a>`;
+  bar.querySelectorAll('.main-tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.viewMode = (btn as HTMLElement).dataset['mode'] as ViewMode;
+      if (state.viewMode === 'workflow') {
+        postMessage({ command: 'loadSddWorkflow', payload: { activeFeatureId: state.sddStatus?.activeFeatureId } });
+      }
+      render();
+    });
+  });
+  return bar;
+}
+
+// ---------------------------------------------------------------------------
+// SDD Workflow (spec-kit)
+// ---------------------------------------------------------------------------
+
+function renderWorkflowPane(): HTMLElement {
+  const el = document.createElement('div');
+  el.className = 'pane-body workflow-pane';
+
+  const status = state.sddStatus;
+  if (!status) {
+    el.innerHTML = `<div class="empty-state"><p class="empty-sub">Loading SDD workflow…</p></div>`;
+    postMessage({ command: 'loadSddWorkflow', payload: {} });
+    return el;
+  }
+
+  const featureOptions = status.features
+    .map((f) => `<option value="${escapeAttr(f.id)}" ${status.activeFeatureId === f.id ? 'selected' : ''}>${escapeAttr(f.id)}</option>`)
+    .join('');
+
+  const stepRows = SDD_WORKFLOW_STEPS.map((meta) => {
+    const st = status.steps.find((s) => s.id === meta.id) as SddStepState | undefined;
+    const stepStatus = st?.status ?? 'locked';
+    const artifact = st?.artifactPath ?? '';
+    const canScaffold = meta.id !== 'analyze' && meta.id !== 'implement' && meta.id !== 'taskstoissues';
+    return /* html */`
+      <div class="wf-step wf-step--${stepStatus}" data-step="${meta.id}">
+        <div class="wf-step__head">
+          <span class="wf-step__status">${stepStatusIcon(stepStatus)}</span>
+          <div class="wf-step__titles">
+            <span class="wf-step__cmd">${meta.slashCommand}</span>
+            <span class="wf-step__label">${meta.label}${meta.optional ? ' <em>(optional)</em>' : ''}</span>
+          </div>
+        </div>
+        <p class="wf-step__desc">${meta.description}</p>
+        <div class="wf-step__actions">
+          ${canScaffold ? `<button class="btn-secondary btn-sm" data-wf-scaffold="${meta.id}">Scaffold</button>` : ''}
+          ${artifact ? `<button class="btn-ghost btn-sm" data-wf-open="${escapeAttr(artifact)}">Open</button>` : ''}
+          <button class="btn-primary btn-sm" data-wf-run="${meta.id}" ${stepStatus === 'locked' ? 'disabled' : ''}>Run in chat</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  const wizardHtml = state.showFeatureWizard
+    ? /* html */`
+      <div class="wf-wizard">
+        <div class="wf-wizard__title">New feature (spec-kit)</div>
+        <input id="wf-name" class="text-input" placeholder="Feature name" value="${escapeAttr(state.wizardName)}" />
+        <textarea id="wf-desc" class="text-input" rows="3" placeholder="What & why (optional)">${escapeAttr(state.wizardDescription)}</textarea>
+        <div class="wf-wizard__actions">
+          <button id="wf-cancel" class="btn-ghost btn-sm">Cancel</button>
+          <button id="wf-create" class="btn-primary btn-sm">Create feature</button>
+        </div>
+      </div>`
+    : '';
+
+  el.innerHTML = /* html */`
+    <div class="wf-toolbar">
+      <button id="wf-init" class="btn-secondary btn-sm">${status.initialized ? 'Re-init SDD' : 'Initialize SDD'}</button>
+      <button id="wf-new-feature" class="btn-primary btn-sm">+ New feature</button>
+      <button id="wf-discover" class="btn-ghost btn-sm" title="Repo-based spec suggestions">Discover</button>
+    </div>
+    ${!status.initialized ? `<div class="wf-banner">Initialize <code>.harness/sdd/</code> to mirror <a href="https://github.com/github/spec-kit">spec-kit</a> (constitution → specify → plan → tasks → implement).</div>` : ''}
+    ${wizardHtml}
+    <div class="wf-feature-row">
+      <label class="form-label">Active feature</label>
+      <select id="wf-feature" class="select-input">
+        <option value="">— Select feature —</option>
+        ${featureOptions}
+      </select>
+    </div>
+    <div class="wf-notes">
+      <label class="form-label">Notes for next step (optional)</label>
+      <textarea id="wf-notes" class="text-input" rows="2" placeholder="Extra context sent with Run in chat">${escapeAttr(state.sddNotes)}</textarea>
+    </div>
+    <div class="wf-pipeline">${stepRows}</div>
+    <div class="wf-footer">
+      <span class="wf-hint">Runs use <strong>Spec+Agent</strong> with SDD artifacts in context.</span>
+    </div>`;
+
+  el.querySelector('#wf-init')?.addEventListener('click', () => postMessage({ command: 'initSddWorkflow' }));
+  el.querySelector('#wf-new-feature')?.addEventListener('click', () => {
+    state.showFeatureWizard = true;
+    render();
+  });
+  el.querySelector('#wf-discover')?.addEventListener('click', () => postMessage({ command: 'discoverSpecsRepo' }));
+  el.querySelector('#wf-cancel')?.addEventListener('click', () => {
+    state.showFeatureWizard = false;
+    render();
+  });
+  el.querySelector('#wf-create')?.addEventListener('click', () => {
+    const name = (el.querySelector('#wf-name') as HTMLInputElement)?.value.trim();
+    if (!name) return;
+    const description = (el.querySelector('#wf-desc') as HTMLTextAreaElement)?.value.trim();
+    postMessage({ command: 'createSddFeature', payload: { name, description } });
+    state.showFeatureWizard = false;
+    state.wizardName = '';
+    state.wizardDescription = '';
+  });
+  el.querySelector('#wf-feature')?.addEventListener('change', (e) => {
+    const featureId = (e.target as HTMLSelectElement).value || null;
+    postMessage({ command: 'selectSddFeature', payload: { featureId } });
+  });
+  el.querySelector('#wf-notes')?.addEventListener('input', (e) => {
+    state.sddNotes = (e.target as HTMLTextAreaElement).value;
+  });
+
+  el.querySelectorAll('[data-wf-scaffold]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const stepId = (btn as HTMLElement).dataset['wfScaffold'] as SddStepId;
+      postMessage({
+        command: 'writeSddArtifact',
+        payload: { stepId, featureId: status.activeFeatureId },
+      });
+    });
+  });
+  el.querySelectorAll('[data-wf-open]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const filePath = (btn as HTMLElement).dataset['wfOpen'] ?? '';
+      postMessage({ command: 'openSddFile', payload: { filePath } });
+    });
+  });
+  el.querySelectorAll('[data-wf-run]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const stepId = (btn as HTMLElement).dataset['wfRun'] as SddStepId;
+      postMessage({
+        command: 'runSddStep',
+        payload: {
+          stepId,
+          featureId: status.activeFeatureId,
+          userNotes: state.sddNotes || undefined,
+        },
+      });
+    });
+  });
+
+  return el;
+}
+
+function stepStatusIcon(status: string): string {
+  switch (status) {
+    case 'done': return '✓';
+    case 'ready': return '○';
+    case 'optional': return '◇';
+    default: return '·';
   }
 }
 
@@ -362,6 +556,16 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       }
       break;
     }
+
+    case 'sddWorkflowLoaded':
+      state.sddStatus = (msg.payload as { status: SddWorkflowStatus }).status;
+      if (!state.editingSpec) render();
+      break;
+
+    case 'sddWorkflowUpdated':
+      state.sddStatus = (msg.payload as { status: SddWorkflowStatus }).status;
+      if (!state.editingSpec) render();
+      break;
 
     case 'error':
       console.error('Spec Manager error:', msg.payload);
@@ -696,6 +900,84 @@ body {
 }
 .icon-btn:hover { opacity: 1; background: var(--vscode-toolbar-hoverBackground); }
 .icon-btn--danger:hover { color: var(--vscode-errorForeground); }
+
+/* ── Main tabs & SDD workflow ────────────────────────── */
+.main-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
+  flex-shrink: 0;
+}
+.main-tab {
+  background: none;
+  border: none;
+  color: var(--vscode-foreground);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-family: var(--vscode-font-family);
+  cursor: pointer;
+  opacity: 0.65;
+}
+.main-tab:hover { opacity: 1; background: var(--vscode-toolbar-hoverBackground); }
+.main-tab--active {
+  opacity: 1;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+.main-tab-link {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+  opacity: 0.8;
+}
+.pane-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
+.workflow-pane { padding: 8px; gap: 8px; }
+.wf-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.wf-banner {
+  font-size: 11px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--vscode-inputValidation-infoBackground);
+  border: 1px solid var(--vscode-inputValidation-infoBorder);
+  margin-bottom: 8px;
+  line-height: 1.45;
+}
+.wf-banner code { font-size: 10px; }
+.wf-wizard {
+  border: 1px solid var(--vscode-focusBorder);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wf-wizard__title { font-weight: 600; font-size: 12px; }
+.wf-wizard__actions { display: flex; gap: 6px; justify-content: flex-end; }
+.wf-feature-row, .wf-notes { margin-bottom: 8px; }
+.wf-pipeline { display: flex; flex-direction: column; gap: 6px; }
+.wf-step {
+  border: 1px solid var(--vscode-widget-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--vscode-editor-inactiveSelectionBackground);
+}
+.wf-step--done { border-left: 3px solid var(--vscode-testing-iconPassed); }
+.wf-step--ready { border-left: 3px solid var(--vscode-focusBorder); }
+.wf-step--optional { border-left: 3px solid var(--vscode-descriptionForeground); opacity: 0.9; }
+.wf-step--locked { opacity: 0.55; }
+.wf-step__head { display: flex; gap: 8px; align-items: flex-start; }
+.wf-step__status { font-size: 14px; width: 18px; flex-shrink: 0; }
+.wf-step__cmd { font-size: 10px; font-family: var(--vscode-editor-font-family); color: var(--vscode-textLink-foreground); display: block; }
+.wf-step__label { font-size: 12px; font-weight: 600; }
+.wf-step__desc { font-size: 11px; color: var(--vscode-descriptionForeground); margin: 4px 0 6px 26px; }
+.wf-step__actions { display: flex; flex-wrap: wrap; gap: 4px; margin-left: 26px; }
+.wf-footer { margin-top: 8px; font-size: 10px; color: var(--vscode-descriptionForeground); }
+.wf-hint strong { color: var(--vscode-foreground); }
 `;
 
 // ---------------------------------------------------------------------------
