@@ -55,6 +55,7 @@ interface State {
   providerModels: Record<AgentId, ProviderModelOption[]>;
   liveEdits: LiveEditEntry[];
   canRevert: boolean;
+  liveEditEnabled: boolean;
 }
 
 const state: State = {
@@ -69,6 +70,7 @@ const state: State = {
   providerModels: PROVIDER_MODEL_OPTIONS,
   liveEdits: [],
   canRevert: false,
+  liveEditEnabled: true,
 };
 
 let messagesEl!: HTMLDivElement;
@@ -85,6 +87,7 @@ let contextList!: HTMLDivElement;
 let configBtn!: HTMLButtonElement;
 let slashPopover!: HTMLDivElement;
 let tokenFooter!: HTMLSpanElement;
+let liveEditToggle!: HTMLInputElement;
 
 // ---------------------------------------------------------------------------
 // Shell
@@ -131,6 +134,16 @@ function injectShell(): void {
       </label>
       <button id="config-btn" class="icon-btn" type="button" title="Settings">&#9881;</button>
     </div>
+    <div id="live-edit-bar" class="live-edit-bar">
+      <label class="live-edit-label" title="Show live file changes in VS Code editor as agent writes">
+        <span class="live-edit-dot" id="live-edit-dot"></span>
+        Live Edit
+        <span class="live-edit-toggle-wrap">
+          <input type="checkbox" id="live-edit-toggle" checked />
+          <span class="live-edit-slider"></span>
+        </span>
+      </label>
+    </div>
     <span id="token-footer" class="token-footer"></span>
   </div>
 </div>`;
@@ -151,6 +164,7 @@ function bindRefs(): void {
   configBtn = document.getElementById('config-btn') as HTMLButtonElement;
   slashPopover = document.getElementById('slash-popover') as HTMLDivElement;
   tokenFooter = document.getElementById('token-footer') as HTMLSpanElement;
+  liveEditToggle = document.getElementById('live-edit-toggle') as HTMLInputElement;
 }
 
 // ---------------------------------------------------------------------------
@@ -450,11 +464,18 @@ function updateRevertButton(): void {
   revertBtn.disabled = !state.canRevert;
 }
 
+function updateLiveEditDot(): void {
+  const dot = document.getElementById('live-edit-dot');
+  if (!dot) return;
+  dot.classList.toggle('live-edit-dot--active', state.liveEditEnabled && state.isStreaming);
+}
+
 function setStreaming(streaming: boolean): void {
   state.isStreaming = streaming;
   sendBtn.classList.toggle('send-btn--stop', streaming);
   sendBtn.title = streaming ? 'Stop' : 'Send (Ctrl+Enter)';
   sendBtn.querySelector('.send-icon')!.textContent = streaming ? '■' : '↑';
+  updateLiveEditDot();
 }
 
 function updateTokenFooter(): void {
@@ -580,6 +601,12 @@ function bindEvents(): void {
   modeSelect.addEventListener('change', onModeSelectChange);
   providerSelect.addEventListener('change', onProviderSelectChange);
   modelSelect.addEventListener('change', onModelSelectChange);
+
+  liveEditToggle.addEventListener('change', () => {
+    state.liveEditEnabled = liveEditToggle.checked;
+    updateLiveEditDot();
+    postMessage({ command: 'toggleLiveEdits', payload: { enabled: state.liveEditEnabled } });
+  });
 
   clearCtxBtn.addEventListener('click', () => clearAll());
   newChatBtn.addEventListener('click', () => startNewChat());
@@ -1155,6 +1182,71 @@ body {
   cursor: pointer;
 }
 .slash-item:hover { background: var(--vscode-list-hoverBackground); }
+
+/* Live Edit bar */
+.live-edit-bar {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-top: 1px solid var(--vscode-widget-border);
+  background: var(--vscode-sideBar-background);
+}
+.live-edit-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  user-select: none;
+}
+.live-edit-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--vscode-descriptionForeground);
+  opacity: 0.4;
+  flex-shrink: 0;
+  transition: background 0.2s, opacity 0.2s;
+}
+.live-edit-dot--active {
+  background: #22c55e;
+  opacity: 1;
+  animation: dot-pulse 1s ease-in-out infinite;
+}
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.live-edit-toggle-wrap {
+  position: relative;
+  display: inline-block;
+  width: 28px;
+  height: 15px;
+  margin-left: 2px;
+}
+.live-edit-toggle-wrap input { opacity: 0; width: 0; height: 0; position: absolute; }
+.live-edit-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--vscode-input-border);
+  border-radius: 15px;
+  transition: background 0.2s;
+}
+.live-edit-slider::before {
+  content: '';
+  position: absolute;
+  height: 11px;
+  width: 11px;
+  left: 2px;
+  bottom: 2px;
+  background: var(--vscode-foreground);
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.live-edit-toggle-wrap input:checked + .live-edit-slider { background: #22c55e; }
+.live-edit-toggle-wrap input:checked + .live-edit-slider::before { transform: translateX(13px); }
 `;
 
 // ---------------------------------------------------------------------------

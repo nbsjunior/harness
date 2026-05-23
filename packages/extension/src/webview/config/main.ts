@@ -507,26 +507,8 @@ function renderSpendingTabPanel(): HTMLElement {
     )
     .join('');
 
-  const alertHtml = (stats?.alerts ?? [])
-    .map((a) => `<div class="budget-alert budget-alert--${a.level}">${escapeHtml(a.message)}</div>`)
-    .join('');
-
   el.innerHTML = /* html */`
     <p class="tab-intro">Token counts are <strong>estimates</strong> (~4 chars/token). Persisted in <code>.toddspect/usage-stats.json</code>.</p>
-
-    <h3 class="spend-section-title">Budget alerts</h3>
-    <label class="form-label"><input type="checkbox" id="sp-budget-enabled" ${state.budgetEnabled ? 'checked' : ''} /> Enable budget alerts</label>
-    <label class="form-label">Total token budget (0 = off)
-      <input type="number" id="sp-budget-total" class="form-input" min="0" value="${state.budgetTotalTokens}" />
-    </label>
-    <label class="form-label">Warn at % of budget
-      <input type="number" id="sp-budget-warn" class="form-input" min="1" max="100" value="${state.budgetWarnPercent}" />
-    </label>
-    <label class="form-label">Per-provider caps (JSON)
-      <textarea id="sp-budget-agents" class="form-input" rows="3">${escapeHtml(state.budgetTokensByAgentJson)}</textarea>
-    </label>
-    <button type="button" id="btn-save-budget" class="btn-secondary btn-sm">Save budget settings</button>
-    ${alertHtml ? `<div class="spend-alerts">${alertHtml}</div>` : ''}
 
     <div class="spend-summary">
       <div class="spend-card">
@@ -573,23 +555,6 @@ function renderSpendingTabPanel(): HTMLElement {
     if (confirm('Reset all Todd usage statistics for this workspace?')) {
       postMessage({ command: 'resetUsageStats' });
     }
-  });
-  el.querySelector('#btn-save-budget')!.addEventListener('click', () => {
-    state.budgetEnabled = (el.querySelector('#sp-budget-enabled') as HTMLInputElement).checked;
-    state.budgetTotalTokens = Number((el.querySelector('#sp-budget-total') as HTMLInputElement).value);
-    state.budgetWarnPercent = Number((el.querySelector('#sp-budget-warn') as HTMLInputElement).value);
-    state.budgetTokensByAgentJson = (el.querySelector('#sp-budget-agents') as HTMLTextAreaElement).value.trim();
-    let byAgent: Record<string, number> = {};
-    try {
-      byAgent = JSON.parse(state.budgetTokensByAgentJson || '{}') as Record<string, number>;
-    } catch {
-      alert('Invalid JSON for per-provider caps');
-      return;
-    }
-    postMessage({ command: 'saveSetting', payload: { key: 'toddspect.spending.budgetEnabled', value: state.budgetEnabled } });
-    postMessage({ command: 'saveSetting', payload: { key: 'toddspect.spending.budgetTotalTokens', value: state.budgetTotalTokens } });
-    postMessage({ command: 'saveSetting', payload: { key: 'toddspect.spending.budgetWarnPercent', value: state.budgetWarnPercent } });
-    postMessage({ command: 'saveSetting', payload: { key: 'toddspect.spending.budgetTokensByAgent', value: byAgent } });
   });
 
   return el;

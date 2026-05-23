@@ -50,6 +50,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   private sessionTokens = 0;
   private readonly modelByAgent = new Map<AgentSelectionId, string>();
   private liveEdits: LiveEditEntry[] = [];
+  private liveEditEnabled = true;
   private sessionHydrated = false;
 
   constructor(
@@ -403,6 +404,12 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         await vscode.commands.executeCommand('toddspect.openConfig');
         break;
 
+      case 'toggleLiveEdits': {
+        const payload = msg.payload as { enabled: boolean };
+        this.liveEditEnabled = payload.enabled;
+        break;
+      }
+
       case 'openFile': {
         const payload = msg.payload as { path: string; line?: number; column?: number };
         await this.openFileAtLocation(payload.path, payload.line, payload.column);
@@ -443,6 +450,20 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
     this.liveEdits = edits;
     this.post({ command: 'liveEditsUpdated', payload: { edits } });
     this.postRevertState();
+
+    if (this.liveEditEnabled) {
+      const lastAfter = [...edits].reverse().find((e) => e.phase === 'after' && e.path);
+      if (lastAfter?.path) {
+        const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? '';
+        const abs = path.isAbsolute(lastAfter.path)
+          ? lastAfter.path
+          : path.join(root, lastAfter.path);
+        vscode.workspace.openTextDocument(vscode.Uri.file(abs)).then(
+          (doc) => vscode.window.showTextDocument(doc, { preview: true, preserveFocus: true }),
+          () => undefined,
+        );
+      }
+    }
   }
 
   private async hydrateSessionFromDisk(): Promise<void> {

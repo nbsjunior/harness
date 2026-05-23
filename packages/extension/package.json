@@ -2,7 +2,7 @@
   "name": "toddspect-vscode",
   "displayName": "Todd — Meta-Agent Orchestrator",
   "description": "One VS Code sidebar for Copilot, Claude, Cursor, Devin, and Kiro — with Spec-Driven Development and shared file context. No IDE switching per provider.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "publisher": "toddspect",
   "license": "MIT",
@@ -58,12 +58,6 @@
           "id": "toddspect.chatView",
           "name": "Chat",
           "contextualTitle": "Todd Chat"
-        },
-        {
-          "type": "webview",
-          "id": "toddspect.liveEditsView",
-          "name": "Live Edits",
-          "contextualTitle": "Todd Live Edits"
         },
         {
           "type": "webview",
@@ -127,12 +121,6 @@
         "title": "Revert Agent File Changes",
         "category": "Todd",
         "icon": "$(discard)"
-      },
-      {
-        "command": "toddspect.liveEdits.focus",
-        "title": "Focus Live Edits Panel",
-        "category": "Todd",
-        "icon": "$(diff)"
       },
       {
         "command": "toddspect.showContext",
