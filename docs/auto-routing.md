@@ -1,6 +1,6 @@
 # Auto provider routing
 
-ToddSpect can select the best AI provider for each chat message when you choose **Auto** in the provider bar.
+Todd of AIDLC can select the best AI provider for each chat message when you choose **Auto** in the provider bar.
 
 ## How it works
 
@@ -20,7 +20,7 @@ Implementation: `packages/cli/src/router/autoRouter.ts` (documented in source).
 | Integrations (API, OAuth, webhooks, SDK, third-party) | **Claude** | Typical integration and API design work |
 | Repo-wide / multi-file / monorepo edits | **Cursor** | Cloud Agents API tuned for codebase navigation |
 | Long autonomous implementation | **Devin** | Autonomous engineer positioning |
-| Spec+agent mode, AI-DLC, `.kiro`, steering rules | **Kiro** | ToddSpect AI-DLC + Kiro CLI integration |
+| Spec+agent mode, AI-DLC, `.kiro`, steering rules | **Kiro** | Todd of AIDLC AI-DLC + Kiro CLI integration |
 
 ## Mode and context bonuses
 
@@ -33,7 +33,7 @@ Implementation: `packages/cli/src/router/autoRouter.ts` (documented in source).
 
 ## Fallback chain
 
-If the winning agent is not configured (`toddspect check getGoat` shows ✗), ToddSpect tries:
+If the winning agent is not configured (`toddspect check getGoat` shows ✗), Todd of AIDLC tries:
 
 `copilot` → `claude` → `cursor` → `devin` → `kiro`
 

@@ -9,7 +9,7 @@
  * **Copilot:** Always prefers live `gh auth token` over cached VS Code secret to avoid stale tokens.
  * Syncs secret when gh token changes.
  *
- * @see buildToddSpectProcessEnv
+ * @see buildToddProcessEnv
  */
 import * as vscode from 'vscode';
 import * as fs from 'fs';
@@ -17,7 +17,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { execFile } from 'child_process';
 import type { AgentSelectionId } from './types';
-import { resolveToddSpectWorkspacePath } from './workspacePath.js';
+import { resolveToddWorkspacePath } from './workspacePath.js';
 
 function readCachedKiroCliPath(): string | undefined {
   const marker = path.join(os.homedir(), '.toddspect', 'tools', 'kiro-cli', 'kiro-cli-path.txt');
@@ -49,12 +49,12 @@ function getGhCliToken(): Promise<string | null> {
  * Builds process environment for CLI subprocesses so Extension and CLI
  * share the same connector endpoints and secrets.
  */
-export async function buildToddSpectProcessEnv(
+export async function buildToddProcessEnv(
   context: vscode.ExtensionContext,
   baseEnv: NodeJS.ProcessEnv = process.env,
 ): Promise<NodeJS.ProcessEnv> {
   const toddspect = vscode.workspace.getConfiguration('toddspect');
-  const workspacePath = resolveToddSpectWorkspacePath();
+  const workspacePath = resolveToddWorkspacePath();
 
   const settingsBridge = {
     defaultAgent: toddspect.get<AgentSelectionId>('defaultAgent', 'auto'),

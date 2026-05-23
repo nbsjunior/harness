@@ -30,7 +30,7 @@ export const AUTO_SELECTION_DESCRIPTOR: AutoSelectionDescriptor = {
   id: 'auto',
   label: 'Auto',
   description:
-    'ToddSpect picks the best provider from your prompt (default: Copilot; complex code → Claude; integrations → Claude; specs → Kiro; …)',
+    'Todd picks the best provider from your prompt (default: Copilot; complex code → Claude; integrations → Claude; specs → Kiro; …)',
 };
 
 export interface AgentDescriptor {

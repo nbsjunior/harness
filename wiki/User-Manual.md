@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
-# User Manual — ToddSpect
+# User Manual — Todd of AIDLC
 
-**ToddSpect** is a meta-agent orchestrator for VS Code: one sidebar for **Copilot**, **Claude**, **Cursor**, **Devin**, and **Kiro**, with shared file context and Spec-Driven Development (SDD).
+**Todd of AIDLC** is a meta-agent orchestrator for VS Code: one sidebar for **Copilot**, **Claude**, **Cursor**, **Devin**, and **Kiro**, with shared file context and Spec-Driven Development (SDD).
 
-> **In the app:** `Ctrl+Shift+P` → **ToddSpect: Open User Manual** (dedicated editor tab).
+> **In the app:** `Ctrl+Shift+P` → **Todd of AIDLC: Open User Manual** (dedicated editor tab).
 
 ---
 
@@ -15,7 +15,7 @@
 1. Download `toddspect-vscode-*.vsix` from [Releases](https://github.com/nbsjunior/todd/releases).
 2. `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
 3. **Developer: Reload Window**
-4. Click the **ToddSpect** icon (fox) in the Activity Bar.
+4. Click the **Todd of AIDLC** icon (fox) in the Activity Bar.
 
 ---
 
@@ -26,7 +26,7 @@ On first configuration, the welcome screen summarizes what you get in **one plac
 | Feature | Description |
 |---------|-------------|
 | Unified chat | Copilot, Claude, Devin, Cursor, and Kiro in the same panel |
-| Shared context | Right-click → **Add to ToddSpect Context** |
+| Shared context | Right-click → **Add to Todd of AIDLC Context** |
 | Specs (SDD) | Skills, Tools, and Workflows in `.toddspect/specs/` |
 | MCP | External tool servers |
 
@@ -36,9 +36,9 @@ Click **Get started →** to configure agents, or **Skip** and configure later. 
 
 ## 3. Chat & shared context
 
-By default ToddSpect attaches: manual context chips, **open editor tabs**, and the **workspace folder** (see settings `toddspect.context.includeOpenEditors` and `toddspect.context.includeWorkspaceRoot`).
+By default Todd of AIDLC attaches: manual context chips, **open editor tabs**, and the **workspace folder** (see settings `toddspect.context.includeOpenEditors` and `toddspect.context.includeWorkspaceRoot`).
 
-- **Explorer** or editor → right-click → **Add to ToddSpect Context**
+- **Explorer** or editor → right-click → **Add to Todd of AIDLC Context**
 - The **same context** is sent to whichever provider you pick next
 - **+ New chat** / **Clear context** / **Clear Chat & Context**
 
@@ -61,7 +61,7 @@ For GitHub CLI: configure `gh auth login`; Agent mode can call `run_gh`.
 
 ## 4. Configure agents
 
-Open **ToddSpect: Open Configuration** → **Agents** tab. Each card shows the provider name, a short description, and **Not configured** until you add credentials.
+Open **Todd of AIDLC: Open Configuration** → **Agents** tab. Each card shows the provider name, a short description, and **Not configured** until you add credentials.
 
 Use **Configure** on each agent, paste the API key or token, then **Test Connection**. Tokens are stored in VS Code Secret Storage (never in plain-text settings).
 
@@ -94,7 +94,7 @@ In configuration, open the **API Servers** tab:
 
 ### Prompt optimization (Workspace tab)
 
-Enabled by default. ToddSpect optimizes every outgoing prompt **before** routing:
+Enabled by default. Todd of AIDLC optimizes every outgoing prompt **before** routing:
 
 - **Efficiency** — trims history (24 messages), dedupes repeated user lines, caps context files (12 000 chars), merges duplicate system text
 - **Quality** — injects a response contract (goal first, minimal diffs, mode-specific rules for Ask / Agent / Spec+Agent)
@@ -109,10 +109,10 @@ See [Prompt Optimization](Prompt-Optimization) and use **Spending** to compare e
 
 | Command | Purpose |
 |---------|---------|
-| `ToddSpect: Open User Manual` | This guide (dedicated tab) |
-| `ToddSpect: Open Configuration` | Agents, MCP, workspace, spending |
-| `ToddSpect: Initialize Workspace` | Create `.toddspect/` |
-| `ToddSpect: Check getGoat` | Agent diagnostics |
+| `Todd of AIDLC: Open User Manual` | This guide (dedicated tab) |
+| `Todd of AIDLC: Open Configuration` | Agents, MCP, workspace, spending |
+| `Todd of AIDLC: Initialize Workspace` | Create `.toddspect/` |
+| `Todd of AIDLC: Check getGoat` | Agent diagnostics |
 
 ---
 

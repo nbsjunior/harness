@@ -1,4 +1,4 @@
-# ToddSpect — AI Agent Reference Guide
+# Todd of AIDLC — AI Agent Reference Guide
 
 > This file is the authoritative quick-reference for any AI model (Cursor, Claude, Copilot,
 > Kiro, etc.) working on this codebase. Read it before reading any source file.
@@ -13,19 +13,19 @@
 
 ---
 
-## What is ToddSpect?
+## What is Todd of AIDLC?
 
-ToddSpect is a **meta-agent orchestrator** — one **VS Code** sidebar (or CLI) for multiple AI
+Todd of AIDLC is a **meta-agent orchestrator** — one **VS Code** sidebar (or CLI) for multiple AI
 providers (GitHub Copilot, Devin, Cursor AI, Claude Code, Kiro) so developers **do not switch
 IDEs per vendor**.
 
-**Product advantages** (documented in [docs/why-toddspect.md](docs/why-toddspect.md)):
+**Product advantages** (documented in [docs/why-todd-of-aidlc.md](docs/why-todd-of-aidlc.md)):
 
 1. **One IDE, many providers** — same chat UI; switch provider pills or use **Auto** routing.
 2. **Spec-Driven Development** — `.toddspect/specs/` + **Spec+Agent** mode injects specs as context.
 3. **Context engineering** — attached files are provider-agnostic; context survives agent switches.
 
-**Core idea:** pick an agent (or Auto), attach context and specs, send a prompt — ToddSpect
+**Core idea:** pick an agent (or Auto), attach context and specs, send a prompt — Todd of AIDLC
 handles auth, routing, streaming, and display.
 
 ---
@@ -181,7 +181,7 @@ CLI `loadToddSpectConfig()` also calls `getGhCliToken()` when no env token is se
 
 ## Authentication — GitHub Copilot
 
-Copilot needs a GitHub OAuth token with the `copilot` scope. ToddSpect resolves it in this order:
+Copilot needs a GitHub OAuth token with the `copilot` scope. Todd of AIDLC resolves it in this order:
 
 1. **`gh auth token`** (live subprocess call — always fresh, preferred)
 2. VS Code Secrets (`toddspect.connectors.copilot.token`)

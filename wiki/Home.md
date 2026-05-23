@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
-# ToddSpect Wiki
+# Todd of AIDLC Wiki
 
-**ToddSpect** is a meta-agent orchestrator for VS Code: **one IDE**, **many AI providers** (Copilot, Claude, Cursor, Devin, Kiro), plus **Spec-Driven Development** and **context engineering** in the same sidebar — without switching editors per vendor.
+**Todd of AIDLC** is a meta-agent orchestrator for VS Code: **one IDE**, **many AI providers** (Copilot, Claude, Cursor, Devin, Kiro), plus **Spec-Driven Development** and **context engineering** in the same sidebar — without switching editors per vendor.
 
-**[User Manual](User-Manual)** · **[Why ToddSpect?](Why-ToddSpect)**
+**[User Manual](User-Manual)** · **[Why Todd of AIDLC?](Why-Todd-of-AIDLC)**
 
 ---
 
@@ -15,7 +15,7 @@
 | I want to… | Start here |
 |------------|------------|
 | User manual | **[User Manual](User-Manual)** |
-| Understand why to use ToddSpect | [Why ToddSpect](Why-ToddSpect) |
+| Understand why to use Todd of AIDLC | [Why Todd of AIDLC](Why-Todd-of-AIDLC) |
 | Install and send my first message | [Getting Started](Getting-Started) |
 | Use the chat UI (providers, modes) | [Chat Interface](Chat-Interface) |
 | Configure API keys | [Configuration](Configuration) |
@@ -30,7 +30,7 @@
 
 ---
 
-## What is ToddSpect?
+## What is Todd of AIDLC?
 
 ```
 VS Code Extension (UI)  ←→  CLI daemon (IPC)  ←→  Agent connectors
@@ -56,7 +56,7 @@ Repository: [github.com/nbsjunior/todd](https://github.com/nbsjunior/todd)
 ## Documentation map
 
 ### Users
-- [Why ToddSpect](Why-ToddSpect)
+- [Why Todd of AIDLC](Why-Todd-of-AIDLC)
 - [Getting Started](Getting-Started)
 - [Installation](Installation)
 - [User Guide](User-Guide)

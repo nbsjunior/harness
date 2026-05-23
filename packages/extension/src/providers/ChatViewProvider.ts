@@ -1,6 +1,6 @@
 /**
  * @module providers/ChatViewProvider
- * VS Code webview for the ToddSpect chat sidebar.
+ * VS Code webview for the Todd chat sidebar.
  *
  * **Why:** UI runs in an isolated webview; this provider is the extension-host bridge:
  * webview postMessage ↔ `AgentService` ↔ CLI IPC.
@@ -482,10 +482,10 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
         }
       }
       this.output.info(
-        `[ToddSpect] Restored chat session (${this.history.length} messages) from .toddspect/chat-session.json`,
+        `[Todd] Restored chat session (${this.history.length} messages) from .toddspect/chat-session.json`,
       );
     } catch (err) {
-      this.output.warn(`[ToddSpect] Session restore skipped: ${(err as Error).message}`);
+      this.output.warn(`[Todd] Session restore skipped: ${(err as Error).message}`);
     }
   }
 
@@ -620,7 +620,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
              style-src ${webview.cspSource} 'unsafe-inline';
              font-src ${webview.cspSource};
              img-src ${webview.cspSource} data:;" />
-  <title>ToddSpect Chat</title>
+  <title>Todd Chat</title>
   <style>
     :root {
       --container-padding: 12px;

@@ -1,12 +1,12 @@
-# ToddSpect — User Guide
+# Todd of AIDLC — User Guide
 
-> Complete guide to installing, configuring, and using ToddSpect in VSCode.
+> Complete guide to installing, configuring, and using Todd of AIDLC in VSCode.
 
 ---
 
 ## Table of Contents
 
-1. [What is ToddSpect?](#1-what-is-toddspect)
+1. [What is Todd of AIDLC?](#1-what-is-toddspect)
 2. [Requirements](#2-requirements)
 3. [Installation](#3-installation)
 3b. [Starter Kit (quick path)](#starter-kit-quick-path)
@@ -24,18 +24,18 @@
 
 ---
 
-## 1. What is ToddSpect?
+## 1. What is Todd of AIDLC?
 
-ToddSpect is a VSCode extension that works as a **Meta-Agent Orchestrator**. Its main advantage: you stay in **one IDE** and reuse **multiple AI providers** (Copilot, Claude, Cursor, Devin, Kiro) without opening a different editor for each vendor.
+Todd of AIDLC is a VSCode extension that works as a **Meta-Agent Orchestrator**. Its main advantage: you stay in **one IDE** and reuse **multiple AI providers** (Copilot, Claude, Cursor, Devin, Kiro) without opening a different editor for each vendor.
 
 You also get **Spec-Driven Development (SDD)** and **context engineering** in the **same** chat:
 
 - **SDD** — define behaviour in `.toddspect/specs/` and run **Spec+Agent** mode to inject specs into the prompt.
 - **Context** — attach files/folders once; the same context is sent to **whichever provider** you pick next.
 
-You write your request once; ToddSpect routes it to the agent you choose (or **Auto**), with your selected files and active specs included.
+You write your request once; Todd of AIDLC routes it to the agent you choose (or **Auto**), with your selected files and active specs included.
 
-**[→ Why ToddSpect (detailed)](why-toddspect.md)**
+**[→ Why Todd of AIDLC (detailed)](why-todd-of-aidlc.md)**
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -43,7 +43,7 @@ You write your request once; ToddSpect routes it to the agent you choose (or **A
 │  Type a message  →  Add context  →  Pick agent  │
 └────────────────────────┬────────────────────────┘
                          │
-               ToddSpect Extension
+               Todd of AIDLC Extension
                          │
              Node.js CLI daemon (IPC)
                          │
@@ -109,11 +109,11 @@ code --install-extension toddspect-vscode-*.vsix
 
 ## 4. First-time setup
 
-After installing, you'll see the **ToddSpect icon** (hexagon) in the VSCode Activity Bar on the left.
+After installing, you'll see the **Todd of AIDLC icon** (hexagon) in the VSCode Activity Bar on the left.
 
 ### 4.1 CLI daemon (bundled in the extension)
 
-When you install from the official `.vsix`, the **ToddSpect CLI is already compiled** inside the extension:
+When you install from the official `.vsix`, the **Todd of AIDLC CLI is already compiled** inside the extension:
 
 ```
 extensions/toddspect.toddspect-vscode-0.1.0/cli/dist/index.js
@@ -142,10 +142,10 @@ Override path only if needed:
 
 ### 4.2 Initialize your workspace
 
-Open the project folder you want to use ToddSpect with, then:
+Open the project folder you want to use Todd of AIDLC with, then:
 
 ```
-Ctrl+Shift+P → ToddSpect: Initialize Workspace
+Ctrl+Shift+P → Todd of AIDLC: Initialize Workspace
 ```
 
 This creates a `.toddspect/` directory in your project root:
@@ -168,7 +168,7 @@ You must configure at least one agent before chatting. There are three ways to s
 ### 5.1 Via the Configuration Panel (recommended)
 
 ```
-Ctrl+Shift+P → ToddSpect: Open Configuration
+Ctrl+Shift+P → Todd of AIDLC: Open Configuration
 ```
 
 Fill in the API key for the agent(s) you want to use and click **Save**.
@@ -234,11 +234,11 @@ code C:\path\to\your-project
 
 ## 6. Using the Chat
 
-Click the **ToddSpect icon** in the Activity Bar to open the Chat sidebar.
+Click the **Todd of AIDLC icon** in the Activity Bar to open the Chat sidebar.
 
 ```
 ┌──────────────────────────────────────────┐
-│ 🔷 ToddSpect Chat                    ⚙ ⋮  │
+│ 🔷 Todd of AIDLC Chat                    ⚙ ⋮  │
 ├──────────────────────────────────────────┤
 │                                          │
 │  🤖  How can I help you today?           │
@@ -287,27 +287,27 @@ Fix the TypeScript errors in the current context
 
 ## 7. Adding context
 
-Context tells ToddSpect which files the agent should read before answering.
+Context tells Todd of AIDLC which files the agent should read before answering.
 
 ### Via the Explorer (recommended)
 
 1. Right-click any **file** or **folder** in the Explorer sidebar
-2. Click **Add to ToddSpect Context**
+2. Click **Add to Todd of AIDLC Context**
 3. The file/folder label appears in the chat input bar
 
 ### Via the Command Palette
 
 ```
-Ctrl+Shift+P → ToddSpect: Add Current File to Context
+Ctrl+Shift+P → Todd of AIDLC: Add Current File to Context
 ```
 
 ### Managing context
 
 - **Remove an item:** click the ✕ next to its label in the chat input bar
-- **Clear all context:** `Ctrl+Shift+P → ToddSpect: Clear Context`
+- **Clear all context:** `Ctrl+Shift+P → Todd of AIDLC: Clear Context`
 - **View current context:** hover over the context chips in the input bar
 
-> **How context works internally:** ToddSpect sends the selected absolute paths to the CLI daemon, which reads the files, estimates token counts, and includes the content in the system prompt before calling the AI agent. Files are never read by the Extension Host — only the CLI daemon accesses the file system.
+> **How context works internally:** Todd of AIDLC sends the selected absolute paths to the CLI daemon, which reads the files, estimates token counts, and includes the content in the system prompt before calling the AI agent. Files are never read by the Extension Host — only the CLI daemon accesses the file system.
 
 ---
 
@@ -318,17 +318,17 @@ The **SDD** sidebar view has two tabs:
 | Tab | Purpose |
 |-----|---------|
 | **SDD Workflow** | Full [GitHub spec-kit](https://github.com/github/spec-kit) pipeline — see [§9](#9-sdd-workflow-spec-kit) |
-| **Specs** | ToddSpect Skills, Tools, and Workflows in `.toddspect/specs/` |
+| **Specs** | Todd of AIDLC Skills, Tools, and Workflows in `.toddspect/specs/` |
 
 ### Opening SDD
 
-Click the **ToddSpect icon** → **SDD** view, or:
+Click the **Todd of AIDLC icon** → **SDD** view, or:
 
 ```
-Ctrl+Shift+P → ToddSpect: Open Spec Manager
+Ctrl+Shift+P → Todd of AIDLC: Open Spec Manager
 ```
 
-### Specs tab — ToddSpect specs
+### Specs tab — Todd of AIDLC specs
 
 Define reusable **Skills**, **Tools**, and **Workflows** that guide how the AI agent responds.
 
@@ -392,7 +392,7 @@ You can also explicitly reference a spec:
 
 ## 9. SDD Workflow (spec-kit)
 
-The **SDD Workflow** tab implements the spec-kit development flow inside ToddSpect — without leaving VS Code.
+The **SDD Workflow** tab implements the spec-kit development flow inside Todd of AIDLC — without leaving VS Code.
 
 ### Quick start
 
@@ -420,7 +420,7 @@ The **SDD Workflow** tab implements the spec-kit development flow inside ToddSpe
 
 Use **Notes for next step** to append context before **Run in chat**.
 
-**Discover** runs repo-based suggestions for ToddSpect specs (`toddspect spec:discover`).
+**Discover** runs repo-based suggestions for Todd of AIDLC specs (`toddspect spec:discover`).
 
 Full reference: **[sdd-speckit.md](sdd-speckit.md)**.
 
@@ -433,7 +433,7 @@ Switch between agents without leaving the conversation.
 ### Open the Agent Menu
 
 ```
-Ctrl+Shift+P → ToddSpect: Select Agent
+Ctrl+Shift+P → Todd of AIDLC: Select Agent
 ```
 
 Or click the agent badge at the top-right of the Chat panel.
@@ -456,7 +456,7 @@ The selected agent applies to all subsequent messages in the session.
 ## 11. Configuration Panel
 
 ```
-Ctrl+Shift+P → ToddSpect: Open Configuration
+Ctrl+Shift+P → Todd of AIDLC: Open Configuration
 ```
 
 The panel has three sections:
@@ -500,7 +500,7 @@ Add external Model Context Protocol servers:
 
 ## 12. Standalone CLI
 
-The ToddSpect CLI can be used independently of the VSCode extension — useful in CI/CD pipelines, terminal workflows, or scripting.
+The Todd of AIDLC CLI can be used independently of the VSCode extension — useful in CI/CD pipelines, terminal workflows, or scripting.
 
 ### Installation
 
@@ -581,20 +581,20 @@ echo "$CHANGED" | xargs -I{} toddspect agent:run \
 
 | Action | Windows / Linux | macOS |
 |---|---|---|
-| Focus ToddSpect Chat | `Ctrl+Shift+H` | `Cmd+Shift+H` |
+| Focus Todd of AIDLC Chat | `Ctrl+Shift+H` | `Cmd+Shift+H` |
 | Send message | `Enter` | `Enter` |
 | New line in input | `Shift+Enter` | `Shift+Enter` |
-| Select agent | `Ctrl+Shift+P` → *ToddSpect: Select Agent* | same |
-| Add file to context | Right-click → *Add to ToddSpect Context* | same |
-| Clear context | `Ctrl+Shift+P` → *ToddSpect: Clear Context* | same |
-| Initialize workspace | `Ctrl+Shift+P` → *ToddSpect: Initialize Workspace* | same |
-| Open configuration | `Ctrl+Shift+P` → *ToddSpect: Open Configuration* | same |
+| Select agent | `Ctrl+Shift+P` → *Todd of AIDLC: Select Agent* | same |
+| Add file to context | Right-click → *Add to Todd of AIDLC Context* | same |
+| Clear context | `Ctrl+Shift+P` → *Todd of AIDLC: Clear Context* | same |
+| Initialize workspace | `Ctrl+Shift+P` → *Todd of AIDLC: Initialize Workspace* | same |
+| Open configuration | `Ctrl+Shift+P` → *Todd of AIDLC: Open Configuration* | same |
 
 ---
 
 ## 14. Troubleshooting
 
-### "ToddSpect CLI not found"
+### "Todd of AIDLC CLI not found"
 
 The extension cannot locate the CLI daemon.
 
@@ -617,7 +617,7 @@ The daemon started but didn't respond to the startup handshake.
 
 **Diagnose:**
 
-1. Open the ToddSpect output channel: `View → Output → ToddSpect`
+1. Open the Todd of AIDLC output channel: `View → Output → Todd of AIDLC`
 2. Look for `[cli]` prefixed error lines
 3. Test manually:
 
@@ -651,11 +651,11 @@ Your API key is missing, expired, or has incorrect permissions.
 
 ### Extension is not activating
 
-Check the VSCode version (`Help → About`). ToddSpect requires VSCode ≥ 1.85.
+Check the VSCode version (`Help → About`). Todd of AIDLC requires VSCode ≥ 1.85.
 
 Verify the extension is enabled:
 ```
-Ctrl+Shift+P → Extensions: Show Installed Extensions → search "ToddSpect"
+Ctrl+Shift+P → Extensions: Show Installed Extensions → search "Todd of AIDLC"
 ```
 
 ---
@@ -671,7 +671,7 @@ Enable verbose output for the CLI daemon:
 }
 ```
 
-All CLI stderr output appears in the **ToddSpect** output channel (`View → Output → ToddSpect`).
+All CLI stderr output appears in the **Todd of AIDLC** output channel (`View → Output → Todd of AIDLC`).
 
 ---
 
@@ -681,7 +681,7 @@ All CLI stderr output appears in the **ToddSpect** output channel (`View → Out
 |---|---|
 | [getting-started.md](getting-started.md) | Developer setup: clone, build, and run with F5 |
 | [architecture.md](architecture.md) | How the extension, CLI, and agents fit together |
-| [sdd-specs.md](sdd-specs.md) | ToddSpect specs (Skills, Tools, Workflows) |
+| [sdd-specs.md](sdd-specs.md) | Todd of AIDLC specs (Skills, Tools, Workflows) |
 | [sdd-speckit.md](sdd-speckit.md) | spec-kit SDD workflow in `.toddspect/sdd/` |
 | [agent-connectors.md](agent-connectors.md) | All configuration options per agent |
 | [ipc-protocol.md](ipc-protocol.md) | The stdin/stdout JSON protocol between extension and CLI |

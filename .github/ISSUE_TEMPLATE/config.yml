@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation / Wiki
+    url: https://github.com/nbsjunior/todd/wiki
+    about: Browse the full user and developer docs.
+  - name: Discussions
+    url: https://github.com/nbsjunior/todd/discussions
+    about: Ask questions, share ideas, and connect with other users.

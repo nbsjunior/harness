@@ -1,0 +1,91 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in Todd of AIDLC
+labels: ["bug", "triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+        Before submitting, please search [existing issues](https://github.com/nbsjunior/todd/issues) to avoid duplicates.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of Todd is affected?
+      options:
+        - VS Code Extension (UI / sidebar)
+        - CLI daemon (chat / routing)
+        - GitHub Copilot connector
+        - Claude connector
+        - Cursor connector
+        - Devin connector
+        - Kiro / AI-DLC connector
+        - IPC communication
+        - SDD / Spec Manager
+        - Configuration panel
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      placeholder: A clear and concise description of what went wrong.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Todd sidebar
+        2. Select provider '...'
+        3. Send message '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or error output
+      description: |
+        Check **View → Output → Todd** in VS Code for the full trace.
+        Paste relevant lines here (tokens are auto-redacted in logs).
+      render: text
+
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+      placeholder: e.g. 0.2.1
+    validations:
+      required: true
+
+  - type: input
+    id: vscode
+    attributes:
+      label: VS Code / Cursor version
+      placeholder: e.g. VS Code 1.90 / Cursor 0.40
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: e.g. Windows 11, macOS 14, Ubuntu 22.04
+    validations:
+      required: true

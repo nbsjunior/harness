@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, "release/**", "hotfix/**"]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all packages
+        run: npm run build
+
+      - name: Check for leftover console.log in CLI daemon
+        run: |
+          if grep -rn "console\.log" packages/cli/src/ipc/ packages/cli/src/router/ packages/cli/src/connectors/ 2>/dev/null | grep -v "\.map$"; then
+            echo "::error::console.log found in CLI daemon code — use process.stderr.write or toddspectLog()"
+            exit 1
+          fi
+          echo "No console.log issues found."
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan for hardcoded secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          extra_args: --only-verified

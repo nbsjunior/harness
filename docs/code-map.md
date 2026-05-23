@@ -1,4 +1,4 @@
-# ToddSpect — Code Map (exports by file)
+# Todd of AIDLC — Code Map (exports by file)
 
 > One-line purpose for every public export. Use with [ai-reference.md](ai-reference.md) for *why*.
 
@@ -261,7 +261,7 @@ Canonical types for extension + webview: `AGENT_DESCRIPTORS`, `CopilotMode`, IPC
 ### `panels/SpecManagerPanel.ts`
 | Export | Purpose |
 |--------|---------|
-| `SpecManagerProvider` | SDD webview: spec-kit workflow + ToddSpect specs editor; IPC `sdd:workflow:*`. |
+| `SpecManagerProvider` | SDD webview: spec-kit workflow + Todd of AIDLC specs editor; IPC `sdd:workflow:*`. |
 
 ### `mcp/McpClientManager.ts`
 | Export | Purpose |

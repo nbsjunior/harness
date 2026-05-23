@@ -1,6 +1,6 @@
-# GitHub Actions — ToddSpect agent runs
+# GitHub Actions — Todd of AIDLC agent runs
 
-Run ToddSpect in CI with the same CLI bundled in the VSIX (or `npm run build:cli` in your repo).
+Run Todd of AIDLC in CI with the same CLI bundled in the VSIX (or `npm run build:cli` in your repo).
 
 ## Example workflow
 

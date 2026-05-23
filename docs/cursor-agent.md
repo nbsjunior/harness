@@ -1,6 +1,6 @@
 # Cursor — Agent mode and local file edits
 
-ToddSpect supports **Cursor** in three interaction modes (shared with Copilot in the chat UI): **Ask**, **Agent**, and **Spec+Agent**.
+Todd of AIDLC supports **Cursor** in three interaction modes (shared with Copilot in the chat UI): **Ask**, **Agent**, and **Spec+Agent**.
 
 | Mode | Behaviour | Local VS Code files |
 |------|-----------|---------------------|
@@ -10,7 +10,7 @@ ToddSpect supports **Cursor** in three interaction modes (shared with Copilot in
 
 ## Local edits (recommended)
 
-When provider is **Cursor** and mode is **Agent** or **Spec+Agent**, ToddSpect uses the **[Cursor TypeScript SDK](https://cursor.com/docs/api/sdk/typescript)** (`@cursor/sdk`) with **local runtime**:
+When provider is **Cursor** and mode is **Agent** or **Spec+Agent**, Todd of AIDLC uses the **[Cursor TypeScript SDK](https://cursor.com/docs/api/sdk/typescript)** (`@cursor/sdk`) with **local runtime**:
 
 ```text
 TODDSPECT_WORKSPACE (your open VS Code folder)
@@ -42,7 +42,7 @@ Use Cloud for long-running remote tasks or when you do not need IDE-side file ed
 
 ## Legacy fallback (Copilot tool loop)
 
-If **`auto`** is set, the Cursor SDK cannot load, and **GitHub Copilot** is configured, ToddSpect may fall back to the same **Copilot tool loop** (`read_file`, `write_file`, …) used by Copilot Agent mode. That path consumes **Copilot API quota** and can return HTTP 429 when quota is exceeded.
+If **`auto`** is set, the Cursor SDK cannot load, and **GitHub Copilot** is configured, Todd of AIDLC may fall back to the same **Copilot tool loop** (`read_file`, `write_file`, …) used by Copilot Agent mode. That path consumes **Copilot API quota** and can return HTTP 429 when quota is exceeded.
 
 To avoid Copilot entirely for Cursor Agent: set a **Cursor API key** and ensure the extension bundle includes `@cursor/sdk` (shipped under `extension/cli/node_modules/@cursor/`).
 

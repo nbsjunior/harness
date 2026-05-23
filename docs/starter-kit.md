@@ -1,12 +1,12 @@
-# ToddSpect Starter Kit
+# Todd of AIDLC Starter Kit
 
 > Install the extension, use the bundled CLI, configure **GitHub Copilot** as your first agent, and keep the solution updated.
 
-**Why ToddSpect?** One **VS Code** sidebar for **Copilot, Claude, Cursor, Devin, and Kiro** — plus **SDD specs** and **file context** that stay with you when you switch provider. See **[why-toddspect.md](why-toddspect.md)**.
+**Why Todd of AIDLC?** One **VS Code** sidebar for **Copilot, Claude, Cursor, Devin, and Kiro** — plus **SDD specs** and **file context** that stay with you when you switch provider. See **[why-todd-of-aidlc.md](why-todd-of-aidlc.md)**.
 
 **Choose CLI or Extension?** See [dual-mode.md](dual-mode.md) — most developers use the **VS Code Extension**; use the **CLI** for terminal/CI.
 
-**Kiro + AI-DLC:** See [aidlc-kiro.md](aidlc-kiro.md) — Kiro CLI is installed automatically by ToddSpect (`toddspect setup` or on extension activate).
+**Kiro + AI-DLC:** See [aidlc-kiro.md](aidlc-kiro.md) — Kiro CLI is installed automatically by Todd of AIDLC (`toddspect setup` or on extension activate).
 
 ---
 
@@ -15,10 +15,10 @@
 | Component | Description |
 |---|---|
 | **VSCode extension** (`.vsix`) | Chat, Spec Manager, configuration wizard |
-| **ToddSpect CLI** (bundled) | Node.js daemon inside the extension — routes prompts to Copilot, Claude, Devin, Cursor, KIRO |
+| **Todd of AIDLC CLI** (bundled) | Node.js daemon inside the extension — routes prompts to Copilot, Claude, Devin, Cursor, KIRO |
 | **Workspace starter** | `.toddspect/` with example specs and `config.yaml` |
 
-The CLI is compiled and **included in the `.vsix`** at `extension/cli/dist/index.js`. You do not need to clone the monorepo or run `npm run build:cli` unless you are developing ToddSpect itself.
+The CLI is compiled and **included in the `.vsix`** at `extension/cli/dist/index.js`. You do not need to clone the monorepo or run `npm run build:cli` unless you are developing Todd of AIDLC itself.
 
 **Primary agent for this starter kit:** [GitHub Copilot](https://github.com/features/copilot) (OpenAI-compatible API). The flow mirrors a Copilot-style CLI: one prompt in, streamed response out, with optional file context.
 
@@ -62,10 +62,10 @@ code --install-extension packages/extension/toddspect-vscode-0.1.0.vsix
 
 ---
 
-## Step 2 — Open ToddSpect in VSCode
+## Step 2 — Open Todd of AIDLC in VSCode
 
 1. Reload VSCode after installing the `.vsix`.
-2. Click the **ToddSpect** icon (hexagon) in the **Activity Bar** (left).
+2. Click the **Todd of AIDLC** icon (hexagon) in the **Activity Bar** (left).
 3. Open the **Chat** view (first tab).
 
 If the icon is missing: `Ctrl+Shift+P` → **Developer: Reload Window**.
@@ -75,7 +75,7 @@ If the icon is missing: `Ctrl+Shift+P` → **Developer: Reload Window**.
 ## Step 3 — Initialize your workspace
 
 1. Open the folder of the project you want to work on (`File → Open Folder`).
-2. `Ctrl+Shift+P` → **ToddSpect: Initialize Workspace**.
+2. `Ctrl+Shift+P` → **Todd of AIDLC: Initialize Workspace**.
 
 This creates:
 
@@ -93,7 +93,7 @@ your-project/
 ## Step 3b — Verify setup (recommended)
 
 ```
-Ctrl+Shift+P → ToddSpect: Check getGoat
+Ctrl+Shift+P → Todd of AIDLC: Check getGoat
 ```
 
 Or from terminal (monorepo):
@@ -108,7 +108,7 @@ You should see **GitHub Copilot** as ✓ after configuring a token (next step).
 
 ## Step 4 — Configure GitHub Copilot (recommended first agent)
 
-1. `Ctrl+Shift+P` → **ToddSpect: Open Configuration**  
+1. `Ctrl+Shift+P` → **Todd of AIDLC: Open Configuration**  
    (or click the gear icon in the Chat toolbar).
 
 2. Follow the wizard:
@@ -138,7 +138,7 @@ code .
 
 ## Step 5 — First conversation
 
-1. In the Explorer, right-click a file → **Add to ToddSpect Context**.
+1. In the Explorer, right-click a file → **Add to Todd of AIDLC Context**.
 2. In Chat, pick **GitHub Copilot** in the agent dropdown (badge `GH`).
 3. Try a suggestion chip or type:
 
@@ -148,7 +148,7 @@ Review the selected files for security issues
 
 4. Press **Enter** or **Ctrl+Enter** to send.
 
-The extension starts the **bundled CLI** in IPC mode (`node extension/cli/dist/index.js --ipc`). Logs appear in `View → Output → ToddSpect`.
+The extension starts the **bundled CLI** in IPC mode (`node extension/cli/dist/index.js --ipc`). Logs appear in `View → Output → Todd of AIDLC`.
 
 ---
 
@@ -160,7 +160,7 @@ Inside the installed extension:
 ~/.vscode/extensions/toddspect.toddspect-vscode-0.1.0/
 ├── dist/extension.js          # Extension host
 ├── dist/webview/              # Chat, Config, Spec UI
-└── cli/dist/index.js          # ToddSpect CLI (bundled orchestrator)
+└── cli/dist/index.js          # Todd of AIDLC CLI (bundled orchestrator)
 ```
 
 Resolution order in code:
@@ -191,7 +191,7 @@ Ensure `GITHUB_TOKEN` or `toddspect.connectors.copilot.token` is set.
 
 ---
 
-## Update flow (new version of ToddSpect)
+## Update flow (new version of Todd of AIDLC)
 
 ### End users (VSIX only)
 
@@ -226,7 +226,7 @@ vsce package           → toddspect-vscode-0.1.0.vsix
 node "%USERPROFILE%\.vscode\extensions\toddspect.toddspect-vscode-0.1.0\cli\dist\index.js" --help
 ```
 
-In VSCode: send a chat message and confirm no **ToddSpect CLI not found** in Output → ToddSpect.
+In VSCode: send a chat message and confirm no **Todd of AIDLC CLI not found** in Output → Todd of AIDLC.
 
 ---
 
@@ -234,7 +234,7 @@ In VSCode: send a chat message and confirm no **ToddSpect CLI not found** in Out
 
 | Problem | Fix |
 |---|---|
-| **ToddSpect CLI not found** | Reinstall from a `.vsix` built with `npm run package:vsix`, or set `toddspect.cliPath` to `packages/cli/dist/index.js` |
+| **Todd of AIDLC CLI not found** | Reinstall from a `.vsix` built with `npm run package:vsix`, or set `toddspect.cliPath` to `packages/cli/dist/index.js` |
 | **CLI ping timed out** | Check Node.js ≥ 20: `node --version` |
 | **HTTP 400 — PATs not supported** | Use `gh auth token` (after `gh auth login`) or a fine-grained PAT (`github_pat_…`), not `ghp_…` |
 | **HTTP 401 (Copilot)** | Active Copilot subscription required; regenerate token via `gh auth login` |

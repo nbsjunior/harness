@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # Agent Connectors
 
-ToddSpect routes chat to five agents via the CLI `AgentRouter`.
+Todd of AIDLC routes chat to five agents via the CLI `AgentRouter`.
 
 | Agent | Protocol | API key / auth |
 |-------|----------|----------------|
@@ -14,7 +14,7 @@ ToddSpect routes chat to five agents via the CLI `AgentRouter`.
 | **Claude Code** | CLI subprocess | `claude` on PATH + optional `ANTHROPIC_API_KEY` |
 | **Kiro (AI-DLC)** | kiro-cli + steering | `KIRO_API_KEY` |
 
-Run `toddspect check getGoat` or **ToddSpect: Check getGoat** to see readiness.
+Run `toddspect check getGoat` or **Todd of AIDLC: Check getGoat** to see readiness.
 
 ---
 
@@ -35,13 +35,13 @@ gh auth refresh --scopes copilot
 - **Endpoint:** `https://api.devin.ai/v1` (default)
 - **Env:** `DEVIN_API_KEY`
 
-Devin runs asynchronously — ToddSpect shows the session URL.
+Devin runs asynchronously — Todd of AIDLC shows the session URL.
 
 ---
 
 ## Cursor AI
 
-ToddSpect uses **Cursor SDK local** for **Agent** / **Spec+Agent** when you have a Cursor API key (`auto` or `local` execution). **Ask** and **`cloud`** use the Cloud Agents API.
+Todd of AIDLC uses **Cursor SDK local** for **Agent** / **Spec+Agent** when you have a Cursor API key (`auto` or `local` execution). **Ask** and **`cloud`** use the Cloud Agents API.
 
 See [cursor-agent.md](../docs/cursor-agent.md) in the repo docs.
 
@@ -52,7 +52,7 @@ See [cursor-agent.md](../docs/cursor-agent.md) in the repo docs.
 ### Correct setup
 
 1. Create API key: [cursor.com/dashboard/integrations](https://cursor.com/dashboard/integrations)
-2. Set in ToddSpect Configuration or environment:
+2. Set in Todd of AIDLC Configuration or environment:
 
 ```json
 {
@@ -66,11 +66,11 @@ export CURSOR_API_KEY=your-key
 export CURSOR_API_ENDPOINT=https://api.cursor.com   # optional
 ```
 
-### How ToddSpect calls Cursor
+### How Todd of AIDLC calls Cursor
 
 1. `POST https://api.cursor.com/v1/agents` — create cloud agent + first run
 2. `GET .../runs/{runId}/stream` — SSE assistant text
-3. Follow-up messages: `POST .../agents/{id}/runs` on the same ToddSpect session
+3. Follow-up messages: `POST .../agents/{id}/runs` on the same Todd of AIDLC session
 
 Basic authentication: `Authorization: Basic base64(apiKey:)`
 
@@ -81,13 +81,13 @@ Basic authentication: `Authorization: Basic base64(apiKey:)`
 - **CLI:** `claude` must be on PATH (or set `toddspect.connectors.claude.path`)
 - **Optional:** `ANTHROPIC_API_KEY` for API auth
 
-ToddSpect spawns `claude -p ... --output-format stream-json`.
+Todd of AIDLC spawns `claude -p ... --output-format stream-json`.
 
 ---
 
 ## Kiro (AI-DLC)
 
-- **CLI:** `kiro-cli` (ToddSpect can auto-download via `toddspect setup`)
+- **CLI:** `kiro-cli` (Todd of AIDLC can auto-download via `toddspect setup`)
 - **Steering:** `.kiro/steering/` from AI-DLC rules
 - **Key:** `KIRO_API_KEY` from [kiro.dev](https://kiro.dev)
 

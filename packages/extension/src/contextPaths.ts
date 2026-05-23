@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import type { ContextProvider } from './providers/ContextProvider.js';
-import { resolveToddSpectWorkspacePath } from './workspacePath.js';
+import { resolveToddWorkspacePath } from './workspacePath.js';
 
 /**
  * Paths sent to the CLI on each chat message: manual context chips plus
@@ -18,7 +18,7 @@ export function buildContextPathsForChat(contextProvider: ContextProvider): stri
     }
   }
 
-  const workspaceRoot = resolveToddSpectWorkspacePath();
+  const workspaceRoot = resolveToddWorkspacePath();
   if (cfg.get<boolean>('includeWorkspaceRoot', true) && workspaceRoot) {
     paths.add(workspaceRoot);
   }

@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # Auto provider routing
 
-Choose **Auto** in the chat provider bar and ToddSpect picks the best agent for each message.
+Choose **Auto** in the chat provider bar and Todd of AIDLC picks the best agent for each message.
 
 ## Default behavior
 
@@ -34,8 +34,8 @@ Then the response streams from that provider.
 
 ## Configure
 
-1. Open **ToddSpect → Configuration** and set up the agents you want in the rotation.
-2. Run **`ToddSpect: Check getGoat`** (or `toddspect check getGoat`) to see which agents are ready.
+1. Open **Todd of AIDLC → Configuration** and set up the agents you want in the rotation.
+2. Run **`Todd of AIDLC: Check getGoat`** (or `toddspect check getGoat`) to see which agents are ready.
 3. Optional: set **Default agent** to `auto` in workspace settings.
 
 ## CLI

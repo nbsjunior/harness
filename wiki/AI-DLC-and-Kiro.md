@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # AI-DLC and Kiro
 
-ToddSpect integrates **AWS AI-DLC** steering rules with the **Kiro CLI**.
+Todd of AIDLC integrates **AWS AI-DLC** steering rules with the **Kiro CLI**.
 
 ## What gets installed
 
@@ -33,6 +33,6 @@ From VS Code: extension bootstrap calls `setup --skip-kiro` for workspace only; 
 
 ## Kiro agent routing
 
-ToddSpect builds a prompt with AI-DLC context and runs `kiro-cli` headless, streaming output to the chat.
+Todd of AIDLC builds a prompt with AI-DLC context and runs `kiro-cli` headless, streaming output to the chat.
 
 See repository [docs/aidlc-kiro.md](https://github.com/nbsjunior/todd/blob/main/docs/aidlc-kiro.md).

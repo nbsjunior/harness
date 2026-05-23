@@ -4,7 +4,7 @@ export function renderManualBody(): string {
   return /* html */`
     <article class="manual-doc">
       <header class="manual-doc__hero">
-        <h1>ToddSpect — User Manual</h1>
+        <h1>Todd — User Manual</h1>
         <p class="manual-doc__lead">
           One VS Code sidebar for Copilot, Claude, Cursor, Devin, and Kiro — shared file context,
           Spec-Driven Development, and a single conversation flow. No IDE hopping per provider.
@@ -18,7 +18,7 @@ export function renderManualBody(): string {
             <a href="https://github.com/nbsjunior/todd/releases">Releases</a>.</li>
           <li><code>Ctrl+Shift+P</code> → <strong>Extensions: Install from VSIX...</strong></li>
           <li><strong>Developer: Reload Window</strong></li>
-          <li>Click the <strong>ToddSpect</strong> icon (fox) in the Activity Bar.</li>
+          <li>Click the <strong>Todd</strong> icon (fox) in the Activity Bar.</li>
         </ol>
       </section>
 
@@ -32,7 +32,7 @@ export function renderManualBody(): string {
         <h2>3. Chat &amp; shared context</h2>
         <p>All providers share the same context chips and conversation panel.</p>
         <ul>
-          <li>Right-click in Explorer → <strong>Add to ToddSpect Context</strong></li>
+          <li>Right-click in Explorer → <strong>Add to Todd Context</strong></li>
           <li><strong>+ New chat</strong> — new thread, keeps context</li>
           <li><strong>Clear context</strong> — removes file chips only</li>
           <li>View title → <strong>Clear Chat &amp; Context</strong> — full reset</li>
@@ -43,7 +43,7 @@ export function renderManualBody(): string {
 
       <section class="manual-section">
         <h2>4. Configure agents</h2>
-        <p>Open <strong>ToddSpect: Open Configuration</strong> → <strong>Agents</strong>. Use <strong>Configure</strong> on each provider, then <strong>Test Connection</strong>. Tokens live in VS Code Secret Storage.</p>
+        <p>Open <strong>Todd: Open Configuration</strong> → <strong>Agents</strong>. Use <strong>Configure</strong> on each provider, then <strong>Test Connection</strong>. Tokens live in VS Code Secret Storage.</p>
       </section>
 
       <section class="manual-section">
@@ -56,10 +56,10 @@ export function renderManualBody(): string {
         <table class="manual-table">
           <thead><tr><th>Command</th><th>Purpose</th></tr></thead>
           <tbody>
-            <tr><td><code>ToddSpect: Open User Manual</code></td><td>This guide</td></tr>
-            <tr><td><code>ToddSpect: Open Configuration</code></td><td>Agents, MCP, workspace, spending</td></tr>
-            <tr><td><code>ToddSpect: Initialize Workspace</code></td><td>Create <code>.toddspect/</code></td></tr>
-            <tr><td><code>ToddSpect: Check getGoat</code></td><td>Agent readiness diagnostics</td></tr>
+            <tr><td><code>Todd: Open User Manual</code></td><td>This guide</td></tr>
+            <tr><td><code>Todd: Open Configuration</code></td><td>Agents, MCP, workspace, spending</td></tr>
+            <tr><td><code>Todd: Initialize Workspace</code></td><td>Create <code>.toddspect/</code></td></tr>
+            <tr><td><code>Todd: Check getGoat</code></td><td>Agent readiness diagnostics</td></tr>
           </tbody>
         </table>
       </section>

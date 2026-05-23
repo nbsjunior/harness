@@ -9,7 +9,7 @@ const TODDSPECT_DIR = '.toddspect';
 const SPECS_DIR = 'specs';
 const CONTEXT_DIR = 'context';
 
-const CONFIG_YAML = `# ToddSpect configuration file
+const CONFIG_YAML = `# Todd configuration file
 # This file is read by the CLI and the VSCode extension.
 
 # Default agent to use when no agent is specified in a Spec
@@ -49,14 +49,14 @@ mcp:
 `;
 
 const GITIGNORE_ADDITIONS = `
-# ToddSpect runtime
+# Todd runtime
 .toddspect/context/
 .toddspect/.session/
 .toddspect/cache/
 `;
 
 /**
- * Initialize a ToddSpect workspace by creating the `.toddspect/` directory structure
+ * Initialize a Todd workspace by creating the `.toddspect/` directory structure
  * with default configuration and example spec files.
  */
 export async function initCommand(dir: string = process.cwd()): Promise<void> {
@@ -145,6 +145,6 @@ export async function initCommand(dir: string = process.cwd()): Promise<void> {
   toddspectLog(`\nToddSpect workspace initialized in ${targetDir}`);
   toddspectLog('Next steps:');
   toddspectLog('  1. Set KIRO_API_KEY (https://kiro.dev/docs/cli/authentication) for Kiro + AI-DLC');
-  toddspectLog('  2. Configure other agents in .toddspect/config.yaml or ToddSpect settings');
+  toddspectLog('  2. Configure other agents in .toddspect/config.yaml or Todd settings');
   toddspectLog('  3. Chat with Kiro: "Using AI-DLC, <your request>" — artifacts go to aidlc-docs/');
 }

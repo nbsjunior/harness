@@ -16,7 +16,7 @@ export interface SetupOptions {
 }
 
 /**
- * One-shot bootstrap: ToddSpect workspace + Kiro CLI + AI-DLC rules.
+ * One-shot bootstrap: Todd workspace + Kiro CLI + AI-DLC rules.
  * Called on `toddspect setup`, extension activate, and optional postinstall.
  */
 export async function setupCommand(options: SetupOptions = {}): Promise<number> {
@@ -28,10 +28,10 @@ export async function setupCommand(options: SetupOptions = {}): Promise<number> 
   };
 
   if (!options.skipInit && !fs.existsSync(path.join(dir, '.toddspect'))) {
-    log('\n→ Initializing ToddSpect workspace...');
+    log('\n→ Initializing Todd workspace...');
     await initCommand(dir);
   } else if (!options.skipInit) {
-    log('\n→ ToddSpect workspace already present.');
+    log('\n→ Todd workspace already present.');
     const specsDir = path.join(dir, '.toddspect', 'specs');
     const added = ensureDefaultSpecs(specsDir);
     for (const rel of added) {

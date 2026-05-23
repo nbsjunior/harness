@@ -1,12 +1,12 @@
-# ToddSpect — CLI or VS Code Extension
+# Todd of AIDLC — CLI or VS Code Extension
 
-ToddSpect offers **two ways** to use the same orchestrator. Pick one — both share `.toddspect/` config and the same agent router.
+Todd of AIDLC offers **two ways** to use the same orchestrator. Pick one — both share `.toddspect/` config and the same agent router.
 
-**Value proposition:** the extension is how most teams get **one IDE + many providers + SDD + context** in a single UI. The CLI is the same engine for scripts and CI. See [why-toddspect.md](why-toddspect.md).
+**Value proposition:** the extension is how most teams get **one IDE + many providers + SDD + context** in a single UI. The CLI is the same engine for scripts and CI. See [why-todd-of-aidlc.md](why-todd-of-aidlc.md).
 
 ```
                     ┌─────────────────────────────────┐
-                    │     ToddSpect Agent Router        │
+                    │     Todd of AIDLC Agent Router        │
                     │  Copilot · Claude · Devin · …   │
                     └───────────────┬─────────────────┘
                                     │
@@ -37,10 +37,10 @@ ToddSpect offers **two ways** to use the same orchestrator. Pick one — both sh
 ## Quick start — Extension (simplest for most users)
 
 1. Install `toddspect-vscode-0.1.0.vsix` (includes bundled CLI).
-2. Click **ToddSpect** in the Activity Bar → **Chat**.
-3. `Ctrl+Shift+P` → **ToddSpect: Initialize Workspace**.
-4. `Ctrl+Shift+P` → **ToddSpect: Open Configuration** → configure **GitHub Copilot** (`gh auth token`).
-5. Right-click files → **Add to ToddSpect Context** → send a message.
+2. Click **Todd of AIDLC** in the Activity Bar → **Chat**.
+3. `Ctrl+Shift+P` → **Todd of AIDLC: Initialize Workspace**.
+4. `Ctrl+Shift+P` → **Todd of AIDLC: Open Configuration** → configure **GitHub Copilot** (`gh auth token`).
+5. Right-click files → **Add to Todd of AIDLC Context** → send a message.
 
 Details: [starter-kit.md](starter-kit.md)
 
@@ -91,7 +91,7 @@ toddspect agent:run -a copilot -p "Hello"
 | Project config | `.toddspect/config.yaml` | `.toddspect/config.yaml` |
 | Shell env | `GH_TOKEN`, `ANTHROPIC_API_KEY`, … | Same |
 
-**Tip:** Run **`ToddSpect: Check getGoat`** or `toddspect check getGoat` before your first chat to see which agents are ready.
+**Tip:** Run **`Todd of AIDLC: Check getGoat`** or `toddspect check getGoat` before your first chat to see which agents are ready.
 
 ---
 
@@ -105,7 +105,7 @@ npm run getGoat
 In VS Code:
 
 ```
-Ctrl+Shift+P → ToddSpect: Check getGoat
+Ctrl+Shift+P → Todd of AIDLC: Check getGoat
 ```
 
 Expected: at least **GitHub Copilot** shows ✓ when `GH_TOKEN` is set with a valid OAuth token (`gho_…`), not classic `ghp_…`.
@@ -131,5 +131,5 @@ Reload VSCode. CLI inside the `.vsix` updates automatically with the extension.
 | Extension says CLI not found | Reinstall `.vsix` built with `npm run package:vsix` |
 | getGoat shows 0/5 agents | `gh auth login` → `export GH_TOKEN=$(gh auth token)` |
 | Copilot HTTP 400 PAT | Do not use `ghp_` tokens — use `gh auth token` |
-| CLI works, Extension does not | Reload window; **ToddSpect: Check getGoat** |
+| CLI works, Extension does not | Reload window; **Todd of AIDLC: Check getGoat** |
 | Extension works, CLI does not | Run CLI from project root; `toddspect init` |

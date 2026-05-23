@@ -1,20 +1,20 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
-# Why ToddSpect?
+# Why Todd of AIDLC?
 
-The main advantage of ToddSpect: **stay in one IDE (VS Code)** and reuse **several AI providers** — Copilot, Claude, Cursor, Devin, Kiro — without switching editors. At the same time, use **Spec-Driven Development** and **context engineering** in the **same** chat and workspace.
+The main advantage of Todd of AIDLC: **stay in one IDE (VS Code)** and reuse **several AI providers** — Copilot, Claude, Cursor, Devin, Kiro — without switching editors. At the same time, use **Spec-Driven Development** and **context engineering** in the **same** chat and workspace.
 
 ---
 
 ## One IDE, many agents
 
-| Problem today | ToddSpect approach |
+| Problem today | Todd of AIDLC approach |
 |---------------|------------------|
 | Copilot only inside VS Code | Copilot **plus** other providers in the same sidebar |
 | Cursor or Claude need their own IDE/app | Select **Cursor** or **Claude** as a **provider pill** — stay in VS Code |
-| Different chat history per tool | One ToddSpect chat; switch provider for the **next** message |
+| Different chat history per tool | One Todd of AIDLC chat; switch provider for the **next** message |
 | Re-learn UI for each vendor | One composer, one context bar, one spec manager |
 
 Configure keys in [Configuration](Configuration). Use [Auto Routing](Auto-Routing) to pick the best provider per prompt.
@@ -31,7 +31,7 @@ Define **how agents should behave** in `.toddspect/specs/` (skills, tools, workf
 - **Spec+Agent mode** — injects active specs as system context before Copilot runs ([Copilot Modes](Copilot-Modes))
 - **Reuse** — same spec for chat, CLI, and CI-style runs
 
-SDD is not a separate product; it lives **inside** ToddSpect next to your code.
+SDD is not a separate product; it lives **inside** Todd of AIDLC next to your code.
 
 ---
 
@@ -39,7 +39,7 @@ SDD is not a separate product; it lives **inside** ToddSpect next to your code.
 
 Give the model the **right files** every time:
 
-- Right-click → **Add to ToddSpect Context**
+- Right-click → **Add to Todd of AIDLC Context**
 - Chips above the composer show what is attached
 - The CLI reads files and sends them with **every** provider
 
@@ -51,7 +51,7 @@ Details: [Context and Specs](Context-and-Specs).
 
 ## Prompt optimization (efficiency + quality)
 
-Every message passes through ToddSpect’s **optimization pipeline** before it reaches Copilot, Cursor, Claude, Devin, or Kiro.
+Every message passes through Todd of AIDLC’s **optimization pipeline** before it reaches Copilot, Cursor, Claude, Devin, or Kiro.
 
 **Efficiency**
 
@@ -79,7 +79,7 @@ Use [Spending](User-Manual#6-other-configuration-tabs) to see estimated token im
 3. **Optimization** — trim and structure prompts for efficiency and quality
 4. **Provider** — who answers (Copilot, Claude, … or Auto)
 
-All four in the ToddSpect sidebar — no IDE hopping.
+All four in the Todd of AIDLC sidebar — no IDE hopping.
 
 ---
 
@@ -88,4 +88,4 @@ All four in the ToddSpect sidebar — no IDE hopping.
 - [Getting Started](Getting-Started)
 - [Chat Interface](Chat-Interface)
 - [User Guide](User-Guide)
-- Repository: [docs/why-toddspect.md](https://github.com/nbsjunior/todd/blob/main/docs/why-toddspect.md)
+- Repository: [docs/why-todd-of-aidlc.md](https://github.com/nbsjunior/todd/blob/main/docs/why-todd-of-aidlc.md)

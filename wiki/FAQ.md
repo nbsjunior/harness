@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # FAQ
 
-## What is the main advantage of ToddSpect?
+## What is the main advantage of Todd of AIDLC?
 
-**One IDE (VS Code), many AI providers** — without juggling Cursor IDE, Copilot chat, and Claude in separate apps. Plus **SDD** (`.toddspect/specs/`) and **context engineering** (attached files) in the same sidebar. See [Why ToddSpect](Why-ToddSpect).
+**One IDE (VS Code), many AI providers** — without juggling Cursor IDE, Copilot chat, and Claude in separate apps. Plus **SDD** (`.toddspect/specs/`) and **context engineering** (attached files) in the same sidebar. See [Why Todd of AIDLC](Why-Todd-of-AIDLC).
 
 ## Do I need to install the CLI separately?
 
@@ -16,13 +16,13 @@ No. The VSIX bundles the compiled CLI at `extension/cli/dist/index.js`.
 
 **GitHub Copilot** — easiest if you already use `gh auth login` and have Copilot enabled.
 
-## Can I use ToddSpect without GitHub Copilot?
+## Can I use Todd of AIDLC without GitHub Copilot?
 
 Yes. Configure any agent in [Configuration](Configuration). Each agent has its own API key requirements.
 
 ## Is Cursor the same as running Cursor IDE?
 
-No. ToddSpect calls the **Cursor Cloud Agents API** (`api.cursor.com`), not the IDE's internal `api2.cursor.sh` API.
+No. Todd of AIDLC calls the **Cursor Cloud Agents API** (`api.cursor.com`), not the IDE's internal `api2.cursor.sh` API.
 
 ## Where are API keys stored?
 

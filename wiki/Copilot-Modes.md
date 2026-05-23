@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # Copilot Modes
@@ -30,7 +30,7 @@ File paths are clickable in the chat. See [Chat Interface](Chat-Interface).
 
 1. Define specs in `.toddspect/specs/` (see [SDD Specs](SDD-Specs))
 2. Select **Spec+Agent** mode
-3. ToddSpect loads all `*.yaml` / `*.yml` / `*.json` specs into the system prompt before the agent loop runs
+3. Todd of AIDLC loads all `*.yaml` / `*.yml` / `*.json` specs into the system prompt before the agent loop runs
 
 Use this for team conventions, skills, and workflows encoded as specs.
 

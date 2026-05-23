@@ -8,7 +8,7 @@ import type {
   SecretStatusPayload,
   UsageStatsPayload,
 } from '../types';
-import { resolveToddSpectWorkspacePath } from '../workspacePath.js';
+import { resolveToddWorkspacePath } from '../workspacePath.js';
 import { buildCopilotAuthHeaders, validateCopilotToken } from '../copilotAuth';
 import type { CliService } from '../services/CliService';
 import { UserManualPanel } from './UserManualPanel.js';
@@ -46,7 +46,7 @@ export class ConfigurationPanel {
   ) {
     this.panel = vscode.window.createWebviewPanel(
       ConfigurationPanel.VIEW_TYPE,
-      'ToddSpect Configuration',
+      'Todd Configuration',
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -297,7 +297,7 @@ export class ConfigurationPanel {
       specsDirectory: config.get<string>('specsDirectory', '.toddspect/specs'),
       defaultAgent: config.get<string>('defaultAgent', 'copilot'),
       defaultWorkspace: config.get<string>('defaultWorkspace', ''),
-      resolvedWorkspace: resolveToddSpectWorkspacePath() ?? '',
+      resolvedWorkspace: resolveToddWorkspacePath() ?? '',
       cliPath: config.get<string>('cliPath', ''),
       promptOptimization: {
         enabled: config.get<boolean>('promptOptimization.enabled', true),
@@ -374,7 +374,7 @@ export class ConfigurationPanel {
              style-src ${this.panel.webview.cspSource} 'unsafe-inline';
              font-src ${this.panel.webview.cspSource};
              img-src ${this.panel.webview.cspSource} data:;" />
-  <title>ToddSpect Configuration</title>
+  <title>Todd Configuration</title>
 </head>
 <body>
   <div id="root"></div>

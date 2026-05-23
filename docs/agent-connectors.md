@@ -1,6 +1,6 @@
 # Agent Connectors
 
-ToddSpect routes requests to AI agents via **connectors** — adapter implementations in the CLI's `AgentRouter`. Each connector translates a generic `AgentRequest` into the specific API call for that agent.
+Todd of AIDLC routes requests to AI agents via **connectors** — adapter implementations in the CLI's `AgentRouter`. Each connector translates a generic `AgentRequest` into the specific API call for that agent.
 
 ---
 
@@ -28,7 +28,7 @@ connectors:
 
 ### 2. VSCode Settings (machine-level, not committed)
 
-Open `Ctrl+Shift+P → ToddSpect: Open Configuration` or edit `settings.json`:
+Open `Ctrl+Shift+P → Todd of AIDLC: Open Configuration` or edit `settings.json`:
 
 ```json
 {
@@ -88,7 +88,7 @@ use one of these instead:
 | **GitHub CLI (recommended)** | `gh auth login` → copy output of `gh auth token` (`gho_…`) |
 | **Fine-grained PAT** | [github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens) with **Copilot** permissions (`github_pat_…`) |
 
-ToddSpect sends the header `Copilot-Integration-Id: copilot-developer-cli` on every Copilot API request.
+Todd of AIDLC sends the header `Copilot-Integration-Id: copilot-developer-cli` on every Copilot API request.
 
 You need an **active GitHub Copilot subscription** on the account.
 
@@ -102,7 +102,7 @@ You need an **active GitHub Copilot subscription** on the account.
 
 #### How it works
 
-Creates a new Devin session (`POST /sessions`) with the user's prompt. Returns a session URL where Devin works asynchronously. ToddSpect displays the session URL in the chat so you can monitor progress.
+Creates a new Devin session (`POST /sessions`) with the user's prompt. Returns a session URL where Devin works asynchronously. Todd of AIDLC displays the session URL in the chat so you can monitor progress.
 
 ```yaml
 connectors:
@@ -121,7 +121,7 @@ connectors:
 
 ### Cursor AI
 
-ToddSpect uses **two paths** depending on chat mode and settings:
+Todd of AIDLC uses **two paths** depending on chat mode and settings:
 
 | Path | When | Local VS Code files |
 |------|------|---------------------|
@@ -146,7 +146,7 @@ Does **not** require GitHub Copilot for local file edits.
 **Streaming:** Yes (SSE on run stream)  
 **Default endpoint:** `https://api.cursor.com`
 
-ToddSpect calls `POST /v1/agents`, then streams from `GET /v1/agents/{id}/runs/{runId}/stream`. Follow-ups use `POST /v1/agents/{id}/runs`.
+Todd of AIDLC calls `POST /v1/agents`, then streams from `GET /v1/agents/{id}/runs/{runId}/stream`. Follow-ups use `POST /v1/agents/{id}/runs`.
 
 **Do not use `api2.cursor.sh`** — IDE internal API (gRPC), not REST → HTTP 404.
 
@@ -198,7 +198,7 @@ claude --version
 - Claude Code uses its own authentication by default (`claude auth login`)
 - Set `ANTHROPIC_API_KEY` to use API key auth instead
 - Context files are passed via `--file` flags (if supported by your Claude version)
-- Stderr output from Claude is forwarded to ToddSpect's stderr (not surfaced in chat)
+- Stderr output from Claude is forwarded to Todd of AIDLC's stderr (not surfaced in chat)
 
 ---
 
@@ -211,7 +211,7 @@ claude --version
 
 #### How it works
 
-1. ToddSpect installs (or verifies) AI-DLC rules under `.kiro/steering/aws-aidlc-rules/` and `.kiro/aws-aidlc-rule-details/`.
+1. Todd of AIDLC installs (or verifies) AI-DLC rules under `.kiro/steering/aws-aidlc-rules/` and `.kiro/aws-aidlc-rule-details/`.
 2. Chat messages to agent `kiro` run `kiro-cli` with your prompt (prefixed with `Using AI-DLC,` when needed).
 3. Kiro loads steering files and executes the adaptive Inception → Construction → Operations workflow.
 4. Generated documentation lands in `aidlc-docs/`.
@@ -235,7 +235,7 @@ toddspect agent:run -a kiro -p "Using AI-DLC, add user authentication"
 
 #### Notes
 
-- Install rules: `toddspect aidlc install` or **ToddSpect: Install AI-DLC Workflow (Kiro)**
+- Install rules: `toddspect aidlc install` or **Todd of AIDLC: Install AI-DLC Workflow (Kiro)**
 - Verify in Kiro CLI: `/context show` → `.kiro/steering/aws-aidlc-rules`
 - Full guide: [aidlc-kiro.md](aidlc-kiro.md)
 - Legacy `mode: rest` + `endpoint` still supported for custom REST gateways
@@ -244,7 +244,7 @@ toddspect agent:run -a kiro -p "Using AI-DLC, add user authentication"
 
 ## MCP Servers
 
-In addition to the built-in connectors, ToddSpect supports connecting to any **Model Context Protocol (MCP)** server. MCP servers expose tools and resources that can be invoked by agents.
+In addition to the built-in connectors, Todd of AIDLC supports connecting to any **Model Context Protocol (MCP)** server. MCP servers expose tools and resources that can be invoked by agents.
 
 ### Configuration
 
@@ -297,14 +297,14 @@ mcp:
 
 ## Connector Selection Logic
 
-When a chat message is sent without an explicit agent, ToddSpect uses:
+When a chat message is sent without an explicit agent, Todd of AIDLC uses:
 
 1. The agent selected in the chat dropdown (saved per session)
 2. The `agents.preferred` field in the active Spec (if a spec context is loaded)
 3. The `toddspect.defaultAgent` workspace setting
 4. Falls back to `copilot` if nothing is configured
 
-If the preferred agent fails (API error, missing token, etc.), ToddSpect **does not** automatically fall back — the error is shown in the chat. The `agents.fallback` field in a Spec is intended for future automatic fallback support.
+If the preferred agent fails (API error, missing token, etc.), Todd of AIDLC **does not** automatically fall back — the error is shown in the chat. The `agents.fallback` field in a Spec is intended for future automatic fallback support.
 
 ---
 

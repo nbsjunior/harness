@@ -1,11 +1,11 @@
 # AI-DLC + Kiro integration
 
-ToddSpect implements the [AWS AI-DLC (AI-Driven Development Life Cycle)](https://github.com/awslabs/aidlc-workflows) methodology for the **Kiro** agent, matching the official Kiro steering layout.
+Todd of AIDLC implements the [AWS AI-DLC (AI-Driven Development Life Cycle)](https://github.com/awslabs/aidlc-workflows) methodology for the **Kiro** agent, matching the official Kiro steering layout.
 
 ## How it works
 
 ```
-ToddSpect Chat (agent: Kiro)
+Todd of AIDLC Chat (agent: Kiro)
         │
         ▼
   kiro-cli chat --no-interactive
@@ -23,11 +23,11 @@ ToddSpect Chat (agent: Kiro)
 | `.kiro/aws-aidlc-rule-details/` | Phase rules (inception, construction, operations, extensions) |
 | `aidlc-docs/` | Generated plans, questions, and stage outputs |
 
-Rules version bundled with ToddSpect: **v0.1.8** (from [awslabs/aidlc-workflows releases](https://github.com/awslabs/aidlc-workflows/releases)).
+Rules version bundled with Todd of AIDLC: **v0.1.8** (from [awslabs/aidlc-workflows releases](https://github.com/awslabs/aidlc-workflows/releases)).
 
 ## Quick setup
 
-ToddSpect **installs and configures Kiro CLI automatically** when you:
+Todd of AIDLC **installs and configures Kiro CLI automatically** when you:
 
 - Run `toddspect setup` or `toddspect init`
 - Install the VS Code extension (bootstrap on activate)
@@ -43,14 +43,14 @@ npm run setup
 toddspect setup
 ```
 
-### 2. API key (headless / ToddSpect)
+### 2. API key (headless / Todd of AIDLC)
 
 ```bash
 # Kiro Pro, Pro+, or Power — see Kiro authentication docs
 export KIRO_API_KEY=your_api_key
 ```
 
-In VS Code: **ToddSpect → Open Configuration → Kiro** and save the API key.
+In VS Code: **Todd of AIDLC → Open Configuration → Kiro** and save the API key.
 
 ### 3. AI-DLC rules
 
@@ -60,7 +60,7 @@ Included in `toddspect setup` / extension bootstrap. Manual install:
 toddspect aidlc install
 ```
 
-**Extension:** `Ctrl+Shift+P` → **ToddSpect: Install AI-DLC Workflow (Kiro)**
+**Extension:** `Ctrl+Shift+P` → **Todd of AIDLC: Install AI-DLC Workflow (Kiro)**
 
 ### 4. Chat
 
@@ -70,7 +70,7 @@ Select agent **Kiro (AI-DLC)** and start with:
 Using AI-DLC, build a REST API for user profiles with JWT auth
 ```
 
-ToddSpect prefixes `Using AI-DLC,` automatically when you use the Kiro agent so the workflow activates.
+Todd of AIDLC prefixes `Using AI-DLC,` automatically when you use the Kiro agent so the workflow activates.
 
 ## Three-phase workflow (summary)
 
@@ -123,4 +123,4 @@ If you previously used a custom REST endpoint, set `toddspect.connectors.kiro.mo
 - [aidlc-workflows repository](https://github.com/awslabs/aidlc-workflows)
 - [Kiro steering docs](https://kiro.dev/docs/cli/steering/)
 - [Kiro headless mode](https://kiro.dev/docs/cli/headless)
-- [ToddSpect agent connectors](agent-connectors.md)
+- [Todd of AIDLC agent connectors](agent-connectors.md)

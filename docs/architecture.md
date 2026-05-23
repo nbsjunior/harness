@@ -1,11 +1,11 @@
-# ToddSpect — Technical Architecture
+# Todd of AIDLC — Technical Architecture
 
 > **AI assistants:** read [ai-reference.md](ai-reference.md) first for design *rationale*;
 > use [code-map.md](code-map.md) to locate functions. This doc focuses on structure and diagrams.
 
 ## Overview
 
-ToddSpect routes natural-language prompts to AI coding agents through a **decoupled
+Todd of AIDLC routes natural-language prompts to AI coding agents through a **decoupled
 dual-mode architecture**: the user-facing layer (VS Code Extension or CLI commands)
 is completely separated from the agent-calling layer (CLI daemon).
 

@@ -3,11 +3,11 @@ import * as vscode from 'vscode';
 const SCHEME = 'toddspect-snapshot';
 
 /** In-memory snapshots for diff (before agent write). */
-export class ToddSpectSnapshotProvider implements vscode.TextDocumentContentProvider {
+export class ToddSnapshotProvider implements vscode.TextDocumentContentProvider {
   private readonly snapshots = new Map<string, string>();
 
-  static register(context: vscode.ExtensionContext): ToddSpectSnapshotProvider {
-    const provider = new ToddSpectSnapshotProvider();
+  static register(context: vscode.ExtensionContext): ToddSnapshotProvider {
+    const provider = new ToddSnapshotProvider();
     context.subscriptions.push(
       vscode.workspace.registerTextDocumentContentProvider(SCHEME, provider),
     );

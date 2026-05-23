@@ -31,7 +31,7 @@ if (process.argv.includes('--ipc')) {
 
   program
     .name('toddspect')
-    .description('ToddSpect — Meta-Agent Orchestrator CLI')
+    .description('Todd — Meta-Agent Orchestrator CLI')
     .version('0.1.0');
 
   // ---------------------------------------------------------------------------
@@ -40,7 +40,7 @@ if (process.argv.includes('--ipc')) {
 
   program
     .command('init')
-    .description('Initialize a ToddSpect workspace in the given directory (defaults to cwd)')
+    .description('Initialize a Todd workspace in the given directory (defaults to cwd)')
     .argument('[dir]', 'Target directory', '.')
     .action(async (dir: string) => {
       try {
@@ -136,7 +136,7 @@ if (process.argv.includes('--ipc')) {
 
   program
     .command('setup')
-    .description('Bootstrap Kiro CLI, AI-DLC rules, and ToddSpect workspace (run after install)')
+    .description('Bootstrap Kiro CLI, AI-DLC rules, and Todd workspace (run after install)')
     .argument('[dir]', 'Workspace directory', '.')
     .option('--skip-init', 'Do not run toddspect init')
     .option('--skip-kiro', 'Do not install or locate Kiro CLI')

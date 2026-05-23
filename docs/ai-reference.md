@@ -1,4 +1,4 @@
-# ToddSpect — AI Reference (design rationale)
+# Todd of AIDLC — AI Reference (design rationale)
 
 > **Goal:** explain *why* things exist so you can change the codebase without a full tree walk.
 > Pair with [code-map.md](code-map.md) for *where* things live.
@@ -7,18 +7,18 @@
 
 ## Product intent
 
-ToddSpect is a **meta-agent orchestrator**: one **VS Code** UI (or CLI) talks to many backends
+Todd of AIDLC is a **meta-agent orchestrator**: one **VS Code** UI (or CLI) talks to many backends
 (Copilot, Devin, Cursor, Claude Code, Kiro) so developers **do not change IDE per provider**.
 
-Differentiators (user-facing copy in [why-toddspect.md](why-toddspect.md)):
+Differentiators (user-facing copy in [why-todd-of-aidlc.md](why-todd-of-aidlc.md)):
 
 - **One IDE, many providers** — provider pills + **Auto** routing in one sidebar.
 - **Spec-Driven Development** — `.toddspect/specs/` + **Spec+Agent** injects specs as system context.
 - **Context engineering** — file/directory attachments are **provider-agnostic** (same context after switching agent).
 
-The user picks an agent and mode; ToddSpect handles auth, context, specs, streaming, and Copilot tool loops.
+The user picks an agent and mode; Todd of AIDLC handles auth, context, specs, streaming, and Copilot tool loops.
 
-**Non-goals:** ToddSpect is not a new LLM. It does not embed model weights. It routes and wraps.
+**Non-goals:** Todd of AIDLC is not a new LLM. It does not embed model weights. It routes and wraps.
 
 ---
 
@@ -102,7 +102,7 @@ Different deployment contexts:
 
 ## Kiro + AI-DLC — why CLI subprocess?
 
-Kiro has no simple REST chat API in ToddSpect. Integration uses **kiro-cli** headless plus **steering files**
+Kiro has no simple REST chat API in Todd of AIDLC. Integration uses **kiro-cli** headless plus **steering files**
 from [awslabs/aidlc-workflows](https://github.com/awslabs/aidlc-workflows) installed under `.kiro/steering/`.
 
 - `ensureKiroCli()` downloads/caches binary per OS (see `kiro/bootstrap.ts`).
@@ -122,7 +122,7 @@ from [awslabs/aidlc-workflows](https://github.com/awslabs/aidlc-workflows) insta
 | **`toddspect.cursor.agentExecution: cloud`** | Always Cloud — no local file edits; Live Edits empty |
 | **Fallback** | If SDK unavailable and Copilot configured, Copilot tool loop (uses Copilot quota) |
 
-**Why two paths:** Cursor Cloud cannot write to the user's open VS Code tree. Local edits need either the Cursor SDK on disk or ToddSpect's Copilot tool loop.
+**Why two paths:** Cursor Cloud cannot write to the user's open VS Code tree. Local edits need either the Cursor SDK on disk or Todd of AIDLC's Copilot tool loop.
 
 **Auth:** Cursor local needs `CURSOR_API_KEY` only — not `gh auth` / Copilot scope.
 
@@ -133,7 +133,7 @@ Details: [cursor-agent.md](cursor-agent.md).
 ## Specs (SDD) — why YAML in `.toddspect/specs/`?
 
 Specs describe **Skills**, **Tools**, or **Workflows** with preferred agent and optional tool schemas.
-They are project-local contracts for agents — not ToddSpect internals.
+They are project-local contracts for agents — not Todd of AIDLC internals.
 
 - **Spec Manager UI** edits files; CLI `specParser.ts` validates with Zod.
 - **spec+agent mode** injects raw YAML as `<spec path="…">` system context (authoritative guidance).
@@ -183,7 +183,7 @@ at the top of the bundle (`tsup.config.ts` `banner`).
 
 ### Fix "daemon exited unexpectedly"
 
-- Check stderr in Output → ToddSpect.
+- Check stderr in Output → Todd of AIDLC.
 - Ensure no `console.log` on stdout in daemon path.
 - Ensure setup/Kiro bootstrap is not inside `startIpcServer`.
 - Check Windows stdin `end` handler does not exit process.

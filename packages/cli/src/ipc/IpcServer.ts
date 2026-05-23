@@ -417,7 +417,7 @@ async function handleChatSend(
         id: crypto.randomUUID(),
         role: 'system',
         content:
-          `The following ToddSpect Spec definitions are active for this task. ` +
+          `The following Todd Spec definitions are active for this task. ` +
           `Follow them as authoritative guidance for agent behaviour, tools, and constraints:\n\n${specBlock}`,
         timestamp: Date.now(),
       });

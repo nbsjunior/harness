@@ -1,4 +1,4 @@
-# ToddSpect IPC Protocol
+# Todd of AIDLC IPC Protocol
 
 The **Extension Host** (VSCode extension process) and the **CLI Daemon** communicate through a strictly defined protocol over `stdin`/`stdout` using newline-delimited JSON.
 

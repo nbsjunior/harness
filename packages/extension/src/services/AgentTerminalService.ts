@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-const TERMINAL_NAME = 'ToddSpect';
+const TERMINAL_NAME = 'Todd';
 
 /**
  * Mirrors agent shell commands to the integrated terminal for debug visibility.

@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # Dual Mode
 
-ToddSpect runs in two ways with the **same CLI logic**:
+Todd of AIDLC runs in two ways with the **same CLI logic**:
 
 ## VS Code Extension (default)
 

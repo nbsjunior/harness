@@ -139,7 +139,7 @@ const AGENTS: AgentInfo[] = [
     instructions: [
       'Install Kiro CLI: https://kiro.dev/docs/cli/',
       'Create an API key (Kiro Pro+) for headless mode',
-      'Run ToddSpect: Install AI-DLC Workflow — copies rules to .kiro/steering/',
+      'Run Todd: Install AI-DLC Workflow — copies rules to .kiro/steering/',
       'In chat, start with: Using AI-DLC, &lt;your request&gt;',
       'Artifacts are written to aidlc-docs/',
     ],
@@ -261,14 +261,14 @@ function render(): void {
 }
 
 // ---------------------------------------------------------------------------
-// Tabbed configuration (ToddSpect: Open Configuration)
+// Tabbed configuration (Todd: Open Configuration)
 // ---------------------------------------------------------------------------
 
 function renderTabsShell(): HTMLElement {
   const shell = div('tabs-shell');
   shell.innerHTML = /* html */`
     <header class="tabs-header">
-      <h1 class="tabs-title">ToddSpect Configuration</h1>
+      <h1 class="tabs-title">Todd Configuration</h1>
       <button type="button" id="btn-run-wizard" class="btn-ghost btn-sm">Setup wizard</button>
     </header>
     <nav class="config-tabs" role="tablist">
@@ -570,7 +570,7 @@ function renderSpendingTabPanel(): HTMLElement {
     postMessage({ command: 'getUsageStats' });
   });
   el.querySelector('#btn-reset-usage')!.addEventListener('click', () => {
-    if (confirm('Reset all ToddSpect usage statistics for this workspace?')) {
+    if (confirm('Reset all Todd usage statistics for this workspace?')) {
       postMessage({ command: 'resetUsageStats' });
     }
   });
@@ -611,7 +611,7 @@ function renderWelcome(): HTMLElement {
   const el = div('screen screen--welcome');
   el.innerHTML = /* html */`
     <div class="welcome-logo">&#9670;</div>
-    <h1 class="welcome-title">Welcome to ToddSpect</h1>
+    <h1 class="welcome-title">Welcome to Todd</h1>
     <p class="welcome-sub">Your meta-agent orchestrator for VSCode.</p>
 
     <ul class="welcome-features">
@@ -896,7 +896,7 @@ function saveWorkspaceFieldsFrom(container: HTMLElement): void {
 function renderWorkspaceSettingsForm(wizardMode: boolean): HTMLElement {
   const el = div(wizardMode ? 'screen' : 'tab-content');
   const agentOptions =
-    `<option value="auto" ${state.defaultAgent === 'auto' ? 'selected' : ''}>Auto (ToddSpect picks)</option>` +
+    `<option value="auto" ${state.defaultAgent === 'auto' ? 'selected' : ''}>Auto (Todd picks)</option>` +
     AGENTS.map(
       (a) =>
         `<option value="${a.id}" ${state.defaultAgent === a.id ? 'selected' : ''}>${a.label}</option>`,
@@ -1160,14 +1160,14 @@ function renderDone(): HTMLElement {
 
   const unconfigured = AGENTS.filter(a => !state.secretStatus[a.id]);
   const unconfiguredNote = unconfigured.length > 0
-    ? `<p class="done-note">Not configured: ${unconfigured.map(a => a.label).join(', ')}. You can add them anytime via <em>ToddSpect: Open Configuration</em>.</p>`
+    ? `<p class="done-note">Not configured: ${unconfigured.map(a => a.label).join(', ')}. You can add them anytime via <em>Todd: Open Configuration</em>.</p>`
     : '';
 
   el.innerHTML = /* html */`
     <div class="done-hero">
       <div class="done-check">&#10003;</div>
       <h2>You're all set!</h2>
-      <p class="screen-sub">ToddSpect is configured and ready to use.</p>
+      <p class="screen-sub">Todd is configured and ready to use.</p>
     </div>
 
     ${configuredCards.length > 0

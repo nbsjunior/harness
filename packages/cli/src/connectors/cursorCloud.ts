@@ -2,7 +2,7 @@
  * Cursor Cloud Agents API v1 connector.
  *
  * The IDE endpoint (api2.cursor.sh) is gRPC/Connect — not OpenAI-compatible.
- * ToddSpect uses the public Cloud Agents API: https://api.cursor.com/v1
+ * Todd uses the public Cloud Agents API: https://api.cursor.com/v1
  *
  * @see https://cursor.com/docs/cloud-agent/api/endpoints
  */
@@ -158,7 +158,7 @@ export function buildCursorPrompt(
       if (
         m.content.includes('<file path=') ||
         m.content.includes('<spec path=') ||
-        m.content.includes('assisting through ToddSpect')
+        m.content.includes('assisting through Todd')
       ) {
         continue;
       }
@@ -338,7 +338,7 @@ function isTerminalRunStatus(status: string | undefined): boolean {
   return /FINISHED|FAILED|CANCELLED|COMPLETED|ERROR/i.test(status);
 }
 
-/** Cancel any run still marked active for this ToddSpect session (prevents HTTP 409 agent_busy). */
+/** Cancel any run still marked active for this Todd session (prevents HTTP 409 agent_busy). */
 async function cancelActiveRunForSession(
   baseUrl: string,
   apiKey: string,
@@ -805,7 +805,7 @@ export interface CursorCloudRequest {
 }
 
 /**
- * Cancel the active Cursor run for a ToddSpect session (e.g. user clicked Stop).
+ * Cancel the active Cursor run for a Todd session (e.g. user clicked Stop).
  */
 export async function cancelCursorCloudSession(
   sessionId: string,

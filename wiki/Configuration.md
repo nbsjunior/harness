@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # Configuration
 
 ## Configuration panel
 
-`Ctrl+Shift+P` → **ToddSpect: Open Configuration**
+`Ctrl+Shift+P` → **Todd of AIDLC: Open Configuration**
 
 Tabs:
 - **Agents** — API keys and endpoints per provider
@@ -29,7 +29,7 @@ Tabs:
 }
 ```
 
-Secrets should use **ToddSpect: Open Configuration** (stored in VS Code Secret Storage), not plain `settings.json`.
+Secrets should use **Todd of AIDLC: Open Configuration** (stored in VS Code Secret Storage), not plain `settings.json`.
 
 ## Project config (`.toddspect/config.yaml`)
 
@@ -66,4 +66,4 @@ Never commit API keys in YAML.
 toddspect check getGoat
 ```
 
-Or **ToddSpect: Check getGoat** — shows which agents are ready and hints for missing config.
+Or **Todd of AIDLC: Check getGoat** — shows which agents are ready and hints for missing config.

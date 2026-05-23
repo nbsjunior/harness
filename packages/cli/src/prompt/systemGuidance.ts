@@ -20,7 +20,7 @@ export const DEFAULT_PROMPT_OPTIMIZATION: PromptOptimizationSettings = {
   maxHistoryMessages: 24,
 };
 
-const EFFICIENCY_PREAMBLE = `You are assisting through ToddSpect (multi-provider orchestrator).
+const EFFICIENCY_PREAMBLE = `You are assisting through Todd (multi-provider orchestrator).
 
 ## Response contract
 - Answer the user’s goal first; supporting detail second.
@@ -40,7 +40,7 @@ const MODE_HINTS: Record<CopilotMode, string> = {
   ask: 'Mode: Q&A — no file edits unless explicitly requested.',
   agent: 'Mode: implementation — make focused changes; cite paths you touch.',
   'spec+agent':
-    'Mode: spec-driven — follow active ToddSpect specs; satisfy acceptance criteria before extras.',
+    'Mode: spec-driven — follow active Todd specs; satisfy acceptance criteria before extras.',
 };
 
 export function loadPromptOptimizationFromBridge(
@@ -83,7 +83,7 @@ export function truncateFileContent(content: string, maxChars: number): string {
   const tail = maxChars - head - 80;
   return (
     content.slice(0, head) +
-    `\n\n… [ToddSpect: ${content.length - head - tail} chars omitted for token budget] …\n\n` +
+    `\n\n… [Todd: ${content.length - head - tail} chars omitted for token budget] …\n\n` +
     content.slice(-tail)
   );
 }
@@ -99,7 +99,7 @@ export function applyContextTruncation(
 }
 
 /**
- * Prepend ToddSpect guidance and trim history when optimization is on.
+ * Prepend Todd guidance and trim history when optimization is on.
  * Skips duplicate guidance if already present.
  */
 export function optimizeMessagesForRouting(
@@ -114,7 +114,7 @@ export function optimizeMessagesForRouting(
 
     const guidance = buildToddSpectSystemGuidance(mode);
     const hasGuidance = out.some(
-      (m) => m.role === 'system' && m.content.includes('assisting through ToddSpect'),
+      (m) => m.role === 'system' && m.content.includes('assisting through Todd'),
     );
     if (!hasGuidance) {
       out.unshift({

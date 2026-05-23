@@ -1,6 +1,6 @@
 # @toddspect/cli
 
-Node.js orchestrator: agent routing, SDD specs, IPC daemon for the ToddSpect VS Code extension.
+Node.js orchestrator: agent routing, SDD specs, IPC daemon for the Todd of AIDLC VS Code extension.
 
 ## Commands
 

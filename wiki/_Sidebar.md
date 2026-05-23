@@ -1,15 +1,15 @@
-### ToddSpect Wiki
+### Todd of AIDLC Wiki
 
 **[Home](Home)**
 
 **Getting started**
 - **[User Manual](User-Manual)**
-- [Why ToddSpect](Why-ToddSpect)
+- [Why Todd of AIDLC](Why-Todd-of-AIDLC)
 - [Getting Started](Getting-Started)
 - [Installation](Installation)
 - [User Guide](User-Guide)
 
-**Using ToddSpect**
+**Using Todd of AIDLC**
 - [Chat Interface](Chat-Interface)
 - [Auto Routing](Auto-Routing)
 - [Configuration](Configuration)

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # SDD Specs
@@ -28,7 +28,7 @@ content: |
 
 ## Spec+Agent mode
 
-When Copilot **Spec+Agent** mode is active, ToddSpect:
+When Copilot **Spec+Agent** mode is active, Todd of AIDLC:
 
 1. Resolves all spec files in `toddspect.specsDirectory` (default `.toddspect/specs/`)
 2. Prepends them as `<spec>` blocks in the system context

@@ -1,8 +1,8 @@
 {
   "name": "toddspect-vscode",
-  "displayName": "ToddSpect — Meta-Agent Orchestrator",
+  "displayName": "Todd — Meta-Agent Orchestrator",
   "description": "One VS Code sidebar for Copilot, Claude, Cursor, Devin, and Kiro — with Spec-Driven Development and shared file context. No IDE switching per provider.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "publisher": "toddspect",
   "license": "MIT",
@@ -46,7 +46,7 @@
       "activitybar": [
         {
           "id": "toddspect-sidebar",
-          "title": "ToddSpect",
+          "title": "Todd",
           "icon": "resources/toddspect.svg"
         }
       ]
@@ -57,110 +57,110 @@
           "type": "webview",
           "id": "toddspect.chatView",
           "name": "Chat",
-          "contextualTitle": "ToddSpect Chat"
+          "contextualTitle": "Todd Chat"
         },
         {
           "type": "webview",
           "id": "toddspect.liveEditsView",
           "name": "Live Edits",
-          "contextualTitle": "ToddSpect Live Edits"
+          "contextualTitle": "Todd Live Edits"
         },
         {
           "type": "webview",
           "id": "toddspect.specView",
           "name": "SDD",
-          "contextualTitle": "ToddSpect SDD (spec-kit + specs)"
+          "contextualTitle": "Todd SDD (spec-kit + specs)"
         }
       ]
     },
     "commands": [
       {
         "command": "toddspect.addToContext",
-        "title": "Add to ToddSpect Context",
-        "category": "ToddSpect",
+        "title": "Add to Todd Context",
+        "category": "Todd",
         "icon": "$(add)"
       },
       {
         "command": "toddspect.removeFromContext",
-        "title": "Remove from ToddSpect Context",
-        "category": "ToddSpect",
+        "title": "Remove from Todd Context",
+        "category": "Todd",
         "icon": "$(remove)"
       },
       {
         "command": "toddspect.runAgent",
         "title": "Run Agent",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(play)"
       },
       {
         "command": "toddspect.openConfig",
         "title": "Open Configuration",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(settings-gear)"
       },
       {
         "command": "toddspect.openUserManual",
         "title": "Open User Manual",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(book)"
       },
       {
         "command": "toddspect.initWorkspace",
         "title": "Initialize Workspace",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(new-folder)"
       },
       {
         "command": "toddspect.newSpec",
         "title": "New Spec / Skill",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(file-add)"
       },
       {
         "command": "toddspect.clearContext",
         "title": "Clear Chat & Context",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(clear-all)"
       },
       {
         "command": "toddspect.revertAgentChanges",
         "title": "Revert Agent File Changes",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(discard)"
       },
       {
         "command": "toddspect.liveEdits.focus",
         "title": "Focus Live Edits Panel",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(diff)"
       },
       {
         "command": "toddspect.showContext",
         "title": "Show Current Context",
-        "category": "ToddSpect"
+        "category": "Todd"
       },
       {
         "command": "toddspect.check.getGoat",
         "title": "Check getGoat",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(pulse)"
       },
       {
         "command": "toddspect.copilotLogin",
         "title": "Login: GitHub Copilot",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(account)"
       },
       {
         "command": "toddspect.aidlcInstall",
         "title": "Install AI-DLC Workflow (Kiro)",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(cloud-download)"
       },
       {
         "command": "toddspect.setup",
         "title": "Run Setup (Kiro CLI + AI-DLC)",
-        "category": "ToddSpect",
+        "category": "Todd",
         "icon": "$(rocket)"
       }
     ],
@@ -248,12 +248,12 @@
       ]
     },
     "configuration": {
-      "title": "ToddSpect",
+      "title": "Todd",
       "properties": {
         "toddspect.defaultWorkspace": {
           "type": "string",
           "default": "",
-          "description": "Override workspace root for ToddSpect CLI and context (absolute path). Empty = use the opened VS Code workspace folder.",
+          "description": "Override workspace root for Todd CLI and context (absolute path). Empty = use the opened VS Code workspace folder.",
           "scope": "resource"
         },
         "toddspect.specsDirectory": {
@@ -343,7 +343,7 @@
             "kiro"
           ],
           "default": "auto",
-          "description": "Default provider in chat (auto = ToddSpect picks the best agent per message).",
+          "description": "Default provider in chat (auto = Todd picks the best agent per message).",
           "scope": "resource"
         },
         "toddspect.agent.showLiveDiff": {
@@ -361,7 +361,7 @@
         "toddspect.agent.mirrorCommandsToTerminal": {
           "type": "boolean",
           "default": true,
-          "description": "Mirror git/gh tool commands to the integrated ToddSpect terminal.",
+          "description": "Mirror git/gh tool commands to the integrated Todd terminal.",
           "scope": "resource"
         },
         "toddspect.cursor.agentExecution": {
@@ -378,7 +378,7 @@
         "toddspect.cliPath": {
           "type": "string",
           "default": "",
-          "description": "Absolute path to the ToddSpect CLI binary. Leave empty to use the bundled CLI.",
+          "description": "Absolute path to the Todd CLI binary. Leave empty to use the bundled CLI.",
           "scope": "machine"
         },
         "toddspect.connectors.copilot.token": {
@@ -535,7 +535,7 @@
         "toddspect.telemetry.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Enable anonymous usage telemetry to help improve ToddSpect.",
+          "description": "Enable anonymous usage telemetry to help improve Todd.",
           "scope": "machine"
         }
       }
@@ -543,13 +543,13 @@
     "walkthroughs": [
       {
         "id": "toddspect.gettingStarted",
-        "title": "Getting Started with ToddSpect",
+        "title": "Getting Started with Todd",
         "description": "Set up your AI agent orchestrator in minutes.",
         "steps": [
           {
             "id": "toddspect.gettingStarted.init",
             "title": "Initialize your workspace",
-            "description": "Run **ToddSpect: Initialize Workspace** to create the `.toddspect/` directory with example specs.\n[Initialize Workspace](command:toddspect.initWorkspace)",
+            "description": "Run **Todd: Initialize Workspace** to create the `.toddspect/` directory with example specs.\n[Initialize Workspace](command:toddspect.initWorkspace)",
             "completionEvents": [
               "onCommand:toddspect.initWorkspace"
             ]
@@ -557,7 +557,7 @@
           {
             "id": "toddspect.gettingStarted.configure",
             "title": "Configure agent connectors",
-            "description": "Add your API keys in ToddSpect settings.\n[Open Configuration](command:toddspect.openConfig)",
+            "description": "Add your API keys in Todd settings.\n[Open Configuration](command:toddspect.openConfig)",
             "completionEvents": [
               "onCommand:toddspect.openConfig"
             ]
@@ -565,7 +565,7 @@
           {
             "id": "toddspect.gettingStarted.chat",
             "title": "Start chatting with your agent",
-            "description": "Click the ToddSpect icon in the Activity Bar and start a conversation.",
+            "description": "Click the Todd icon in the Activity Bar and start a conversation.",
             "completionEvents": [
               "onView:toddspect.chatView"
             ]

@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * `toddspect check getGoat` — diagnose ToddSpect setup: config, agents, AI-DLC.
+ * `toddspect check getGoat` — diagnose Todd setup: config, agents, AI-DLC.
  * All output goes to stderr except JSON mode.
  */
 export async function getGoatCommand(options: {
@@ -90,7 +90,7 @@ export async function getGoatCommand(options: {
   } else {
     process.stderr.write(
       '\n  Cursor: no API key — create one at https://cursor.com/dashboard/integrations\n' +
-        '    VS Code: ToddSpect → Configuration → Cursor → paste key → Test Connection → Reload\n',
+        '    VS Code: Todd → Configuration → Cursor → paste key → Test Connection → Reload\n',
     );
   }
 

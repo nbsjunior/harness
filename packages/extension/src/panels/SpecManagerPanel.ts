@@ -13,7 +13,7 @@ import type { ChatViewProvider } from '../providers/ChatViewProvider';
 import type { ContextProvider } from '../providers/ContextProvider';
 
 /**
- * Webview panel for SDD: ToddSpect specs (.toddspect/specs) + spec-kit workflow (.toddspect/sdd).
+ * Webview panel for SDD: Todd specs (.toddspect/specs) + spec-kit workflow (.toddspect/sdd).
  */
 export class SpecManagerProvider implements vscode.WebviewViewProvider {
   static readonly VIEW_ID = 'toddspect.specView';
@@ -449,7 +449,7 @@ export class SpecManagerProvider implements vscode.WebviewViewProvider {
              style-src ${webview.cspSource} 'unsafe-inline';
              font-src ${webview.cspSource};
              img-src ${webview.cspSource} data:;" />
-  <title>ToddSpect SDD</title>
+  <title>Todd SDD</title>
 </head>
 <body>
   <div id="root"></div>

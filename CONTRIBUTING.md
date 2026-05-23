@@ -1,6 +1,6 @@
-# Contributing to ToddSpect
+# Contributing to Todd of AIDLC
 
-Thank you for your interest in contributing! This document covers the development workflow, code standards, and how to extend ToddSpect with new agent connectors.
+Thank you for your interest in contributing! This document covers the development workflow, code standards, and how to extend Todd of AIDLC with new agent connectors.
 
 ---
 

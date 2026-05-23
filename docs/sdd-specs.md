@@ -1,10 +1,10 @@
-# Spec-Driven Development (SDD) with ToddSpect
+# Spec-Driven Development (SDD) with Todd of AIDLC
 
-ToddSpect uses **Spec-Driven Development** (SDD) to define reusable agent capabilities. Specs are Markdown files with YAML frontmatter stored in `.toddspect/specs/`.
+Todd of AIDLC uses **Spec-Driven Development** (SDD) to define reusable agent capabilities. Specs are Markdown files with YAML frontmatter stored in `.toddspect/specs/`.
 
 For the full **GitHub spec-kit** workflow (constitution → specify → plan → tasks → implement), see [sdd-speckit.md](sdd-speckit.md) and the **SDD** view in VS Code.
 
-SDD is one of ToddSpect's core advantages: specs live **in the same VS Code workflow** as multi-provider chat and file context — see [why-toddspect.md](why-toddspect.md).
+SDD is one of Todd of AIDLC's core advantages: specs live **in the same VS Code workflow** as multi-provider chat and file context — see [why-todd-of-aidlc.md](why-todd-of-aidlc.md).
 
 ---
 
@@ -227,7 +227,7 @@ Refactors a module step-by-step to comply with SOLID design principles.
 toddspect init
 
 # Via VSCode
-Ctrl+Shift+P → ToddSpect: Initialize Workspace
+Ctrl+Shift+P → Todd of AIDLC: Initialize Workspace
 ```
 
 This creates the directory structure with example specs.

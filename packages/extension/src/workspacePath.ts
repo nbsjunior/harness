@@ -1,5 +1,5 @@
 /**
- * Resolve the ToddSpect workspace root (CLI TODDSPECT_WORKSPACE).
+ * Resolve the Todd workspace root (CLI TODDSPECT_WORKSPACE).
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 /**
  * Order: `toddspect.defaultWorkspace` (if path exists) → first VS Code workspace folder.
  */
-export function resolveToddSpectWorkspacePath(): string | undefined {
+export function resolveToddWorkspacePath(): string | undefined {
   const toddspect = vscode.workspace.getConfiguration('toddspect');
   const override = toddspect.get<string>('defaultWorkspace', '').trim();
   if (override) {

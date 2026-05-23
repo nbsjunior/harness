@@ -1,6 +1,6 @@
 /**
  * @module webview/chat/main
- * Cursor-inspired ToddSpect chat UI.
+ * Cursor-inspired Todd chat UI.
  */
 import { marked } from 'marked';
 import type {
@@ -24,7 +24,7 @@ marked.setOptions({ breaks: true, gfm: true });
 
 const vscode = acquireVsCodeApi<{ history: ChatMessage[]; agent: AgentSelectionId }>();
 
-const AUTO_META = { short: 'Auto', color: '#a855f7', label: 'Auto (ToddSpect picks provider)' };
+const AUTO_META = { short: 'Auto', color: '#a855f7', label: 'Auto (Todd picks provider)' };
 
 const AGENT_META: Record<AgentId, { short: string; color: string; label: string }> = {
   copilot: { short: 'Copilot', color: '#238636', label: 'GitHub Copilot' },
@@ -101,7 +101,7 @@ function injectShell(): void {
       <button id="new-chat-btn" class="toolbar-btn" type="button" title="New chat">+ New chat</button>
       <button id="clear-ctx-btn" class="toolbar-btn" type="button" title="Clear conversation, context files, and input">Clear all</button>
       <button id="revert-btn" class="toolbar-btn" type="button" title="Revert agent file changes" disabled>Revert</button>
-      <button id="terminal-btn" class="toolbar-btn" type="button" title="Open ToddSpect terminal">Terminal</button>
+      <button id="terminal-btn" class="toolbar-btn" type="button" title="Open Todd terminal">Terminal</button>
     </div>
     <div id="context-bar">
       <div id="context-list"></div>
@@ -247,7 +247,7 @@ function renderMessages(): void {
 function renderEmptyState(): void {
   messagesEl.innerHTML = /* html */`
     <div class="empty-state">
-      <p class="empty-title">ToddSpect</p>
+      <p class="empty-title">Todd</p>
       <p class="empty-sub">Ask a question or describe a change. Pick a provider below.</p>
     </div>`;
 }
@@ -746,7 +746,7 @@ window.addEventListener('message', (event: MessageEvent<ExtensionMessage>) => {
       break;
     }
     case 'error':
-      console.error('ToddSpect error:', msg.payload);
+      console.error('Todd error:', msg.payload);
       break;
   }
 });

@@ -1,6 +1,6 @@
 # Community connector plugins (preview)
 
-ToddSpect reads `.toddspect/plugins.json` in the workspace for **future** community connectors.
+Todd of AIDLC reads `.toddspect/plugins.json` in the workspace for **future** community connectors.
 
 ## Manifest
 

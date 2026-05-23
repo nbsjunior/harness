@@ -1,10 +1,16 @@
 # Changelog
 
+## [0.2.1] — 2026-05-18
+
+### Changed
+
+- **UI rebrand:** extension display name, commands, sidebar, output channels, and webviews now show **Todd** (was ToddSpect / Harness).
+
 ## [0.2.0] — 2026-05-23
 
 ### Changed
 
-- **Rebrand:** Harness / ToddSpec → **ToddSpect** (CLI `toddspect`, workspace `.toddspect/`, settings `toddspect.*`)
+- **Rebrand:** product name **Todd of AIDLC** (formerly Todd / Todd). CLI `toddspect`, workspace `.toddspect/`, settings `toddspect.*` unchanged.
 
 ## [0.1.9] — 2026-05-23
 

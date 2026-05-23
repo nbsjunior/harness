@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # Installation
@@ -11,7 +11,7 @@
 | **VSIX release** | Download from [Releases](https://github.com/nbsjunior/todd/releases) → Install from VSIX → Reload window |
 | **Build from source** | `npm install` → `npm run package:vsix` → install `packages/extension/toddspect-vscode.vsix` |
 
-After install, ToddSpect runs `toddspect setup` automatically (workspace init, AI-DLC rules; Kiro download optional).
+After install, Todd of AIDLC runs `toddspect setup` automatically (workspace init, AI-DLC rules; Kiro download optional).
 
 ## CLI only (no extension)
 
@@ -43,6 +43,6 @@ The bundled CLI inside the extension updates with each VSIX — no separate CLI 
 
 ## Uninstall
 
-Extensions view → ToddSpect → Uninstall → Reload.
+Extensions view → Todd of AIDLC → Uninstall → Reload.
 
 Workspace data (`.toddspect/`, VS Code secrets) remains on disk until you delete them.

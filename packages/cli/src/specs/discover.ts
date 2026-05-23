@@ -122,13 +122,13 @@ export function discoverSpecsFromRepo(workspaceRoot?: string): SpecDiscoveryResu
   if (exists('.github/workflows', root)) {
     suggestions.push({
       id: 'ci-toddspect-agent',
-      title: 'ToddSpect agent in CI',
+      title: 'Todd agent in CI',
       kind: 'workflow',
       reason: 'GitHub Actions workflows directory present.',
       suggestedFile: `${specsDir}/workflow-ci-toddspect.md`,
       template: yamlStub(
         'ci-toddspect-agent',
-        'ToddSpect agent in CI',
+        'Todd agent in CI',
         'workflow',
         'Use `toddspect agent:run` in CI for automated reviews (see docs/github-actions.md).',
         'cursor',

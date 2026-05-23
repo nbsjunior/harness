@@ -160,7 +160,7 @@ export class AgentRouter {
     const copilotToken = await this.resolveCopilotApiToken(cfg);
     if (!copilotToken) {
       req.onError(
-        'Local Agent mode needs GitHub Copilot configured (`gh auth login` or ToddSpect → Copilot). ' +
+        'Local Agent mode needs GitHub Copilot configured (`gh auth login` or Todd → Copilot). ' +
           'It reads and writes files in your VS Code workspace.',
       );
       return;
@@ -182,7 +182,7 @@ export class AgentRouter {
     if (!cfg.token) {
       req.onError(
         'GitHub Copilot token not configured. Run `gh auth login`, set GH_TOKEN, ' +
-          'or save a fine-grained PAT (github_pat_…) via ToddSpect configuration.',
+          'or save a fine-grained PAT (github_pat_…) via Todd configuration.',
       );
       return;
     }
@@ -386,7 +386,7 @@ export class AgentRouter {
 
       if (wantLocal && cursorKey) {
         req.onChunk(
-          '**[ToddSpect]** Cursor + Agent: editing **your VS Code workspace** locally via **Cursor SDK**. ' +
+          '**[Todd]** Cursor + Agent: editing **your VS Code workspace** locally via **Cursor SDK**. ' +
             '**Live Edits** shows each file change. No GitHub Copilot quota is used.\n\n',
         );
         try {
@@ -416,7 +416,7 @@ export class AgentRouter {
             return;
           }
           req.onChunk(
-            `**[ToddSpect]** Cursor SDK local failed (${err.message}). Trying fallback…\n\n`,
+            `**[Todd]** Cursor SDK local failed (${err.message}). Trying fallback…\n\n`,
           );
         }
       }
@@ -428,7 +428,7 @@ export class AgentRouter {
 
       if (useCopilotLocal) {
         req.onChunk(
-          '**[ToddSpect]** Cursor + Agent: local workspace via **GitHub Copilot** tool loop. ' +
+          '**[Todd]** Cursor + Agent: local workspace via **GitHub Copilot** tool loop. ' +
             'Set a **Cursor API key** to edit locally without Copilot.\n\n',
         );
         await this.routeLocalWorkspaceAgent(req);
@@ -445,12 +445,12 @@ export class AgentRouter {
 
       if (wantLocal && !cursorKey && !copilotReady) {
         req.onChunk(
-          '**[ToddSpect]** Cursor Agent is using **Cursor Cloud** (remote). ' +
+          '**[Todd]** Cursor Agent is using **Cursor Cloud** (remote). ' +
             'Add a **Cursor API key** for local file edits without Copilot, or configure Copilot for the legacy local path.\n\n',
         );
       } else if (execution === 'cloud' || (execution === 'auto' && cursorKey)) {
         req.onChunk(
-          '**[ToddSpect]** Cursor Agent is using **Cursor Cloud** (remote). ' +
+          '**[Todd]** Cursor Agent is using **Cursor Cloud** (remote). ' +
             'It cannot change files in your open VS Code folder — **Live Edits stays empty**. ' +
             'For local edits: set **toddspect.cursor.agentExecution** to `auto` or `local` and add a Cursor API key.\n\n',
         );
@@ -637,7 +637,7 @@ export class AgentRouter {
           `Context files are in <file> blocks in earlier system messages — read them before editing. ` +
           `Apply changes with write_file so the engineer sees them in the IDE. ` +
           (mode === 'spec+agent'
-            ? `Active ToddSpect Spec definitions are in <spec> blocks — follow them.`
+            ? `Active Todd Spec definitions are in <spec> blocks — follow them.`
             : ''),
       });
     }

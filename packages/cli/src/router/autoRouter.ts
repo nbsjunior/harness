@@ -1,6 +1,6 @@
 /**
  * @module router/autoRouter
- * **ToddSpect Auto provider** — selects the best `AgentId` from the user prompt and session signals.
+ * **Todd Auto provider** — selects the best `AgentId` from the user prompt and session signals.
  *
  * ## Algorithm (v1)
  *
@@ -21,7 +21,7 @@
  * | Claude  | Complex refactors, architecture, integrations (APIs, OAuth, webhooks), security/perf |
  * | Cursor  | Multi-file repo work, cloud agent tasks, large selected context |
  * | Devin   | Long-horizon autonomous implementation (“build end-to-end”, ship feature) |
- * | Kiro    | Spec-driven / AI-DLC / `.kiro` steering / ToddSpect `spec+agent` mode |
+ * | Kiro    | Spec-driven / AI-DLC / `.kiro` steering / Todd `spec+agent` mode |
  *
  * @see docs/auto-routing.md — full documentation for users and contributors
  */

@@ -45,7 +45,7 @@ export function checkAgentReadiness(
           ready: false,
           hint: ghAvailable
             ? '`gh` found but not authenticated. Run: gh auth login'
-            : 'No token. Run `gh auth login` or save token in ToddSpect → Configuration.',
+            : 'No token. Run `gh auth login` or save token in Todd → Configuration.',
         };
       }
       const tokenErr = validateCopilotToken(config.copilot.token);
@@ -66,7 +66,7 @@ export function checkAgentReadiness(
           label: LABELS.devin,
           ready: false,
           hint:
-            '[Devin] API key missing — set DEVIN_API_KEY or ToddSpect → Configuration → Devin. ' +
+            '[Devin] API key missing — set DEVIN_API_KEY or Todd → Configuration → Devin. ' +
             '(If you meant Cursor, select the **Cursor** pill in chat, not Auto/Devin.)',
         };
       }
@@ -84,7 +84,7 @@ export function checkAgentReadiness(
           label: LABELS.cursor,
           ready: false,
           hint:
-            '[Cursor] API key missing — set CURSOR_API_KEY or ToddSpect → Configuration → Cursor ' +
+            '[Cursor] API key missing — set CURSOR_API_KEY or Todd → Configuration → Cursor ' +
             '(https://cursor.com/dashboard/integrations).',
         };
       }

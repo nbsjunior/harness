@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { ChatToolEventPayload, LiveEditEntry } from '../types';
-import { ToddSpectSnapshotProvider } from './ToddSpectSnapshotProvider';
+import { ToddSnapshotProvider } from './ToddSnapshotProvider';
 
 interface FileCheckpoint {
   /** null = file did not exist before agent run */
@@ -25,7 +25,7 @@ export class AgentEditTracker {
   private readonly liveEdits = new Map<string, LiveEditEntry[]>();
 
   constructor(
-    private readonly snapshots: ToddSpectSnapshotProvider,
+    private readonly snapshots: ToddSnapshotProvider,
     private readonly onLiveEdits: (sessionId: string, edits: LiveEditEntry[]) => void,
   ) {}
 
@@ -132,7 +132,7 @@ export class AgentEditTracker {
     this.onLiveEdits(sessionId, []);
 
     void vscode.window.showInformationMessage(
-      `ToddSpect: reverted agent changes (${restored} restored, ${removed} new files removed).`,
+      `Todd: reverted agent changes (${restored} restored, ${removed} new files removed).`,
     );
 
     return { restored, removed };
@@ -160,7 +160,7 @@ export class AgentEditTracker {
     }
     const left = this.snapshots.setSnapshot(absPath, cp.before);
     const right = vscode.Uri.file(absPath);
-    const title = `${path.basename(absPath)} (ToddSpect — before ↔ after)`;
+    const title = `${path.basename(absPath)} (Todd — before ↔ after)`;
     await vscode.commands.executeCommand('vscode.diff', left, right, title);
   }
 }

@@ -1,0 +1,59 @@
+name: Feature Request
+description: Suggest a new feature or improvement for Todd of AIDLC
+labels: ["enhancement"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement! Before submitting, please search
+        [existing issues](https://github.com/nbsjunior/todd/issues?q=is%3Aissue+label%3Aenhancement) to see if your idea is already being tracked.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this improve?
+      options:
+        - New agent connector
+        - Chat UI / UX
+        - Prompt optimization
+        - SDD / Spec Manager
+        - Auto routing
+        - Configuration panel
+        - CLI standalone
+        - IPC protocol
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      placeholder: Describe the problem you're trying to solve, or why this feature would be useful.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      placeholder: Describe what you'd like to see added or changed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      placeholder: Any other approaches you've considered?
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Would you like to implement this?
+      options:
+        - label: Yes, I'd like to submit a PR for this.
+        - label: I can help test / review a PR.

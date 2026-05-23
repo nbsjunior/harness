@@ -1,6 +1,6 @@
 /**
  * @module config
- * Merges ToddSpect configuration from YAML, environment variables, and the VS Code settings bridge.
+ * Merges Todd configuration from YAML, environment variables, and the VS Code settings bridge.
  *
  * **Why:** Connectors need a single `AgentConnectorConfig` whether the CLI runs as a daemon
  * (extension) or standalone (`toddspect chat`). Secrets come from env; endpoints often from

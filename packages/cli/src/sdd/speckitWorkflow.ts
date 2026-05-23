@@ -1,5 +1,5 @@
 /**
- * Spec-Kit aligned SDD workflow for ToddSpect (.toddspect/sdd/).
+ * Spec-Kit aligned SDD workflow for Todd (.toddspect/sdd/).
  * @see https://github.com/github/spec-kit
  */
 import * as fs from 'fs';
@@ -354,7 +354,7 @@ export function initSddWorkspace(workspaceRoot?: string): SddInitResult {
   if (!fileExists(readmePath)) {
     fs.writeFileSync(
       readmePath,
-      `# SDD Workspace (ToddSpect + spec-kit)
+      `# SDD Workspace (Todd + spec-kit)
 
 This folder mirrors [GitHub spec-kit](https://github.com/github/spec-kit) layout for Spec-Driven Development.
 
@@ -365,7 +365,7 @@ This folder mirrors [GitHub spec-kit](https://github.com/github/spec-kit) layout
 | \`specs/<id>/plan.md\` | Technical plan |
 | \`specs/<id>/tasks.md\` | Implementation tasks |
 
-Use the **SDD** view in ToddSpect to run each \`/speckit.*\` step in chat.
+Use the **SDD** view in Todd to run each \`/speckit.*\` step in chat.
 `,
       'utf-8',
     );

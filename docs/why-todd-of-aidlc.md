@@ -1,6 +1,6 @@
-# Why ToddSpect?
+# Why Todd of AIDLC?
 
-ToddSpect exists so you can stay in **one IDE** and still use the best AI for each job — with **Spec-Driven Development (SDD)** and **context engineering** applied consistently, no matter which provider answers.
+Todd of AIDLC exists so you can stay in **one IDE** and still use the best AI for each job — with **Spec-Driven Development (SDD)** and **context engineering** applied consistently, no matter which provider answers.
 
 ---
 
@@ -8,16 +8,16 @@ ToddSpect exists so you can stay in **one IDE** and still use the best AI for ea
 
 Today, teams often juggle **GitHub Copilot** in VS Code, **Cursor** in another editor, **Claude Code** in the terminal, and **Kiro** for spec-driven workflows. Each tool has its own window, shortcuts, and chat history.
 
-**ToddSpect removes that fragmentation:**
+**Todd of AIDLC removes that fragmentation:**
 
-| Without ToddSpect | With ToddSpect |
+| Without Todd of AIDLC | With Todd of AIDLC |
 |-----------------|--------------|
 | Open Cursor IDE for repo-wide edits | Stay in **VS Code** — pick **Cursor** as the provider pill |
 | Switch to Claude desktop/CLI for hard refactors | Pick **Claude Code** in the same chat sidebar |
 | Use Copilot only where the extension lives | **Copilot**, **Devin**, **Kiro**, and **Auto** in one panel |
-| Lose context when changing tools | Same workspace, same ToddSpect session |
+| Lose context when changing tools | Same workspace, same Todd of AIDLC session |
 
-You configure API keys once in **ToddSpect → Configuration**. Each message goes to the provider you choose (or **Auto** routes by task — see [auto-routing.md](auto-routing.md)).
+You configure API keys once in **Todd of AIDLC → Configuration**. Each message goes to the provider you choose (or **Auto** routes by task — see [auto-routing.md](auto-routing.md)).
 
 **Supported providers (same UI):**
 
@@ -35,7 +35,7 @@ You do **not** install five different IDE products — you install **one extensi
 
 **SDD** means agent behaviour is defined in versioned specs under `.toddspect/specs/` (skills, tools, workflows) instead of one-off prompts that disappear after the session.
 
-ToddSpect integrates SDD into the **same chat** as everyday coding:
+Todd of AIDLC integrates SDD into the **same chat** as everyday coding:
 
 - **Spec Manager** — browse, create, and edit specs in the sidebar
 - **Spec+Agent mode** (Copilot) — active specs are injected as authoritative `<spec>` system context before the model runs
@@ -47,9 +47,9 @@ Specs are **reusable**: the same `code-review` skill applies whether you invoke 
 
 ## 3. Context engineering in one place
 
-**Context engineering** is selecting the files, folders, and rules the model must see. ToddSpect makes that explicit and portable:
+**Context engineering** is selecting the files, folders, and rules the model must see. Todd of AIDLC makes that explicit and portable:
 
-- **Add to ToddSpect Context** — right-click files or folders in the Explorer
+- **Add to Todd of AIDLC Context** — right-click files or folders in the Explorer
 - **Context chips** — visible above the composer; click to open, × to remove
 - **CLI reads context** — the daemon loads file contents and attaches them to every agent call (extension host stays fast)
 
@@ -59,9 +59,9 @@ Crucially, context is **provider-agnostic**:
 2. Ask Copilot a question
 3. Switch to **Claude** for a deeper refactor — **the same context** is still attached
 
-ToddSpect also **optimizes** prompts before routing (history trim, dedupe, file caps, quality contract) — see [prompt-optimization.md](prompt-optimization.md).
+Todd of AIDLC also **optimizes** prompts before routing (history trim, dedupe, file caps, quality contract) — see [prompt-optimization.md](prompt-optimization.md).
 
-You are not re-uploading files in a different product; ToddSpect carries the engineering context across providers.
+You are not re-uploading files in a different product; Todd of AIDLC carries the engineering context across providers.
 
 ---
 
@@ -69,14 +69,14 @@ You are not re-uploading files in a different product; ToddSpect carries the eng
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  VS Code  —  single ToddSpect sidebar                          │
+│  VS Code  —  single Todd of AIDLC sidebar                          │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │ Context chips  +  Spec+Agent  +  Provider: Auto      │   │
 │  └──────────────────────────┬──────────────────────────┘   │
 └─────────────────────────────┼──────────────────────────────┘
                               │ IPC
                               ▼
-                    ToddSpect CLI (routing)
+                    Todd of AIDLC CLI (routing)
                               │
          Copilot · Claude · Cursor · Devin · Kiro
 ```
@@ -102,4 +102,4 @@ One workflow: **define specs**, **attach context**, **pick or auto-select provid
 | Day-to-day usage | [user-guide.md](user-guide.md) |
 | Context + specs | [sdd-specs.md](sdd-specs.md) · [user-guide.md §7–8](user-guide.md) |
 | Configure agents | [agent-connectors.md](agent-connectors.md) |
-| Wiki (users) | [../wiki/Why-ToddSpect.md](../wiki/Why-ToddSpect.md) |
+| Wiki (users) | [../wiki/Why-Todd-of-AIDLC.md](../wiki/Why-Todd-of-AIDLC.md) |

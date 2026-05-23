@@ -1,6 +1,6 @@
 # GitHub Copilot — Interaction Modes
 
-ToddSpect exposes three modes in the chat **mode bar** (below the agent selector).
+Todd of AIDLC exposes three modes in the chat **mode bar** (below the agent selector).
 They map to different behaviours in `AgentRouter.routeCopilot()`.
 
 | Mode | UI label | What it does | When to use |

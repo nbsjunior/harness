@@ -1,5 +1,5 @@
 /**
- * Minimal web UI for remote ToddSpect instances (read-only dashboard).
+ * Minimal web UI for remote Todd instances (read-only dashboard).
  */
 import http from 'http';
 import * as fs from 'fs';

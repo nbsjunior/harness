@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
-# ToddSpect — Documentation Index
+# Todd of AIDLC — Documentation Index
 
 Use this index to find the right doc without reading the whole repository.
 
-**Core value:** one IDE (VS Code), many AI providers, plus SDD and context engineering in the same workflow — see **[why-toddspect.md](why-toddspect.md)**.
+**Core value:** one IDE (VS Code), many AI providers, plus SDD and context engineering in the same workflow — see **[why-todd-of-aidlc.md](why-todd-of-aidlc.md)**.
 
 | Document | Audience | Purpose |
 |----------|----------|---------|
@@ -15,12 +15,12 @@ Use this index to find the right doc without reading the whole repository.
 | [code-map.md](code-map.md) | **AI models & devs** | Every exported function/class by file — one-line purpose. |
 | [architecture.md](architecture.md) | Developers | Component diagram, layers, Copilot modes, bundling. |
 | [ipc-protocol.md](ipc-protocol.md) | Developers | IPC frame schema, actions, error handling. |
-| [why-toddspect.md](why-toddspect.md) | **Everyone** | **Why use ToddSpect** — one IDE, multi-provider, SDD, context engineering. |
+| [why-todd-of-aidlc.md](why-todd-of-aidlc.md) | **Everyone** | **Why use Todd of AIDLC** — one IDE, multi-provider, SDD, context engineering. |
 | [starter-kit.md](starter-kit.md) | End users | Install VSIX, Copilot auth, first message. |
 | [dual-mode.md](dual-mode.md) | End users | Extension vs standalone CLI. |
 | [agent-connectors.md](agent-connectors.md) | Developers | Per-agent setup (tokens, endpoints). |
 | [aidlc-kiro.md](aidlc-kiro.md) | Developers | Kiro CLI + AWS AI-DLC steering rules. |
-| [sdd-specs.md](sdd-specs.md) | Developers | ToddSpect spec format (Skill / Tool / Workflow). |
+| [sdd-specs.md](sdd-specs.md) | Developers | Todd of AIDLC spec format (Skill / Tool / Workflow). |
 | [sdd-speckit.md](sdd-speckit.md) | **Everyone** | **spec-kit** SDD workflow — constitution → implement in `.toddspect/sdd/`. |
 | [backlog-features.md](backlog-features.md) | Everyone | Roadmap items: session, budgets, fan-out, Actions, web UI. |
 | [releases/v0.1.9.md](releases/v0.1.9.md) | Everyone | Release notes and VSIX install tips for v0.1.9. |

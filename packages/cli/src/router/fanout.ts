@@ -66,7 +66,7 @@ export async function runAgentFanout(
 }
 
 export function formatFanoutMarkdown(results: FanoutAgentResult[]): string {
-  const parts = ['**[ToddSpect fan-out]** Parallel agent results\n'];
+  const parts = ['**[Todd fan-out]** Parallel agent results\n'];
   for (const r of results) {
     parts.push(`\n### ${r.agent}${r.ok ? '' : ' (failed)'}\n`);
     if (r.error) {

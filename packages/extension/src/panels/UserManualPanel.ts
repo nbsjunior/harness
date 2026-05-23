@@ -9,7 +9,7 @@ export class UserManualPanel {
   private constructor(private readonly extensionUri: vscode.Uri) {
     this.panel = vscode.window.createWebviewPanel(
       UserManualPanel.VIEW_TYPE,
-      'ToddSpect — User Manual',
+      'Todd — User Manual',
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -55,7 +55,7 @@ export class UserManualPanel {
     content="default-src 'none';
              script-src 'nonce-${nonce}' ${this.panel.webview.cspSource};
              style-src ${this.panel.webview.cspSource} 'unsafe-inline';" />
-  <title>ToddSpect — User Manual</title>
+  <title>Todd — User Manual</title>
 </head>
 <body>
   <div id="root"></div>

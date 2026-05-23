@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import type { IPCMessage, IpcAction } from '../types';
-import { buildToddSpectProcessEnv } from '../configBridge';
+import { buildToddProcessEnv } from '../configBridge';
 import { redactSecrets, traceLog } from '../trace';
 
 interface PendingRequest {
@@ -24,7 +24,7 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const PING_TIMEOUT_MS = 5_000;
 
 /**
- * Manages the lifecycle of the ToddSpect CLI daemon subprocess and all
+ * Manages the lifecycle of the Todd CLI daemon subprocess and all
  * IPC communication with it.
  *
  * Transport: newline-delimited JSON over stdin/stdout.
@@ -76,7 +76,7 @@ export class CliService extends EventEmitter {
   private async doStart(): Promise<void> {
     try {
       const cliPath = this.resolveCliPath();
-      this.output.info(`Starting ToddSpect CLI daemon: ${cliPath}`);
+      this.output.info(`Starting Todd CLI daemon: ${cliPath}`);
 
       const env = await this.buildCliEnv();
       const cwd =
@@ -114,7 +114,7 @@ export class CliService extends EventEmitter {
 
       await this.ping();
       this.restartAttempts = 0;
-      this.output.info('ToddSpect CLI daemon ready.');
+      this.output.info('Todd CLI daemon ready.');
     } catch (err) {
       this.subprocess?.kill('SIGTERM');
       this.subprocess = null;
@@ -412,7 +412,7 @@ export class CliService extends EventEmitter {
   }
 
   private async buildCliEnv(): Promise<NodeJS.ProcessEnv> {
-    return buildToddSpectProcessEnv(this.context, {
+    return buildToddProcessEnv(this.context, {
       ...process.env,
       TODDSPECT_IPC: '1',
     });
@@ -441,7 +441,7 @@ export class CliService extends EventEmitter {
     }
 
     throw new Error(
-      'ToddSpect CLI not found. Run `npm run build:cli` in the monorepo root, ' +
+      'Todd CLI not found. Run `npm run build:cli` in the monorepo root, ' +
         'or set `toddspect.cliPath` in VSCode settings.',
     );
   }

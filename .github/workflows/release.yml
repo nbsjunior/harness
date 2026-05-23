@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Package and publish VSIX
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build all packages
+        run: npm run build
+
+      - name: Bundle CLI into extension
+        run: node scripts/bundle-cli.mjs
+
+      - name: Package VSIX
+        run: |
+          cd packages/extension
+          npx @vscode/vsce package --no-dependencies --out ../../
+
+      - name: Get VSIX filename
+        id: vsix
+        run: echo "file=$(ls *.vsix | head -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Compute SHA-256
+        run: sha256sum "${{ steps.vsix.outputs.file }}" > "${{ steps.vsix.outputs.file }}.sha256"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ steps.vsix.outputs.file }}
+            ${{ steps.vsix.outputs.file }}.sha256
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

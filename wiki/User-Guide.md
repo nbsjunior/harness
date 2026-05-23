@@ -1,25 +1,25 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # User Guide
 
-Day-to-day usage of ToddSpect in VS Code.
+Day-to-day usage of Todd of AIDLC in VS Code.
 
-ToddSpect keeps you in **one IDE** while you use **Copilot, Claude, Cursor, Devin, or Kiro**, with **specs** and **context files** applied in the same chat. Overview: [Why ToddSpect](Why-ToddSpect).
+Todd of AIDLC keeps you in **one IDE** while you use **Copilot, Claude, Cursor, Devin, or Kiro**, with **specs** and **context files** applied in the same chat. Overview: [Why Todd of AIDLC](Why-Todd-of-AIDLC).
 
 ## Open panels
 
 | Panel | Command |
 |-------|---------|
-| Chat | Click ToddSpect icon in Activity Bar |
-| Spec Manager | **ToddSpect: Open Spec Manager** |
-| Configuration | **ToddSpect: Open Configuration** |
-| Context | **ToddSpect: Show Context** |
+| Chat | Click Todd of AIDLC icon in Activity Bar |
+| Spec Manager | **Todd of AIDLC: Open Spec Manager** |
+| Configuration | **Todd of AIDLC: Open Configuration** |
+| Context | **Todd of AIDLC: Show Context** |
 
 ## Chat workflow
 
-1. Optionally add files to context (right-click → Add to ToddSpect Context)
+1. Optionally add files to context (right-click → Add to Todd of AIDLC Context)
 2. Select **provider** pill (Copilot, Cursor, etc.)
 3. Select **mode** (Ask / Agent / Spec+Agent for Copilot)
 4. Type message → `Ctrl+Enter`
@@ -37,14 +37,14 @@ Change the provider pill before sending the next message. History remains in the
 
 ## Copilot login
 
-**ToddSpect: Copilot Login** runs `gh auth refresh --scopes copilot`.
+**Todd of AIDLC: Copilot Login** runs `gh auth refresh --scopes copilot`.
 
 ## MCP servers
 
-Configure in **Configuration → MCP** tab. ToddSpect connects MCP servers defined in workspace settings for tool augmentation (extension-side).
+Configure in **Configuration → MCP** tab. Todd of AIDLC connects MCP servers defined in workspace settings for tool augmentation (extension-side).
 
 ## Check getGoat
 
-**ToddSpect: Check getGoat** prints agent readiness in a notification and the Output channel.
+**Todd of AIDLC: Check getGoat** prints agent readiness in a notification and the Output channel.
 
 More: [Configuration](Configuration) · [Troubleshooting](Troubleshooting)

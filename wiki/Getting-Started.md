@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # Getting Started
 
-Get ToddSpect running in under 10 minutes.
+Get Todd of AIDLC running in under 10 minutes.
 
-ToddSpect lets you use **Copilot, Claude, Cursor, Devin, and Kiro from one VS Code sidebar**, with **specs** and **file context** shared across providers. Read **[Why ToddSpect](Why-ToddSpect)** for the full picture.
+Todd of AIDLC lets you use **Copilot, Claude, Cursor, Devin, and Kiro from one VS Code sidebar**, with **specs** and **file context** shared across providers. Read **[Why Todd of AIDLC](Why-Todd-of-AIDLC)** for the full picture.
 
 ## Requirements
 
@@ -32,17 +32,17 @@ code --install-extension packages/extension/toddspect-vscode.vsix
 
 The `.vsix` includes the compiled CLI — no separate install needed.
 
-## 2. Open ToddSpect
+## 2. Open Todd of AIDLC
 
 1. Open a project folder in VS Code
-2. Click the **ToddSpect** icon in the Activity Bar (sidebar)
-3. Wait for **ToddSpect CLI daemon ready** in **View → Output → ToddSpect**
+2. Click the **Todd of AIDLC** icon in the Activity Bar (sidebar)
+3. Wait for **Todd of AIDLC CLI daemon ready** in **View → Output → Todd of AIDLC**
 
 ## 3. Configure GitHub Copilot
 
-1. `Ctrl+Shift+P` → **ToddSpect: Copilot Login** (or run `gh auth login --scopes copilot`)
-2. Open **ToddSpect: Open Configuration** → verify Copilot shows ready
-3. Run **ToddSpect: Check getGoat** to confirm agents
+1. `Ctrl+Shift+P` → **Todd of AIDLC: Copilot Login** (or run `gh auth login --scopes copilot`)
+2. Open **Todd of AIDLC: Open Configuration** → verify Copilot shows ready
+3. Run **Todd of AIDLC: Check getGoat** to confirm agents
 
 ## 4. Send your first message
 

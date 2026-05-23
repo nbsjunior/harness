@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="Todd of AIDLC logo" width="80" />
 </p>
 
 # Wiki source (GitHub Wiki)
@@ -29,7 +29,7 @@ Requires:
 | Page | Description |
 |------|-------------|
 | `Home.md` | Wiki home |
-| `Why-ToddSpect.md` | Value proposition — one IDE, multi-provider, SDD, context |
+| `Why-Todd-of-AIDLC.md` | Value proposition — one IDE, multi-provider, SDD, context |
 | `_Sidebar.md` | Left navigation |
 | `Getting-Started.md` | Quick start |
 | `Agent-Connectors.md` | All agents including Cursor Cloud API |
