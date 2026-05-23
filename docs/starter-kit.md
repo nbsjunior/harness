@@ -38,9 +38,12 @@ The CLI is compiled and **included in the `.vsix`** at `extension/cli/dist/index
 
 ### From a release
 
-1. Download `harness-vscode-0.1.0.vsix` from [Releases](https://github.com/nbsjunior/harness/releases).
-2. `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
-3. Select the file → **Reload**.
+1. Download `harness-vscode-*.vsix` from [Releases](https://github.com/nbsjunior/harness/releases) (latest: **v0.1.9**).
+2. Confirm the file size on disk is about **18.8 MB** (~19 748 096 bytes). Smaller files are incomplete downloads.
+3. `Ctrl+Shift+P` → **Extensions: Install from VSIX...**
+4. Select the file → **Reload**.
+
+> **OneDrive / cloud sync:** If install fails with *"End of central directory record signature not found"*, the `.vsix` was truncated. Download again from GitHub, or copy from `%LOCALAPPDATA%\HarnessRelease\` after `npm run package:vsix:release` (builds outside OneDrive). Compare SHA256 with the `.sha256` file on the release page.
 
 ### From the repository (build locally)
 
