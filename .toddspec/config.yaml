@@ -1,26 +1,26 @@
-# Harness configuration file
+# ToddSpect configuration file
 # This file is committed to version control (without secrets).
-# Set API keys via environment variables or VSCode settings (harness.connectors.*).
+# Set API keys via environment variables or VSCode settings (toddspect.connectors.*).
 
 defaultAgent: auto
 
 connectors:
   copilot:
-    # Token: set GITHUB_TOKEN env var or harness.connectors.copilot.token in VSCode settings
+    # Token: set GITHUB_TOKEN env var or toddspect.connectors.copilot.token in VSCode settings
     endpoint: https://api.githubcopilot.com
 
   devin:
-    # API Key: set DEVIN_API_KEY env var or harness.connectors.devin.apiKey in VSCode settings
+    # API Key: set DEVIN_API_KEY env var or toddspect.connectors.devin.apiKey in VSCode settings
     endpoint: https://api.devin.ai/v1
 
   cursor:
-    # API Key: set CURSOR_API_KEY env var or save in Harness → Configuration (VS Code Secrets)
+    # API Key: set CURSOR_API_KEY env var or save in ToddSpect → Configuration (VS Code Secrets)
     endpoint: https://api.cursor.com
 
   claude:
     # Path to the Claude Code CLI binary (must be on PATH or provide full path)
     path: claude
-    # API Key: set ANTHROPIC_API_KEY env var or harness.connectors.claude.apiKey in VSCode settings
+    # API Key: set ANTHROPIC_API_KEY env var or toddspect.connectors.claude.apiKey in VSCode settings
 
   kiro:
     cliPath: kiro-cli

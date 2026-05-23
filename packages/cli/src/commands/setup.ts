@@ -3,7 +3,7 @@ import { getAidlcStatus } from '../aidlc/status.js';
 import { ensureKiroCli } from '../kiro/bootstrap.js';
 import { initCommand } from './init.js';
 import { ensureDefaultSpecs } from '../specs/defaultSpecs.js';
-import { harnessLog, harnessWarn } from '../log.js';
+import { toddspectLog, toddspectWarn } from '../log.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -16,26 +16,26 @@ export interface SetupOptions {
 }
 
 /**
- * One-shot bootstrap: Harness workspace + Kiro CLI + AI-DLC rules.
- * Called on `harness setup`, extension activate, and optional postinstall.
+ * One-shot bootstrap: ToddSpect workspace + Kiro CLI + AI-DLC rules.
+ * Called on `toddspect setup`, extension activate, and optional postinstall.
  */
 export async function setupCommand(options: SetupOptions = {}): Promise<number> {
-  const dir = path.resolve(options.dir ?? process.env['HARNESS_WORKSPACE'] ?? process.cwd());
+  const dir = path.resolve(options.dir ?? process.env['TODDSPECT_WORKSPACE'] ?? process.cwd());
   const log = (msg: string) => {
     if (!options.quiet) {
-      harnessLog(msg);
+      toddspectLog(msg);
     }
   };
 
-  if (!options.skipInit && !fs.existsSync(path.join(dir, '.harness'))) {
-    log('\n→ Initializing Harness workspace...');
+  if (!options.skipInit && !fs.existsSync(path.join(dir, '.toddspect'))) {
+    log('\n→ Initializing ToddSpect workspace...');
     await initCommand(dir);
   } else if (!options.skipInit) {
-    log('\n→ Harness workspace already present.');
-    const specsDir = path.join(dir, '.harness', 'specs');
+    log('\n→ ToddSpect workspace already present.');
+    const specsDir = path.join(dir, '.toddspect', 'specs');
     const added = ensureDefaultSpecs(specsDir);
     for (const rel of added) {
-      log(`  created  .harness/${rel}`);
+      log(`  created  .toddspect/${rel}`);
     }
   }
 
@@ -45,7 +45,7 @@ export async function setupCommand(options: SetupOptions = {}): Promise<number> 
       const kiro = await ensureKiroCli({ allowDownload: true });
       log(`  Kiro CLI: ${kiro.cliPath} (${kiro.source}${kiro.version ? `, v${kiro.version}` : ''})`);
     } catch (err) {
-      harnessWarn(`  warn: ${err instanceof Error ? err.message : String(err)}`);
+      toddspectWarn(`  warn: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
@@ -62,7 +62,7 @@ export async function setupCommand(options: SetupOptions = {}): Promise<number> 
         }
       }
     } catch (err) {
-      harnessWarn(`  warn: ${err instanceof Error ? err.message : String(err)}`);
+      toddspectWarn(`  warn: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 

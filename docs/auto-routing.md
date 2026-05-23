@@ -1,6 +1,6 @@
 # Auto provider routing
 
-Harness can select the best AI provider for each chat message when you choose **Auto** in the provider bar.
+ToddSpect can select the best AI provider for each chat message when you choose **Auto** in the provider bar.
 
 ## How it works
 
@@ -20,7 +20,7 @@ Implementation: `packages/cli/src/router/autoRouter.ts` (documented in source).
 | Integrations (API, OAuth, webhooks, SDK, third-party) | **Claude** | Typical integration and API design work |
 | Repo-wide / multi-file / monorepo edits | **Cursor** | Cloud Agents API tuned for codebase navigation |
 | Long autonomous implementation | **Devin** | Autonomous engineer positioning |
-| Spec+agent mode, AI-DLC, `.kiro`, steering rules | **Kiro** | Harness AI-DLC + Kiro CLI integration |
+| Spec+agent mode, AI-DLC, `.kiro`, steering rules | **Kiro** | ToddSpect AI-DLC + Kiro CLI integration |
 
 ## Mode and context bonuses
 
@@ -33,22 +33,22 @@ Implementation: `packages/cli/src/router/autoRouter.ts` (documented in source).
 
 ## Fallback chain
 
-If the winning agent is not configured (`harness check getGoat` shows ✗), Harness tries:
+If the winning agent is not configured (`toddspect check getGoat` shows ✗), ToddSpect tries:
 
 `copilot` → `claude` → `cursor` → `devin` → `kiro`
 
 ## CLI
 
 ```bash
-harness agent:run --agent auto --prompt "refactor the auth module for SOLID"
+toddspect agent:run --agent auto --prompt "refactor the auth module for SOLID"
 ```
 
 Stderr logs the routing decision; stdout is the agent response only.
 
 ## Settings
 
-- VS Code: `harness.defaultAgent` = `auto` (default)
-- Workspace: `.harness/config.yaml` → `defaultAgent: auto`
+- VS Code: `toddspect.defaultAgent` = `auto` (default)
+- Workspace: `.toddspect/config.yaml` → `defaultAgent: auto`
 
 ## Tuning rules
 

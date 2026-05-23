@@ -32,7 +32,7 @@ function fetchCopilotToken(githubToken: string): Promise<CopilotToken> {
         headers: {
           Authorization: `token ${githubToken}`,
           Accept: 'application/json',
-          'User-Agent': 'harness-cli/0.1.0',
+          'User-Agent': 'toddspect-cli/0.1.0',
         },
       },
       (res) => {

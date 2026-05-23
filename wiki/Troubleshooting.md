@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # Troubleshooting
@@ -8,7 +8,7 @@
 
 | Error | Fix |
 |-------|-----|
-| `CLI stdin is not writable` | Reload window; check Output → Harness for crash; reinstall VSIX |
+| `CLI stdin is not writable` | Reload window; check Output → ToddSpect for crash; reinstall VSIX |
 | `CLI ping timed out` | Daemon failed to start — check Node ≥ 20 on PATH |
 | `CLI daemon exited unexpectedly` | See stderr in Output; often bad token or uncaught exception |
 
@@ -26,16 +26,16 @@
 |-------|-----|
 | **HTTP 404 from api2.cursor.sh** | Wrong endpoint — use `https://api.cursor.com`, not `api2.cursor.sh` |
 | HTTP 401 | Create key at [cursor.com/dashboard/integrations](https://cursor.com/dashboard/integrations) |
-| No response / stuck thinking | Cursor Cloud can take minutes; Harness now shows status text and errors after **90s** without text. Use **Ask** mode for simple chat. Open **View → Output → Harness** for `[cursor]` logs. **+ New chat** if stuck. |
-| **`read ECONNRESET` in Agent mode** | Normal for long cloud-agent runs — Harness reconnects the SSE stream automatically. If it persists, **+ New chat** or use **Ask** (Plan mode on Cursor). Rebuild VSIX after updates. |
-| HTTP 409 `agent_busy` | Previous Cursor run still active — **+ New chat**, or wait a few seconds; Harness now cancels stale runs automatically |
+| No response / stuck thinking | Cursor Cloud can take minutes; ToddSpect now shows status text and errors after **90s** without text. Use **Ask** mode for simple chat. Open **View → Output → ToddSpect** for `[cursor]` logs. **+ New chat** if stuck. |
+| **`read ECONNRESET` in Agent mode** | Normal for long cloud-agent runs — ToddSpect reconnects the SSE stream automatically. If it persists, **+ New chat** or use **Ask** (Plan mode on Cursor). Rebuild VSIX after updates. |
+| HTTP 409 `agent_busy` | Previous Cursor run still active — **+ New chat**, or wait a few seconds; ToddSpect now cancels stale runs automatically |
 
 ## Claude
 
 | Error | Fix |
 |-------|-----|
 | getGoat shows ready but CLI missing | Install [Claude Code CLI](https://claude.ai/code) |
-| Command not found | Set `harness.connectors.claude.path` |
+| Command not found | Set `toddspect.connectors.claude.path` |
 
 ## Context / chat UI
 
@@ -46,8 +46,8 @@
 
 ## Logs
 
-Always check **View → Output → Harness** first.
+Always check **View → Output → ToddSpect** first.
 
 ```bash
-harness check getGoat    # CLI-side readiness
+toddspect check getGoat    # CLI-side readiness
 ```

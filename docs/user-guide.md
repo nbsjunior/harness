@@ -1,12 +1,12 @@
-# Harness — User Guide
+# ToddSpect — User Guide
 
-> Complete guide to installing, configuring, and using Harness in VSCode.
+> Complete guide to installing, configuring, and using ToddSpect in VSCode.
 
 ---
 
 ## Table of Contents
 
-1. [What is Harness?](#1-what-is-harness)
+1. [What is ToddSpect?](#1-what-is-toddspect)
 2. [Requirements](#2-requirements)
 3. [Installation](#3-installation)
 3b. [Starter Kit (quick path)](#starter-kit-quick-path)
@@ -24,18 +24,18 @@
 
 ---
 
-## 1. What is Harness?
+## 1. What is ToddSpect?
 
-Harness is a VSCode extension that works as a **Meta-Agent Orchestrator**. Its main advantage: you stay in **one IDE** and reuse **multiple AI providers** (Copilot, Claude, Cursor, Devin, Kiro) without opening a different editor for each vendor.
+ToddSpect is a VSCode extension that works as a **Meta-Agent Orchestrator**. Its main advantage: you stay in **one IDE** and reuse **multiple AI providers** (Copilot, Claude, Cursor, Devin, Kiro) without opening a different editor for each vendor.
 
 You also get **Spec-Driven Development (SDD)** and **context engineering** in the **same** chat:
 
-- **SDD** — define behaviour in `.harness/specs/` and run **Spec+Agent** mode to inject specs into the prompt.
+- **SDD** — define behaviour in `.toddspect/specs/` and run **Spec+Agent** mode to inject specs into the prompt.
 - **Context** — attach files/folders once; the same context is sent to **whichever provider** you pick next.
 
-You write your request once; Harness routes it to the agent you choose (or **Auto**), with your selected files and active specs included.
+You write your request once; ToddSpect routes it to the agent you choose (or **Auto**), with your selected files and active specs included.
 
-**[→ Why Harness (detailed)](why-harness.md)**
+**[→ Why ToddSpect (detailed)](why-toddspect.md)**
 
 ```
 ┌─────────────────────────────────────────────────┐
@@ -43,7 +43,7 @@ You write your request once; Harness routes it to the agent you choose (or **Aut
 │  Type a message  →  Add context  →  Pick agent  │
 └────────────────────────┬────────────────────────┘
                          │
-               Harness Extension
+               ToddSpect Extension
                          │
              Node.js CLI daemon (IPC)
                          │
@@ -79,7 +79,7 @@ For a guided flow (install `.vsix`, open extension, configure **GitHub Copilot**
 
 ### Option A — Install from VSIX (recommended)
 
-1. Download `harness-vscode-0.1.0.vsix` from the [Releases page](https://github.com/nbsjunior/harness/releases).
+1. Download `toddspect-vscode-0.1.0.vsix` from the [Releases page](https://github.com/nbsjunior/ToddSpect/releases).
 2. In VSCode, open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P` on macOS).
 3. Run **Extensions: Install from VSIX...**
 4. Select the downloaded `.vsix` file.
@@ -88,19 +88,19 @@ For a guided flow (install `.vsix`, open extension, configure **GitHub Copilot**
 You can also install from the terminal:
 
 ```bash
-code --install-extension harness-vscode-0.1.0.vsix
+code --install-extension toddspect-vscode-0.1.0.vsix
 ```
 
 ### Option B — Build from source (developers)
 
 ```bash
-git clone https://github.com/nbsjunior/harness.git
-cd harness
+git clone https://github.com/nbsjunior/toddspect.git
+cd toddspect
 npm install
 npm run build:cli          # build the CLI daemon
 cd packages/extension
-npm run package            # generates harness-vscode-*.vsix
-code --install-extension harness-vscode-*.vsix
+npm run package            # generates toddspect-vscode-*.vsix
+code --install-extension toddspect-vscode-*.vsix
 ```
 
 > For development mode (F5 hot-reload), see [getting-started.md](getting-started.md).
@@ -109,14 +109,14 @@ code --install-extension harness-vscode-*.vsix
 
 ## 4. First-time setup
 
-After installing, you'll see the **Harness icon** (hexagon) in the VSCode Activity Bar on the left.
+After installing, you'll see the **ToddSpect icon** (hexagon) in the VSCode Activity Bar on the left.
 
 ### 4.1 CLI daemon (bundled in the extension)
 
-When you install from the official `.vsix`, the **Harness CLI is already compiled** inside the extension:
+When you install from the official `.vsix`, the **ToddSpect CLI is already compiled** inside the extension:
 
 ```
-extensions/harness-ai.harness-vscode-0.1.0/cli/dist/index.js
+extensions/toddspect.toddspect-vscode-0.1.0/cli/dist/index.js
 ```
 
 No `npm link` or manual build is required. The extension starts it automatically with:
@@ -136,23 +136,23 @@ Override path only if needed:
 
 ```json
 {
-  "harness.cliPath": "C:/path/to/harness/packages/cli/dist/index.js"
+  "toddspect.cliPath": "C:/path/to/toddspect/packages/cli/dist/index.js"
 }
 ```
 
 ### 4.2 Initialize your workspace
 
-Open the project folder you want to use Harness with, then:
+Open the project folder you want to use ToddSpect with, then:
 
 ```
-Ctrl+Shift+P → Harness: Initialize Workspace
+Ctrl+Shift+P → ToddSpect: Initialize Workspace
 ```
 
-This creates a `.harness/` directory in your project root:
+This creates a `.toddspect/` directory in your project root:
 
 ```
 your-project/
-└── .harness/
+└── .toddspect/
     ├── config.yaml                    # agent settings (safe to commit)
     └── specs/
         ├── skill-code-review.md       # example skill spec
@@ -168,34 +168,34 @@ You must configure at least one agent before chatting. There are three ways to s
 ### 5.1 Via the Configuration Panel (recommended)
 
 ```
-Ctrl+Shift+P → Harness: Open Configuration
+Ctrl+Shift+P → ToddSpect: Open Configuration
 ```
 
 Fill in the API key for the agent(s) you want to use and click **Save**.
 
 ### 5.2 Via VSCode settings
 
-Open `File → Preferences → Settings`, search for `harness`, or edit `settings.json` directly:
+Open `File → Preferences → Settings`, search for `toddspect`, or edit `settings.json` directly:
 
 ```jsonc
 {
   // GitHub Copilot (fine-grained token with 'copilot' scope)
-  "harness.connectors.copilot.token": "ghp_xxxxxxxxxxxxxxxxxxxx",
-  "harness.connectors.copilot.endpoint": "https://api.githubcopilot.com",
+  "toddspect.connectors.copilot.token": "ghp_xxxxxxxxxxxxxxxxxxxx",
+  "toddspect.connectors.copilot.endpoint": "https://api.githubcopilot.com",
 
   // Anthropic Claude Code
-  "harness.connectors.claude.apiKey": "sk-ant-xxxxxxxxxxxxxxxxxxxx",
-  "harness.connectors.claude.model": "claude-opus-4-5",
+  "toddspect.connectors.claude.apiKey": "sk-ant-xxxxxxxxxxxxxxxxxxxx",
+  "toddspect.connectors.claude.model": "claude-opus-4-5",
 
   // AWS KIRO
-  "harness.connectors.kiro.region": "us-east-1",
-  "harness.connectors.kiro.modelId": "amazon.kiro-v1",
+  "toddspect.connectors.kiro.region": "us-east-1",
+  "toddspect.connectors.kiro.modelId": "amazon.kiro-v1",
 
   // Devin (Cognition AI)
-  "harness.connectors.devin.apiKey": "devin-xxxxxxxxxxxxxxxxxxxx",
+  "toddspect.connectors.devin.apiKey": "devin-xxxxxxxxxxxxxxxxxxxx",
 
   // Cursor AI
-  "harness.connectors.cursor.apiKey": "cursor-xxxxxxxxxxxxxxxxxxxx"
+  "toddspect.connectors.cursor.apiKey": "cursor-xxxxxxxxxxxxxxxxxxxx"
 }
 ```
 
@@ -234,11 +234,11 @@ code C:\path\to\your-project
 
 ## 6. Using the Chat
 
-Click the **Harness icon** in the Activity Bar to open the Chat sidebar.
+Click the **ToddSpect icon** in the Activity Bar to open the Chat sidebar.
 
 ```
 ┌──────────────────────────────────────────┐
-│ 🔷 Harness Chat                    ⚙ ⋮  │
+│ 🔷 ToddSpect Chat                    ⚙ ⋮  │
 ├──────────────────────────────────────────┤
 │                                          │
 │  🤖  How can I help you today?           │
@@ -287,27 +287,27 @@ Fix the TypeScript errors in the current context
 
 ## 7. Adding context
 
-Context tells Harness which files the agent should read before answering.
+Context tells ToddSpect which files the agent should read before answering.
 
 ### Via the Explorer (recommended)
 
 1. Right-click any **file** or **folder** in the Explorer sidebar
-2. Click **Add to Harness Context**
+2. Click **Add to ToddSpect Context**
 3. The file/folder label appears in the chat input bar
 
 ### Via the Command Palette
 
 ```
-Ctrl+Shift+P → Harness: Add Current File to Context
+Ctrl+Shift+P → ToddSpect: Add Current File to Context
 ```
 
 ### Managing context
 
 - **Remove an item:** click the ✕ next to its label in the chat input bar
-- **Clear all context:** `Ctrl+Shift+P → Harness: Clear Context`
+- **Clear all context:** `Ctrl+Shift+P → ToddSpect: Clear Context`
 - **View current context:** hover over the context chips in the input bar
 
-> **How context works internally:** Harness sends the selected absolute paths to the CLI daemon, which reads the files, estimates token counts, and includes the content in the system prompt before calling the AI agent. Files are never read by the Extension Host — only the CLI daemon accesses the file system.
+> **How context works internally:** ToddSpect sends the selected absolute paths to the CLI daemon, which reads the files, estimates token counts, and includes the content in the system prompt before calling the AI agent. Files are never read by the Extension Host — only the CLI daemon accesses the file system.
 
 ---
 
@@ -318,17 +318,17 @@ The **SDD** sidebar view has two tabs:
 | Tab | Purpose |
 |-----|---------|
 | **SDD Workflow** | Full [GitHub spec-kit](https://github.com/github/spec-kit) pipeline — see [§9](#9-sdd-workflow-spec-kit) |
-| **Specs** | Harness Skills, Tools, and Workflows in `.harness/specs/` |
+| **Specs** | ToddSpect Skills, Tools, and Workflows in `.toddspect/specs/` |
 
 ### Opening SDD
 
-Click the **Harness icon** → **SDD** view, or:
+Click the **ToddSpect icon** → **SDD** view, or:
 
 ```
-Ctrl+Shift+P → Harness: Open Spec Manager
+Ctrl+Shift+P → ToddSpect: Open Spec Manager
 ```
 
-### Specs tab — Harness specs
+### Specs tab — ToddSpect specs
 
 Define reusable **Skills**, **Tools**, and **Workflows** that guide how the AI agent responds.
 
@@ -375,11 +375,11 @@ Return findings as a structured list with severity (Critical / High / Medium / L
 3. Add instructions in the Markdown body
 4. Click **Save Spec**
 
-The file is saved to `.harness/specs/<name>.md` in your workspace.
+The file is saved to `.toddspect/specs/<name>.md` in your workspace.
 
 ### Using a spec in the chat
 
-Active specs in `.harness/specs/` are automatically picked up by the CLI. When you select an agent that supports a spec's `agents` list, the spec's instructions are injected into the system prompt.
+Active specs in `.toddspect/specs/` are automatically picked up by the CLI. When you select an agent that supports a spec's `agents` list, the spec's instructions are injected into the system prompt.
 
 You can also explicitly reference a spec:
 
@@ -392,12 +392,12 @@ You can also explicitly reference a spec:
 
 ## 9. SDD Workflow (spec-kit)
 
-The **SDD Workflow** tab implements the spec-kit development flow inside Harness — without leaving VS Code.
+The **SDD Workflow** tab implements the spec-kit development flow inside ToddSpect — without leaving VS Code.
 
 ### Quick start
 
 1. Open **SDD** → **SDD Workflow**
-2. Click **Initialize SDD** — creates `.harness/sdd/` (constitution, `specs/`, templates)
+2. Click **Initialize SDD** — creates `.toddspect/sdd/` (constitution, `specs/`, templates)
 3. Click **+ New feature** — enter name and optional description → folder `001-<slug>/`
 4. For each step (`/speckit.constitution` … `/speckit.implement`):
    - **Scaffold** — create or refresh the artifact template
@@ -420,7 +420,7 @@ The **SDD Workflow** tab implements the spec-kit development flow inside Harness
 
 Use **Notes for next step** to append context before **Run in chat**.
 
-**Discover** runs repo-based suggestions for Harness specs (`harness spec:discover`).
+**Discover** runs repo-based suggestions for ToddSpect specs (`toddspect spec:discover`).
 
 Full reference: **[sdd-speckit.md](sdd-speckit.md)**.
 
@@ -433,7 +433,7 @@ Switch between agents without leaving the conversation.
 ### Open the Agent Menu
 
 ```
-Ctrl+Shift+P → Harness: Select Agent
+Ctrl+Shift+P → ToddSpect: Select Agent
 ```
 
 Or click the agent badge at the top-right of the Chat panel.
@@ -456,7 +456,7 @@ The selected agent applies to all subsequent messages in the session.
 ## 11. Configuration Panel
 
 ```
-Ctrl+Shift+P → Harness: Open Configuration
+Ctrl+Shift+P → ToddSpect: Open Configuration
 ```
 
 The panel has three sections:
@@ -469,9 +469,9 @@ Configure API keys and endpoints for each agent. Values are stored in VSCode's s
 
 | Setting | Key | Default | Description |
 |---|---|---|---|
-| CLI path | `harness.cliPath` | auto-detect | Absolute path to `packages/cli/dist/index.js` |
-| Workspace specs dir | `harness.specsDir` | `.harness/specs` | Where to look for SDD spec files |
-| Timeout | `harness.cliTimeout` | `30000` | ms before a CLI request times out |
+| CLI path | `toddspect.cliPath` | auto-detect | Absolute path to `packages/cli/dist/index.js` |
+| Workspace specs dir | `toddspect.specsDir` | `.toddspect/specs` | Where to look for SDD spec files |
+| Timeout | `toddspect.cliTimeout` | `30000` | ms before a CLI request times out |
 
 ### MCP Servers
 
@@ -480,7 +480,7 @@ Add external Model Context Protocol servers:
 ```jsonc
 // settings.json
 {
-  "harness.mcpServers": [
+  "toddspect.mcpServers": [
     {
       "name": "filesystem",
       "transport": "stdio",
@@ -500,7 +500,7 @@ Add external Model Context Protocol servers:
 
 ## 12. Standalone CLI
 
-The Harness CLI can be used independently of the VSCode extension — useful in CI/CD pipelines, terminal workflows, or scripting.
+The ToddSpect CLI can be used independently of the VSCode extension — useful in CI/CD pipelines, terminal workflows, or scripting.
 
 ### Installation
 
@@ -511,25 +511,25 @@ npm link        # or: npm install -g .
 
 ### Commands
 
-#### `harness init`
+#### `toddspect init`
 
-Initialize `.harness/` in the current directory:
+Initialize `.toddspect/` in the current directory:
 
 ```bash
-harness init
-harness init --dir ./my-project
+toddspect init
+toddspect init --dir ./my-project
 ```
 
-#### `harness agent:run`
+#### `toddspect agent:run`
 
 One-shot agent call — sends a prompt and exits:
 
 ```bash
-harness agent:run \
+toddspect agent:run \
   --agent copilot \
   --prompt "Review this code for security issues" \
   --dirs ./src ./lib \
-  --specs ./.harness/specs
+  --specs ./.toddspect/specs
 ```
 
 Output (JSON, stdout):
@@ -543,22 +543,22 @@ Output (JSON, stdout):
 }
 ```
 
-#### `harness spec:parse`
+#### `toddspect spec:parse`
 
 Parse and validate spec files in a directory:
 
 ```bash
-harness spec:parse .harness/specs/
-harness spec:parse .harness/specs/skill-code-review.md --output yaml
+toddspect spec:parse .toddspect/specs/
+toddspect spec:parse .toddspect/specs/skill-code-review.md --output yaml
 ```
 
-#### `harness context:build`
+#### `toddspect context:build`
 
 Read files from directories and output a consolidated context:
 
 ```bash
-harness context:build ./src ./lib --output json
-harness context:build ./src --format prompt
+toddspect context:build ./src ./lib --output json
+toddspect context:build ./src --format prompt
 ```
 
 ### Scripting example
@@ -568,11 +568,11 @@ harness context:build ./src --format prompt
 # pr-review.sh — run a security review on changed files
 
 CHANGED=$(git diff --name-only HEAD~1)
-echo "$CHANGED" | xargs -I{} harness agent:run \
+echo "$CHANGED" | xargs -I{} toddspect agent:run \
   --agent claude \
   --prompt "Security review" \
   --dirs {} \
-  --specs .harness/specs | jq .response
+  --specs .toddspect/specs | jq .response
 ```
 
 ---
@@ -581,20 +581,20 @@ echo "$CHANGED" | xargs -I{} harness agent:run \
 
 | Action | Windows / Linux | macOS |
 |---|---|---|
-| Focus Harness Chat | `Ctrl+Shift+H` | `Cmd+Shift+H` |
+| Focus ToddSpect Chat | `Ctrl+Shift+H` | `Cmd+Shift+H` |
 | Send message | `Enter` | `Enter` |
 | New line in input | `Shift+Enter` | `Shift+Enter` |
-| Select agent | `Ctrl+Shift+P` → *Harness: Select Agent* | same |
-| Add file to context | Right-click → *Add to Harness Context* | same |
-| Clear context | `Ctrl+Shift+P` → *Harness: Clear Context* | same |
-| Initialize workspace | `Ctrl+Shift+P` → *Harness: Initialize Workspace* | same |
-| Open configuration | `Ctrl+Shift+P` → *Harness: Open Configuration* | same |
+| Select agent | `Ctrl+Shift+P` → *ToddSpect: Select Agent* | same |
+| Add file to context | Right-click → *Add to ToddSpect Context* | same |
+| Clear context | `Ctrl+Shift+P` → *ToddSpect: Clear Context* | same |
+| Initialize workspace | `Ctrl+Shift+P` → *ToddSpect: Initialize Workspace* | same |
+| Open configuration | `Ctrl+Shift+P` → *ToddSpect: Open Configuration* | same |
 
 ---
 
 ## 14. Troubleshooting
 
-### "Harness CLI not found"
+### "ToddSpect CLI not found"
 
 The extension cannot locate the CLI daemon.
 
@@ -606,7 +606,7 @@ cd packages/cli && npm run build
 
 # 2. Point the extension to it
 # settings.json:
-{ "harness.cliPath": "/absolute/path/to/harness/packages/cli/dist/index.js" }
+{ "toddspect.cliPath": "/absolute/path/to/toddspect/packages/cli/dist/index.js" }
 ```
 
 ---
@@ -617,7 +617,7 @@ The daemon started but didn't respond to the startup handshake.
 
 **Diagnose:**
 
-1. Open the Harness output channel: `View → Output → Harness`
+1. Open the ToddSpect output channel: `View → Output → ToddSpect`
 2. Look for `[cli]` prefixed error lines
 3. Test manually:
 
@@ -643,7 +643,7 @@ Your API key is missing, expired, or has incorrect permissions.
 
 ### Responses are empty or truncated
 
-- Increase the model's `maxTokens` in `.harness/config.yaml`
+- Increase the model's `maxTokens` in `.toddspect/config.yaml`
 - Your context may be too large — remove some files from the context selector
 - Check the agent's rate limits or quota in their respective dashboards
 
@@ -651,11 +651,11 @@ Your API key is missing, expired, or has incorrect permissions.
 
 ### Extension is not activating
 
-Check the VSCode version (`Help → About`). Harness requires VSCode ≥ 1.85.
+Check the VSCode version (`Help → About`). ToddSpect requires VSCode ≥ 1.85.
 
 Verify the extension is enabled:
 ```
-Ctrl+Shift+P → Extensions: Show Installed Extensions → search "Harness"
+Ctrl+Shift+P → Extensions: Show Installed Extensions → search "ToddSpect"
 ```
 
 ---
@@ -667,11 +667,11 @@ Enable verbose output for the CLI daemon:
 ```jsonc
 // settings.json
 {
-  "harness.logLevel": "debug"
+  "toddspect.logLevel": "debug"
 }
 ```
 
-All CLI stderr output appears in the **Harness** output channel (`View → Output → Harness`).
+All CLI stderr output appears in the **ToddSpect** output channel (`View → Output → ToddSpect`).
 
 ---
 
@@ -681,8 +681,8 @@ All CLI stderr output appears in the **Harness** output channel (`View → Outpu
 |---|---|
 | [getting-started.md](getting-started.md) | Developer setup: clone, build, and run with F5 |
 | [architecture.md](architecture.md) | How the extension, CLI, and agents fit together |
-| [sdd-specs.md](sdd-specs.md) | Harness specs (Skills, Tools, Workflows) |
-| [sdd-speckit.md](sdd-speckit.md) | spec-kit SDD workflow in `.harness/sdd/` |
+| [sdd-specs.md](sdd-specs.md) | ToddSpect specs (Skills, Tools, Workflows) |
+| [sdd-speckit.md](sdd-speckit.md) | spec-kit SDD workflow in `.toddspect/sdd/` |
 | [agent-connectors.md](agent-connectors.md) | All configuration options per agent |
 | [ipc-protocol.md](ipc-protocol.md) | The stdin/stdout JSON protocol between extension and CLI |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | How to add new agent connectors or fix bugs |

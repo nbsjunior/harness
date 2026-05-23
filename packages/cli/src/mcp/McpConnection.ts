@@ -37,7 +37,7 @@ export class McpConnection {
 
   constructor(private readonly config: McpServerConfig) {
     this.client = new Client(
-      { name: 'harness-cli', version: '0.1.0' },
+      { name: 'toddspect-cli', version: '0.1.0' },
       { capabilities: { tools: {}, resources: {}, prompts: {} } },
     );
   }

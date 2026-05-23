@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Publish wiki/ folder to GitHub Wiki (harness.wiki.git).
+ * Publish wiki/ folder to GitHub Wiki (toddspect.wiki.git).
  * Usage: node scripts/publish-wiki.mjs
  */
 import { execSync } from 'child_process';
@@ -11,15 +11,15 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
 const wikiSrc = path.join(root, 'wiki');
-const wikiRemote = 'https://github.com/nbsjunior/harness.wiki.git';
+const wikiRemote = 'https://github.com/nbsjunior/toddspect.wiki.git';
 const workDir = path.join(root, '.wiki-publish');
 
 const gitEnv = {
   ...process.env,
-  GIT_AUTHOR_NAME: process.env.GIT_AUTHOR_NAME ?? 'Harness',
-  GIT_AUTHOR_EMAIL: process.env.GIT_AUTHOR_EMAIL ?? 'harness@users.noreply.github.com',
-  GIT_COMMITTER_NAME: process.env.GIT_COMMITTER_NAME ?? 'Harness',
-  GIT_COMMITTER_EMAIL: process.env.GIT_COMMITTER_EMAIL ?? 'harness@users.noreply.github.com',
+  GIT_AUTHOR_NAME: process.env.GIT_AUTHOR_NAME ?? 'ToddSpect',
+  GIT_AUTHOR_EMAIL: process.env.GIT_AUTHOR_EMAIL ?? 'toddspect@users.noreply.github.com',
+  GIT_COMMITTER_NAME: process.env.GIT_COMMITTER_NAME ?? 'ToddSpect',
+  GIT_COMMITTER_EMAIL: process.env.GIT_COMMITTER_EMAIL ?? 'toddspect@users.noreply.github.com',
 };
 
 function run(cmd, opts = {}) {

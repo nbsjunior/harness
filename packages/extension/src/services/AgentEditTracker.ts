@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import type { ChatToolEventPayload, LiveEditEntry } from '../types';
-import { HarnessSnapshotProvider } from './HarnessSnapshotProvider';
+import { ToddSpectSnapshotProvider } from './ToddSpectSnapshotProvider';
 
 interface FileCheckpoint {
   /** null = file did not exist before agent run */
@@ -25,7 +25,7 @@ export class AgentEditTracker {
   private readonly liveEdits = new Map<string, LiveEditEntry[]>();
 
   constructor(
-    private readonly snapshots: HarnessSnapshotProvider,
+    private readonly snapshots: ToddSpectSnapshotProvider,
     private readonly onLiveEdits: (sessionId: string, edits: LiveEditEntry[]) => void,
   ) {}
 
@@ -72,12 +72,12 @@ export class AgentEditTracker {
         }
       }
       this.onLiveEdits(event.sessionId, [...list]);
-      void vscode.commands.executeCommand('harness.liveEdits.focus');
+      void vscode.commands.executeCommand('toddspect.liveEdits.focus');
     }
 
     if (event.phase === 'after' && event.path) {
       const abs = path.resolve(event.path);
-      const cfg = vscode.workspace.getConfiguration('harness.agent');
+      const cfg = vscode.workspace.getConfiguration('toddspect.agent');
       if (cfg.get<boolean>('showLiveDiff', true)) {
         await this.openDiff(abs, session);
       }
@@ -86,7 +86,7 @@ export class AgentEditTracker {
       entry.preview = event.preview ?? afterContent.slice(0, 400);
       entry.beforeContent = session.files.get(abs)?.before ?? entry.beforeContent;
       this.onLiveEdits(event.sessionId, [...list]);
-      void vscode.commands.executeCommand('harness.liveEdits.focus');
+      void vscode.commands.executeCommand('toddspect.liveEdits.focus');
 
       if (cfg.get<boolean>('openChangedFiles', true)) {
         try {
@@ -132,7 +132,7 @@ export class AgentEditTracker {
     this.onLiveEdits(sessionId, []);
 
     void vscode.window.showInformationMessage(
-      `Harness of AI: reverted agent changes (${restored} restored, ${removed} new files removed).`,
+      `ToddSpect: reverted agent changes (${restored} restored, ${removed} new files removed).`,
     );
 
     return { restored, removed };
@@ -160,7 +160,7 @@ export class AgentEditTracker {
     }
     const left = this.snapshots.setSnapshot(absPath, cp.before);
     const right = vscode.Uri.file(absPath);
-    const title = `${path.basename(absPath)} (Harness — before ↔ after)`;
+    const title = `${path.basename(absPath)} (ToddSpect — before ↔ after)`;
     await vscode.commands.executeCommand('vscode.diff', left, right, title);
   }
 }

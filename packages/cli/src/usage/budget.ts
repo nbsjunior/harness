@@ -1,5 +1,5 @@
 /**
- * Spending budgets and alert evaluation for `.harness/usage-stats.json`.
+ * Spending budgets and alert evaluation for `.toddspect/usage-stats.json`.
  */
 import type { AgentId } from '../types.js';
 import type { UsageStatsSnapshot } from './usageTracker.js';

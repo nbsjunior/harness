@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as child_process from 'child_process';
 import { EventEmitter } from 'events';
 import type { IPCMessage, IpcAction } from '../types';
-import { buildHarnessProcessEnv } from '../configBridge';
+import { buildToddSpectProcessEnv } from '../configBridge';
 import { redactSecrets, traceLog } from '../trace';
 
 interface PendingRequest {
@@ -24,7 +24,7 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const PING_TIMEOUT_MS = 5_000;
 
 /**
- * Manages the lifecycle of the Harness CLI daemon subprocess and all
+ * Manages the lifecycle of the ToddSpect CLI daemon subprocess and all
  * IPC communication with it.
  *
  * Transport: newline-delimited JSON over stdin/stdout.
@@ -76,12 +76,12 @@ export class CliService extends EventEmitter {
   private async doStart(): Promise<void> {
     try {
       const cliPath = this.resolveCliPath();
-      this.output.info(`Starting Harness of AI CLI daemon: ${cliPath}`);
+      this.output.info(`Starting ToddSpect CLI daemon: ${cliPath}`);
 
       const env = await this.buildCliEnv();
       const cwd =
-        env['HARNESS_WORKSPACE'] && fs.existsSync(env['HARNESS_WORKSPACE'])
-          ? env['HARNESS_WORKSPACE']
+        env['TODDSPECT_WORKSPACE'] && fs.existsSync(env['TODDSPECT_WORKSPACE'])
+          ? env['TODDSPECT_WORKSPACE']
           : undefined;
 
       this.subprocess = child_process.spawn('node', [cliPath, '--ipc'], {
@@ -114,7 +114,7 @@ export class CliService extends EventEmitter {
 
       await this.ping();
       this.restartAttempts = 0;
-      this.output.info('Harness of AI CLI daemon ready.');
+      this.output.info('ToddSpect CLI daemon ready.');
     } catch (err) {
       this.subprocess?.kill('SIGTERM');
       this.subprocess = null;
@@ -203,11 +203,11 @@ export class CliService extends EventEmitter {
   async runCommand(command: string, args: string[] = []): Promise<RunCommandResult> {
     const cliPath = this.resolveCliPath();
     const env = await this.buildCliEnv();
-    delete env['HARNESS_IPC'];
+    delete env['TODDSPECT_IPC'];
 
     const cwd =
-      env['HARNESS_WORKSPACE'] && fs.existsSync(env['HARNESS_WORKSPACE'])
-        ? env['HARNESS_WORKSPACE']
+      env['TODDSPECT_WORKSPACE'] && fs.existsSync(env['TODDSPECT_WORKSPACE'])
+        ? env['TODDSPECT_WORKSPACE']
         : undefined;
 
     return new Promise<RunCommandResult>((resolve) => {
@@ -412,15 +412,15 @@ export class CliService extends EventEmitter {
   }
 
   private async buildCliEnv(): Promise<NodeJS.ProcessEnv> {
-    return buildHarnessProcessEnv(this.context, {
+    return buildToddSpectProcessEnv(this.context, {
       ...process.env,
-      HARNESS_IPC: '1',
+      TODDSPECT_IPC: '1',
     });
   }
 
   private resolveCliPath(): string {
     const configPath = vscode.workspace
-      .getConfiguration('harness')
+      .getConfiguration('toddspect')
       .get<string>('cliPath', '');
 
     if (configPath && fs.existsSync(configPath)) {
@@ -441,8 +441,8 @@ export class CliService extends EventEmitter {
     }
 
     throw new Error(
-      'Harness of AI CLI not found. Run `npm run build:cli` in the monorepo root, ' +
-        'or set `harness.cliPath` in VSCode settings.',
+      'ToddSpect CLI not found. Run `npm run build:cli` in the monorepo root, ' +
+        'or set `toddspect.cliPath` in VSCode settings.',
     );
   }
 }

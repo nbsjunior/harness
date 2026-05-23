@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # IPC Protocol
@@ -39,6 +39,6 @@ Extension ↔ CLI communication when the daemon runs with `--ipc`.
 
 ## Debugging
 
-**View → Output → Harness** — extension-side trace (secrets redacted).
+**View → Output → ToddSpect** — extension-side trace (secrets redacted).
 
 CLI logs appear as `[cli] ...` in the same channel.

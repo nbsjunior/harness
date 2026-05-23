@@ -21,7 +21,7 @@ import type { AgentId } from './types.js';
 
 if (process.argv.includes('--ipc')) {
   startIpcServer().catch((err: Error) => {
-    process.stderr.write(`[harness-cli] IPC server fatal error: ${err.message}\n`);
+    process.stderr.write(`[toddspect-cli] IPC server fatal error: ${err.message}\n`);
     process.exit(1);
   });
 } else {
@@ -30,17 +30,17 @@ if (process.argv.includes('--ipc')) {
   // ---------------------------------------------------------------------------
 
   program
-    .name('harness')
-    .description('Harness — Meta-Agent Orchestrator CLI')
+    .name('toddspect')
+    .description('ToddSpect — Meta-Agent Orchestrator CLI')
     .version('0.1.0');
 
   // ---------------------------------------------------------------------------
-  // harness init [dir]
+  // toddspect init [dir]
   // ---------------------------------------------------------------------------
 
   program
     .command('init')
-    .description('Initialize a Harness workspace in the given directory (defaults to cwd)')
+    .description('Initialize a ToddSpect workspace in the given directory (defaults to cwd)')
     .argument('[dir]', 'Target directory', '.')
     .action(async (dir: string) => {
       try {
@@ -52,7 +52,7 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // harness agent:run
+  // toddspect agent:run
   // ---------------------------------------------------------------------------
 
   program
@@ -65,7 +65,7 @@ if (process.argv.includes('--ipc')) {
     .requiredOption('-p, --prompt <text>', 'Prompt to send to the agent')
     .option('-d, --dirs <dirs>', 'Comma-separated list of context directories')
     .option('-s, --specs-dir <dir>', 'Path to the specs directory')
-    .option('-c, --config <file>', 'Path to harness config.yaml')
+    .option('-c, --config <file>', 'Path to toddspect config.yaml')
     .action(async (options) => {
       const validAgents = ['auto', 'copilot', 'devin', 'cursor', 'claude', 'kiro'] as const;
       const agent = options.agent as (typeof validAgents)[number];
@@ -90,7 +90,7 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // harness spec:parse
+  // toddspect spec:parse
   // ---------------------------------------------------------------------------
 
   program
@@ -112,7 +112,7 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // harness check getGoat
+  // toddspect check getGoat
   // ---------------------------------------------------------------------------
 
   program
@@ -131,14 +131,14 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // harness setup — Kiro CLI + AI-DLC + workspace
+  // toddspect setup — Kiro CLI + AI-DLC + workspace
   // ---------------------------------------------------------------------------
 
   program
     .command('setup')
-    .description('Bootstrap Kiro CLI, AI-DLC rules, and Harness workspace (run after install)')
+    .description('Bootstrap Kiro CLI, AI-DLC rules, and ToddSpect workspace (run after install)')
     .argument('[dir]', 'Workspace directory', '.')
-    .option('--skip-init', 'Do not run harness init')
+    .option('--skip-init', 'Do not run toddspect init')
     .option('--skip-kiro', 'Do not install or locate Kiro CLI')
     .option('--skip-aidlc', 'Do not install AI-DLC steering rules')
     .option('-q, --quiet', 'Minimal output', false)
@@ -164,7 +164,7 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // harness aidlc install | status
+  // toddspect aidlc install | status
   // ---------------------------------------------------------------------------
 
   const aidlc = program.command('aidlc').description('AI-DLC workflow rules (Kiro steering)');
@@ -233,7 +233,7 @@ if (process.argv.includes('--ipc')) {
     });
 
   // ---------------------------------------------------------------------------
-  // harness context:build
+  // toddspect context:build
   // ---------------------------------------------------------------------------
 
   program

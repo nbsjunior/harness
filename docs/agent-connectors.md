@@ -1,6 +1,6 @@
 # Agent Connectors
 
-Harness routes requests to AI agents via **connectors** — adapter implementations in the CLI's `AgentRouter`. Each connector translates a generic `AgentRequest` into the specific API call for that agent.
+ToddSpect routes requests to AI agents via **connectors** — adapter implementations in the CLI's `AgentRouter`. Each connector translates a generic `AgentRequest` into the specific API call for that agent.
 
 ---
 
@@ -8,7 +8,7 @@ Harness routes requests to AI agents via **connectors** — adapter implementati
 
 Connectors are configured in two layers (CLI merges them, env vars take precedence):
 
-### 1. `.harness/config.yaml` (project-level, committed)
+### 1. `.toddspect/config.yaml` (project-level, committed)
 
 ```yaml
 connectors:
@@ -28,16 +28,16 @@ connectors:
 
 ### 2. VSCode Settings (machine-level, not committed)
 
-Open `Ctrl+Shift+P → Harness: Open Configuration` or edit `settings.json`:
+Open `Ctrl+Shift+P → ToddSpect: Open Configuration` or edit `settings.json`:
 
 ```json
 {
-  "harness.connectors.copilot.token": "ghp_xxxx",
-  "harness.connectors.devin.apiKey": "devin_xxxx",
-  "harness.connectors.cursor.apiKey": "cursor_xxxx",
-  "harness.connectors.claude.path": "/usr/local/bin/claude",
-  "harness.connectors.claude.apiKey": "sk-ant-xxxx",
-  "harness.connectors.kiro.apiKey": "kiro_xxxx"
+  "toddspect.connectors.copilot.token": "ghp_xxxx",
+  "toddspect.connectors.devin.apiKey": "devin_xxxx",
+  "toddspect.connectors.cursor.apiKey": "cursor_xxxx",
+  "toddspect.connectors.claude.path": "/usr/local/bin/claude",
+  "toddspect.connectors.claude.apiKey": "sk-ant-xxxx",
+  "toddspect.connectors.kiro.apiKey": "kiro_xxxx"
 }
 ```
 
@@ -88,7 +88,7 @@ use one of these instead:
 | **GitHub CLI (recommended)** | `gh auth login` → copy output of `gh auth token` (`gho_…`) |
 | **Fine-grained PAT** | [github.com/settings/personal-access-tokens](https://github.com/settings/personal-access-tokens) with **Copilot** permissions (`github_pat_…`) |
 
-Harness sends the header `Copilot-Integration-Id: copilot-developer-cli` on every Copilot API request.
+ToddSpect sends the header `Copilot-Integration-Id: copilot-developer-cli` on every Copilot API request.
 
 You need an **active GitHub Copilot subscription** on the account.
 
@@ -102,7 +102,7 @@ You need an **active GitHub Copilot subscription** on the account.
 
 #### How it works
 
-Creates a new Devin session (`POST /sessions`) with the user's prompt. Returns a session URL where Devin works asynchronously. Harness displays the session URL in the chat so you can monitor progress.
+Creates a new Devin session (`POST /sessions`) with the user's prompt. Returns a session URL where Devin works asynchronously. ToddSpect displays the session URL in the chat so you can monitor progress.
 
 ```yaml
 connectors:
@@ -121,7 +121,7 @@ connectors:
 
 ### Cursor AI
 
-Harness uses **two paths** depending on chat mode and settings:
+ToddSpect uses **two paths** depending on chat mode and settings:
 
 | Path | When | Local VS Code files |
 |------|------|---------------------|
@@ -134,9 +134,9 @@ Full details: [cursor-agent.md](cursor-agent.md).
 
 **Package:** `@cursor/sdk` (loaded at runtime from `extension/cli/node_modules/@cursor/`).
 
-**Requires:** `CURSOR_API_KEY` or `harness.connectors.cursor.apiKey`.
+**Requires:** `CURSOR_API_KEY` or `toddspect.connectors.cursor.apiKey`.
 
-**Setting:** `harness.cursor.agentExecution` — `auto` (default), `local`, or `cloud`.
+**Setting:** `toddspect.cursor.agentExecution` — `auto` (default), `local`, or `cloud`.
 
 Does **not** require GitHub Copilot for local file edits.
 
@@ -146,7 +146,7 @@ Does **not** require GitHub Copilot for local file edits.
 **Streaming:** Yes (SSE on run stream)  
 **Default endpoint:** `https://api.cursor.com`
 
-Harness calls `POST /v1/agents`, then streams from `GET /v1/agents/{id}/runs/{runId}/stream`. Follow-ups use `POST /v1/agents/{id}/runs`.
+ToddSpect calls `POST /v1/agents`, then streams from `GET /v1/agents/{id}/runs/{runId}/stream`. Follow-ups use `POST /v1/agents/{id}/runs`.
 
 **Do not use `api2.cursor.sh`** — IDE internal API (gRPC), not REST → HTTP 404.
 
@@ -198,7 +198,7 @@ claude --version
 - Claude Code uses its own authentication by default (`claude auth login`)
 - Set `ANTHROPIC_API_KEY` to use API key auth instead
 - Context files are passed via `--file` flags (if supported by your Claude version)
-- Stderr output from Claude is forwarded to Harness's stderr (not surfaced in chat)
+- Stderr output from Claude is forwarded to ToddSpect's stderr (not surfaced in chat)
 
 ---
 
@@ -211,7 +211,7 @@ claude --version
 
 #### How it works
 
-1. Harness installs (or verifies) AI-DLC rules under `.kiro/steering/aws-aidlc-rules/` and `.kiro/aws-aidlc-rule-details/`.
+1. ToddSpect installs (or verifies) AI-DLC rules under `.kiro/steering/aws-aidlc-rules/` and `.kiro/aws-aidlc-rule-details/`.
 2. Chat messages to agent `kiro` run `kiro-cli` with your prompt (prefixed with `Using AI-DLC,` when needed).
 3. Kiro loads steering files and executes the adaptive Inception → Construction → Operations workflow.
 4. Generated documentation lands in `aidlc-docs/`.
@@ -229,13 +229,13 @@ aidlc:
 
 ```bash
 export KIRO_API_KEY=...   # Kiro Pro API key — see kiro.dev/docs/cli/authentication
-harness aidlc install
-harness agent:run -a kiro -p "Using AI-DLC, add user authentication"
+toddspect aidlc install
+toddspect agent:run -a kiro -p "Using AI-DLC, add user authentication"
 ```
 
 #### Notes
 
-- Install rules: `harness aidlc install` or **Harness: Install AI-DLC Workflow (Kiro)**
+- Install rules: `toddspect aidlc install` or **ToddSpect: Install AI-DLC Workflow (Kiro)**
 - Verify in Kiro CLI: `/context show` → `.kiro/steering/aws-aidlc-rules`
 - Full guide: [aidlc-kiro.md](aidlc-kiro.md)
 - Legacy `mode: rest` + `endpoint` still supported for custom REST gateways
@@ -244,12 +244,12 @@ harness agent:run -a kiro -p "Using AI-DLC, add user authentication"
 
 ## MCP Servers
 
-In addition to the built-in connectors, Harness supports connecting to any **Model Context Protocol (MCP)** server. MCP servers expose tools and resources that can be invoked by agents.
+In addition to the built-in connectors, ToddSpect supports connecting to any **Model Context Protocol (MCP)** server. MCP servers expose tools and resources that can be invoked by agents.
 
 ### Configuration
 
 ```yaml
-# .harness/config.yaml
+# .toddspect/config.yaml
 mcp:
   enabled: true
   servers:
@@ -274,8 +274,8 @@ mcp:
 
 ```json
 {
-  "harness.mcp.enabled": true,
-  "harness.mcp.servers": [
+  "toddspect.mcp.enabled": true,
+  "toddspect.mcp.servers": [
     {
       "name": "filesystem",
       "transport": "stdio",
@@ -297,14 +297,14 @@ mcp:
 
 ## Connector Selection Logic
 
-When a chat message is sent without an explicit agent, Harness uses:
+When a chat message is sent without an explicit agent, ToddSpect uses:
 
 1. The agent selected in the chat dropdown (saved per session)
 2. The `agents.preferred` field in the active Spec (if a spec context is loaded)
-3. The `harness.defaultAgent` workspace setting
+3. The `toddspect.defaultAgent` workspace setting
 4. Falls back to `copilot` if nothing is configured
 
-If the preferred agent fails (API error, missing token, etc.), Harness **does not** automatically fall back — the error is shown in the chat. The `agents.fallback` field in a Spec is intended for future automatic fallback support.
+If the preferred agent fails (API error, missing token, etc.), ToddSpect **does not** automatically fall back — the error is shown in the chat. The `agents.fallback` field in a Spec is intended for future automatic fallback support.
 
 ---
 

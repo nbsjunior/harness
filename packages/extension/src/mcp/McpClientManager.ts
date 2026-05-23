@@ -41,7 +41,7 @@ export class McpClientManager {
    * Connect to all MCP servers defined in the workspace configuration.
    */
   async connectFromConfig(): Promise<void> {
-    const config = vscode.workspace.getConfiguration('harness');
+    const config = vscode.workspace.getConfiguration('toddspect');
     const serversConfig = config.get<McpServerConfig[]>('mcp.servers', []);
     const enabled = config.get<boolean>('mcp.enabled', true);
 
@@ -66,7 +66,7 @@ export class McpClientManager {
     this.output.info(`Connecting to MCP server: ${config.name} (${config.transport})`);
 
     const client = new Client(
-      { name: 'harness', version: '0.1.0' },
+      { name: 'toddspect', version: '0.1.0' },
       { capabilities: { tools: {}, resources: {}, prompts: {} } },
     );
 

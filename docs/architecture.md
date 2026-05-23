@@ -1,11 +1,11 @@
-# Harness — Technical Architecture
+# ToddSpect — Technical Architecture
 
 > **AI assistants:** read [ai-reference.md](ai-reference.md) first for design *rationale*;
 > use [code-map.md](code-map.md) to locate functions. This doc focuses on structure and diagrams.
 
 ## Overview
 
-Harness routes natural-language prompts to AI coding agents through a **decoupled
+ToddSpect routes natural-language prompts to AI coding agents through a **decoupled
 dual-mode architecture**: the user-facing layer (VS Code Extension or CLI commands)
 is completely separated from the agent-calling layer (CLI daemon).
 
@@ -19,7 +19,7 @@ is completely separated from the agent-calling layer (CLI daemon).
 │                                                                 │
 │  ┌─────────────────────────┐    ┌──────────────────────────┐   │
 │  │  VS Code Extension       │    │  Standalone CLI          │   │
-│  │  packages/extension/     │    │  harness chat/run/check  │   │
+│  │  packages/extension/     │    │  toddspect chat/run/check  │   │
 │  │                         │    │                          │   │
 │  │  ChatViewProvider        │    │  commander program       │   │
 │  │  SpecManagerPanel        │    │  (index.ts)              │   │
@@ -43,7 +43,7 @@ is completely separated from the agent-calling layer (CLI daemon).
 │  ┌─────────────────┐    │  routeCursor()                  │    │
 │  │  config.ts      │───▶│  routeKiro()                    │    │
 │  │                 │    └──────────┬──────────────────────┘    │
-│  │  loadHarness    │               │                           │
+│  │  loadToddSpect    │               │                           │
 │  │  Config()       │               ▼                           │
 │  │  5-layer merge  │    ┌─────────────────────────────────┐    │
 │  └─────────────────┘    │  Connectors                     │    │
@@ -102,14 +102,14 @@ VS Code Secrets API
        ↓
 Environment variables
        ↓
-HARNESS_SETTINGS_JSON  ← built by configBridge.ts from VS Code settings
+TODDSPECT_SETTINGS_JSON  ← built by configBridge.ts from VS Code settings
        ↓
-.harness/config.yaml
+.toddspect/config.yaml
        ↓
 Defaults
 ```
 
-`loadHarnessConfig()` in `config.ts` merges these into a single `LoadedHarnessConfig`.
+`loadToddSpectConfig()` in `config.ts` merges these into a single `LoadedToddSpectConfig`.
 
 ---
 
@@ -164,11 +164,11 @@ specPaths ──▶ readContextFiles(specPaths)
 ## Kiro + AI-DLC Integration
 
 ```
-harness chat --agent kiro "implement feature X"
+toddspect chat --agent kiro "implement feature X"
         ↓
 AgentRouter.routeKiro()
         ↓
-ensureKiroCli()   ← downloads binary if missing (~/.harness/tools/kiro-cli/)
+ensureKiroCli()   ← downloads binary if missing (~/.toddspect/tools/kiro-cli/)
         ↓
 ensureAidlcInstalled()  ← copies steering rules to .kiro/steering/
         ↓
@@ -195,7 +195,7 @@ node scripts/bundle-cli.mjs
     └── copies cli/dist/index.js + vendor/ → extension/cli/
 
 npx @vscode/vsce package
-    └── harness-vscode-0.1.0.vsix
+    └── toddspect-vscode-0.1.0.vsix
 ```
 
 ### CLI Bundle Special Requirements

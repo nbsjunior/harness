@@ -30,7 +30,7 @@ export const AUTO_SELECTION_DESCRIPTOR: AutoSelectionDescriptor = {
   id: 'auto',
   label: 'Auto',
   description:
-    'Harness of AI picks the best provider from your prompt (default: Copilot; complex code → Claude; integrations → Claude; specs → Kiro; …)',
+    'ToddSpect picks the best provider from your prompt (default: Copilot; complex code → Claude; integrations → Claude; specs → Kiro; …)',
 };
 
 export interface AgentDescriptor {
@@ -156,7 +156,7 @@ export interface SpecDefinition {
 }
 
 // ---------------------------------------------------------------------------
-// SDD workflow (GitHub spec-kit aligned — .harness/sdd/)
+// SDD workflow (GitHub spec-kit aligned — .toddspect/sdd/)
 // ---------------------------------------------------------------------------
 
 export type SddStepId =

@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # Auto provider routing
 
-Choose **Auto** in the chat provider bar and Harness picks the best agent for each message.
+Choose **Auto** in the chat provider bar and ToddSpect picks the best agent for each message.
 
 ## Default behavior
 
-- **Starting provider:** Auto (configurable via `harness.defaultAgent`).
+- **Starting provider:** Auto (configurable via `toddspect.defaultAgent`).
 - **When unsure:** routes to **GitHub Copilot**.
 - **When configured agents are missing:** falls back along  
   Copilot → Claude → Cursor → Devin → Kiro.
@@ -34,16 +34,16 @@ Then the response streams from that provider.
 
 ## Configure
 
-1. Open **Harness → Configuration** and set up the agents you want in the rotation.
-2. Run **`Harness: Check getGoat`** (or `harness check getGoat`) to see which agents are ready.
+1. Open **ToddSpect → Configuration** and set up the agents you want in the rotation.
+2. Run **`ToddSpect: Check getGoat`** (or `toddspect check getGoat`) to see which agents are ready.
 3. Optional: set **Default agent** to `auto` in workspace settings.
 
 ## CLI
 
 ```bash
-harness agent:run --agent auto --prompt "integrate Stripe webhooks"
+toddspect agent:run --agent auto --prompt "integrate Stripe webhooks"
 ```
 
 ## Learn more
 
-Full algorithm and rule list: [auto-routing.md](https://github.com/nbsjunior/harness/blob/main/docs/auto-routing.md) in the repository.
+Full algorithm and rule list: [auto-routing.md](https://github.com/nbsjunior/ToddSpect/blob/main/docs/auto-routing.md) in the repository.

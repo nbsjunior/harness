@@ -20,7 +20,7 @@ export const DEFAULT_PROMPT_OPTIMIZATION: PromptOptimizationSettings = {
   maxHistoryMessages: 24,
 };
 
-const EFFICIENCY_PREAMBLE = `You are assisting through Harness (multi-provider orchestrator).
+const EFFICIENCY_PREAMBLE = `You are assisting through ToddSpect (multi-provider orchestrator).
 
 ## Response contract
 - Answer the user’s goal first; supporting detail second.
@@ -40,7 +40,7 @@ const MODE_HINTS: Record<CopilotMode, string> = {
   ask: 'Mode: Q&A — no file edits unless explicitly requested.',
   agent: 'Mode: implementation — make focused changes; cite paths you touch.',
   'spec+agent':
-    'Mode: spec-driven — follow active Harness specs; satisfy acceptance criteria before extras.',
+    'Mode: spec-driven — follow active ToddSpect specs; satisfy acceptance criteria before extras.',
 };
 
 export function loadPromptOptimizationFromBridge(
@@ -56,7 +56,7 @@ export function loadPromptOptimizationFromBridge(
   };
 }
 
-export function buildHarnessSystemGuidance(mode?: CopilotMode): string {
+export function buildToddSpectSystemGuidance(mode?: CopilotMode): string {
   const m = mode ?? 'ask';
   return augmentGuidanceForMode(`${EFFICIENCY_PREAMBLE}\n\n${MODE_HINTS[m]}`, m);
 }
@@ -83,7 +83,7 @@ export function truncateFileContent(content: string, maxChars: number): string {
   const tail = maxChars - head - 80;
   return (
     content.slice(0, head) +
-    `\n\n… [Harness: ${content.length - head - tail} chars omitted for token budget] …\n\n` +
+    `\n\n… [ToddSpect: ${content.length - head - tail} chars omitted for token budget] …\n\n` +
     content.slice(-tail)
   );
 }
@@ -99,7 +99,7 @@ export function applyContextTruncation(
 }
 
 /**
- * Prepend Harness guidance and trim history when optimization is on.
+ * Prepend ToddSpect guidance and trim history when optimization is on.
  * Skips duplicate guidance if already present.
  */
 export function optimizeMessagesForRouting(
@@ -112,9 +112,9 @@ export function optimizeMessagesForRouting(
   if (settings.enabled) {
     out = applyPromptEngineeringPipeline(out, mode);
 
-    const guidance = buildHarnessSystemGuidance(mode);
+    const guidance = buildToddSpectSystemGuidance(mode);
     const hasGuidance = out.some(
-      (m) => m.role === 'system' && m.content.includes('assisting through Harness'),
+      (m) => m.role === 'system' && m.content.includes('assisting through ToddSpect'),
     );
     if (!hasGuidance) {
       out.unshift({

@@ -1,5 +1,5 @@
 /**
- * Community connector plugin registry (`.harness/plugins.json`).
+ * Community connector plugin registry (`.toddspect/plugins.json`).
  * MVP: load manifest; dynamic connector loading is reserved for future marketplace builds.
  */
 import * as fs from 'fs';
@@ -7,7 +7,7 @@ import * as path from 'path';
 import { getWorkspaceRoot } from '../config.js';
 import type { AgentId } from '../types.js';
 
-export interface HarnessPluginManifest {
+export interface ToddSpectPluginManifest {
   id: string;
   label: string;
   description?: string;
@@ -19,22 +19,22 @@ export interface HarnessPluginManifest {
   enabled?: boolean;
 }
 
-export interface HarnessPluginRegistry {
+export interface ToddSpectPluginRegistry {
   version: number;
-  plugins: HarnessPluginManifest[];
+  plugins: ToddSpectPluginManifest[];
 }
 
 export function pluginsManifestPath(workspaceRoot?: string): string {
-  return path.join(workspaceRoot ?? getWorkspaceRoot(), '.harness', 'plugins.json');
+  return path.join(workspaceRoot ?? getWorkspaceRoot(), '.toddspect', 'plugins.json');
 }
 
-export function loadPluginRegistry(workspaceRoot?: string): HarnessPluginRegistry {
+export function loadPluginRegistry(workspaceRoot?: string): ToddSpectPluginRegistry {
   const filePath = pluginsManifestPath(workspaceRoot);
   if (!fs.existsSync(filePath)) {
     return { version: 1, plugins: [] };
   }
   try {
-    const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as HarnessPluginRegistry;
+    const raw = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as ToddSpectPluginRegistry;
     return {
       version: raw.version ?? 1,
       plugins: Array.isArray(raw.plugins) ? raw.plugins.filter((p) => p?.id) : [],
@@ -44,7 +44,7 @@ export function loadPluginRegistry(workspaceRoot?: string): HarnessPluginRegistr
   }
 }
 
-export function listEnabledPlugins(workspaceRoot?: string): HarnessPluginManifest[] {
+export function listEnabledPlugins(workspaceRoot?: string): ToddSpectPluginManifest[] {
   return loadPluginRegistry(workspaceRoot).plugins.filter((p) => p.enabled !== false);
 }
 

@@ -1,4 +1,4 @@
-# Harness — AI Reference (design rationale)
+# ToddSpect — AI Reference (design rationale)
 
 > **Goal:** explain *why* things exist so you can change the codebase without a full tree walk.
 > Pair with [code-map.md](code-map.md) for *where* things live.
@@ -7,18 +7,18 @@
 
 ## Product intent
 
-Harness is a **meta-agent orchestrator**: one **VS Code** UI (or CLI) talks to many backends
+ToddSpect is a **meta-agent orchestrator**: one **VS Code** UI (or CLI) talks to many backends
 (Copilot, Devin, Cursor, Claude Code, Kiro) so developers **do not change IDE per provider**.
 
-Differentiators (user-facing copy in [why-harness.md](why-harness.md)):
+Differentiators (user-facing copy in [why-toddspect.md](why-toddspect.md)):
 
 - **One IDE, many providers** — provider pills + **Auto** routing in one sidebar.
-- **Spec-Driven Development** — `.harness/specs/` + **Spec+Agent** injects specs as system context.
+- **Spec-Driven Development** — `.toddspect/specs/` + **Spec+Agent** injects specs as system context.
 - **Context engineering** — file/directory attachments are **provider-agnostic** (same context after switching agent).
 
-The user picks an agent and mode; Harness handles auth, context, specs, streaming, and Copilot tool loops.
+The user picks an agent and mode; ToddSpect handles auth, context, specs, streaming, and Copilot tool loops.
 
-**Non-goals:** Harness is not a new LLM. It does not embed model weights. It routes and wraps.
+**Non-goals:** ToddSpect is not a new LLM. It does not embed model weights. It routes and wraps.
 
 ---
 
@@ -28,10 +28,10 @@ The user picks an agent and mode; Harness handles auth, context, specs, streamin
 |------|--------|
 | **Extension never reads file contents** | Keeps VS Code UI thread free; all `fs` in CLI. |
 | **stdout = JSON IPC only** (daemon) | Extension parses stdout line-by-line as frames. |
-| **stderr = human logs** | Use `harnessLog()` / `harnessWarn()` from `log.ts`. |
+| **stderr = human logs** | Use `toddspectLog()` / `toddspectWarn()` from `log.ts`. |
 | **CLI bundled in VSIX** | Extension ships `cli/dist/index.js` (~900 KB ESM); no `npm install` in extension folder. |
 | **Duplicate `types.ts`** | CLI and extension cannot import each other at runtime; keep shapes in sync manually. |
-| **Secrets not in YAML** | `.harness/config.yaml` is for non-secret defaults only. |
+| **Secrets not in YAML** | `.toddspect/config.yaml` is for non-secret defaults only. |
 
 ---
 
@@ -43,10 +43,10 @@ User → Webview → Extension Host → stdin/stdout JSON → CLI Daemon → Age
 
 - **Extension host** is sandboxed and should stay responsive.
 - **CLI daemon** does blocking I/O (read files, HTTP, subprocesses for Claude/Kiro).
-- Same CLI runs standalone (`harness chat`) without the extension — one router, two entry points.
+- Same CLI runs standalone (`toddspect chat`) without the extension — one router, two entry points.
 
 **Daemon stability (Windows):** `IpcServer` must **not** `process.exit(0)` on stdin `end` — spurious EOF
-on Windows caused "CLI daemon exited unexpectedly". Heavy work (Kiro download, `harness setup`) runs in a
+on Windows caused "CLI daemon exited unexpectedly". Heavy work (Kiro download, `toddspect setup`) runs in a
 **separate** `CliService.runCommand('setup')` subprocess, not inside the IPC daemon.
 
 ---
@@ -57,10 +57,10 @@ on Windows caused "CLI daemon exited unexpectedly". Heavy work (Kiro download, `
 |------|------------------|----------------|
 | **ask** | Chat only, no file edits | `routeCopilot` → SSE `streamSseRequest`, `stream: true` |
 | **agent** | Autonomous edits | `routeCopilotAgent` → non-streaming loop + OpenAI `tools` (max 10 iterations) |
-| **spec+agent** | Agent + project rules | Same as agent; `IpcServer` prepends `<spec>` system blocks from `.harness/specs/*.yaml` |
+| **spec+agent** | Agent + project rules | Same as agent; `IpcServer` prepends `<spec>` system blocks from `.toddspect/specs/*.yaml` |
 
 Tools in agent mode: `read_file`, `write_file`, `list_files`, `search_in_files` — implemented at bottom
-of `AgentRouter.ts` (`executeCopilotTool`). Paths resolve against `HARNESS_WORKSPACE` or context paths.
+of `AgentRouter.ts` (`executeCopilotTool`). Paths resolve against `TODDSPECT_WORKSPACE` or context paths.
 
 **UI:** `webview/chat/main.ts` mode bar → `selectMode` → `ChatViewProvider.selectedMode` → `ChatSendPayload.mode`.
 
@@ -77,9 +77,9 @@ GitHub Copilot API (`api.githubcopilot.com`) requires:
 **Resolution order (extension → CLI env):**
 
 1. Live `gh auth token` (freshest — `configBridge.ts` prefers this over stale VS Code secrets)
-2. VS Code secret `harness.connectors.copilot.token`
+2. VS Code secret `toddspect.connectors.copilot.token`
 3. `GH_TOKEN` / `COPILOT_GITHUB_TOKEN` env vars
-4. `loadHarnessConfig()` also calls `getGhCliToken()` as fallback
+4. `loadToddSpectConfig()` also calls `getGhCliToken()` as fallback
 
 **User fix:** `gh auth refresh --scopes copilot` then reload VS Code.
 
@@ -93,16 +93,16 @@ Different deployment contexts:
 
 - **Developer in VS Code** → secrets + settings bridge
 - **CI / script** → env vars
-- **Team defaults** → `.harness/config.yaml`
+- **Team defaults** → `.toddspect/config.yaml`
 - **Copilot live token** → `gh auth token` subprocess
 
-`HARNESS_SETTINGS_JSON` carries non-secret VS Code settings (endpoints, Kiro cli path) into the CLI child process.
+`TODDSPECT_SETTINGS_JSON` carries non-secret VS Code settings (endpoints, Kiro cli path) into the CLI child process.
 
 ---
 
 ## Kiro + AI-DLC — why CLI subprocess?
 
-Kiro has no simple REST chat API in Harness. Integration uses **kiro-cli** headless plus **steering files**
+Kiro has no simple REST chat API in ToddSpect. Integration uses **kiro-cli** headless plus **steering files**
 from [awslabs/aidlc-workflows](https://github.com/awslabs/aidlc-workflows) installed under `.kiro/steering/`.
 
 - `ensureKiroCli()` downloads/caches binary per OS (see `kiro/bootstrap.ts`).
@@ -118,11 +118,11 @@ from [awslabs/aidlc-workflows](https://github.com/awslabs/aidlc-workflows) insta
 | User choice | Implementation |
 |-------------|----------------|
 | **Cursor + Ask** | `routeCursorCloud()` — remote Cloud Agents API |
-| **Cursor + Agent** (default `auto`, API key set) | `routeCursorLocal()` — `@cursor/sdk` with `local: { cwd: HARNESS_WORKSPACE }` |
-| **`harness.cursor.agentExecution: cloud`** | Always Cloud — no local file edits; Live Edits empty |
+| **Cursor + Agent** (default `auto`, API key set) | `routeCursorLocal()` — `@cursor/sdk` with `local: { cwd: TODDSPECT_WORKSPACE }` |
+| **`toddspect.cursor.agentExecution: cloud`** | Always Cloud — no local file edits; Live Edits empty |
 | **Fallback** | If SDK unavailable and Copilot configured, Copilot tool loop (uses Copilot quota) |
 
-**Why two paths:** Cursor Cloud cannot write to the user's open VS Code tree. Local edits need either the Cursor SDK on disk or Harness's Copilot tool loop.
+**Why two paths:** Cursor Cloud cannot write to the user's open VS Code tree. Local edits need either the Cursor SDK on disk or ToddSpect's Copilot tool loop.
 
 **Auth:** Cursor local needs `CURSOR_API_KEY` only — not `gh auth` / Copilot scope.
 
@@ -130,10 +130,10 @@ Details: [cursor-agent.md](cursor-agent.md).
 
 ---
 
-## Specs (SDD) — why YAML in `.harness/specs/`?
+## Specs (SDD) — why YAML in `.toddspect/specs/`?
 
 Specs describe **Skills**, **Tools**, or **Workflows** with preferred agent and optional tool schemas.
-They are project-local contracts for agents — not Harness internals.
+They are project-local contracts for agents — not ToddSpect internals.
 
 - **Spec Manager UI** edits files; CLI `specParser.ts` validates with Zod.
 - **spec+agent mode** injects raw YAML as `<spec path="…">` system context (authoritative guidance).
@@ -183,7 +183,7 @@ at the top of the bundle (`tsup.config.ts` `banner`).
 
 ### Fix "daemon exited unexpectedly"
 
-- Check stderr in Output → Harness.
+- Check stderr in Output → ToddSpect.
 - Ensure no `console.log` on stdout in daemon path.
 - Ensure setup/Kiro bootstrap is not inside `startIpcServer`.
 - Check Windows stdin `end` handler does not exit process.
@@ -211,4 +211,4 @@ at the top of the bundle (`tsup.config.ts` `banner`).
 | **Spec** | SDD YAML skill/tool/workflow definition |
 | **Context** | User-selected files/dirs sent as `<file>` blocks |
 | **Frame** | One JSON line on IPC stdout |
-| **Bridge** | `configBridge.ts` env + `HARNESS_SETTINGS_JSON` |
+| **Bridge** | `configBridge.ts` env + `TODDSPECT_SETTINGS_JSON` |

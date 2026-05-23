@@ -1,35 +1,14 @@
-# @harness/cli
+# @toddspect/cli
 
-Node.js orchestrator: agent routing, IPC daemon, SDD spec parsing, Kiro/AI-DLC bootstrap.
+Node.js orchestrator: agent routing, SDD specs, IPC daemon for the ToddSpect VS Code extension.
 
-## For AI assistants
-
-Read in order: [../../AGENTS.md](../../AGENTS.md) → [../../docs/ai-reference.md](../../docs/ai-reference.md) → [../../docs/code-map.md](../../docs/code-map.md).
-
-## Entry points
+## Commands
 
 | Command | Module |
 |---------|--------|
-| `harness --ipc` | `src/ipc/IpcServer.ts` — daemon (stdout = JSON only) |
-| `harness chat` / `run` | `src/commands/` → `AgentRouter` |
-| `harness check getGoat` | `src/commands/getGoat.ts` |
-| `harness setup` | `src/commands/setup.ts` |
+| `toddspect --ipc` | `src/ipc/IpcServer.ts` — daemon (stdout = JSON only) |
+| `toddspect chat` / `run` | `src/commands/` → `AgentRouter` |
+| `toddspect check getGoat` | `src/commands/getGoat.ts` |
+| `toddspect setup` | `src/commands/setup.ts` |
 
-## Build
-
-```bash
-npm run build          # tsup → dist/index.js (single bundled ESM)
-```
-
-Bundled into the VS Code extension via `../../scripts/bundle-cli.mjs`.
-
-## Key directories
-
-| Path | Role |
-|------|------|
-| `src/router/` | Agent routing and Copilot tool loop |
-| `src/connectors/` | Auth and Kiro CLI |
-| `src/ipc/` | Extension ↔ CLI protocol |
-| `src/aidlc/` | AWS AI-DLC steering install |
-| `src/kiro/` | Kiro CLI download/cache |
-| `src/parsers/` | Spec YAML |
+Build: `npm run build -w packages/cli`

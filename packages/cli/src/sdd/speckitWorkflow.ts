@@ -1,5 +1,5 @@
 /**
- * Spec-Kit aligned SDD workflow for Harness (.harness/sdd/).
+ * Spec-Kit aligned SDD workflow for ToddSpect (.toddspect/sdd/).
  * @see https://github.com/github/spec-kit
  */
 import * as fs from 'fs';
@@ -14,7 +14,7 @@ import {
   TASKS_TEMPLATE,
 } from './templates.js';
 
-export const SDD_ROOT = '.harness/sdd';
+export const SDD_ROOT = '.toddspect/sdd';
 
 export type SddStepId =
   | 'constitution'
@@ -354,7 +354,7 @@ export function initSddWorkspace(workspaceRoot?: string): SddInitResult {
   if (!fileExists(readmePath)) {
     fs.writeFileSync(
       readmePath,
-      `# SDD Workspace (Harness + spec-kit)
+      `# SDD Workspace (ToddSpect + spec-kit)
 
 This folder mirrors [GitHub spec-kit](https://github.com/github/spec-kit) layout for Spec-Driven Development.
 
@@ -365,7 +365,7 @@ This folder mirrors [GitHub spec-kit](https://github.com/github/spec-kit) layout
 | \`specs/<id>/plan.md\` | Technical plan |
 | \`specs/<id>/tasks.md\` | Implementation tasks |
 
-Use the **SDD** view in Harness to run each \`/speckit.*\` step in chat.
+Use the **SDD** view in ToddSpect to run each \`/speckit.*\` step in chat.
 `,
       'utf-8',
     );
@@ -477,8 +477,8 @@ export function buildSddStepPrompt(
   const notes = userNotes?.trim() ? `\n\nAdditional context:\n${userNotes.trim()}` : '';
 
   const prompts: Record<SddStepId, string> = {
-    constitution: `${cmd} Review and refine \`.harness/sdd/memory/constitution.md\`. Establish code quality, testing, UX, performance, and security principles for this project.${notes}`,
-    specify: `${cmd} ${featureLine}. Define functional requirements and user stories in \`.harness/sdd/specs/${featureId}/spec.md\`. Focus on WHAT and WHY — not tech stack.${notes}`,
+    constitution: `${cmd} Review and refine \`.toddspect/sdd/memory/constitution.md\`. Establish code quality, testing, UX, performance, and security principles for this project.${notes}`,
+    specify: `${cmd} ${featureLine}. Define functional requirements and user stories in \`.toddspect/sdd/specs/${featureId}/spec.md\`. Focus on WHAT and WHY — not tech stack.${notes}`,
     clarify: `${cmd} ${featureLine}. Run structured clarification on the spec; record answers in \`clarifications.md\` before planning.${notes}`,
     plan: `${cmd} ${featureLine}. Create \`plan.md\` with tech stack, architecture, and phased implementation. Follow the constitution.${notes}`,
     tasks: `${cmd} ${featureLine}. Generate \`tasks.md\` from plan.md with ordered tasks, [P] parallel markers, and file paths.${notes}`,

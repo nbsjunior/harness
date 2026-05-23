@@ -45,7 +45,7 @@ export function checkAgentReadiness(
           ready: false,
           hint: ghAvailable
             ? '`gh` found but not authenticated. Run: gh auth login'
-            : 'No token. Run `gh auth login` or save token in Harness → Configuration.',
+            : 'No token. Run `gh auth login` or save token in ToddSpect → Configuration.',
         };
       }
       const tokenErr = validateCopilotToken(config.copilot.token);
@@ -66,7 +66,7 @@ export function checkAgentReadiness(
           label: LABELS.devin,
           ready: false,
           hint:
-            '[Devin] API key missing — set DEVIN_API_KEY or Harness → Configuration → Devin. ' +
+            '[Devin] API key missing — set DEVIN_API_KEY or ToddSpect → Configuration → Devin. ' +
             '(If you meant Cursor, select the **Cursor** pill in chat, not Auto/Devin.)',
         };
       }
@@ -84,7 +84,7 @@ export function checkAgentReadiness(
           label: LABELS.cursor,
           ready: false,
           hint:
-            '[Cursor] API key missing — set CURSOR_API_KEY or Harness → Configuration → Cursor ' +
+            '[Cursor] API key missing — set CURSOR_API_KEY or ToddSpect → Configuration → Cursor ' +
             '(https://cursor.com/dashboard/integrations).',
         };
       }
@@ -120,7 +120,7 @@ export function checkAgentReadiness(
             agent,
             label: LABELS.kiro,
             ready: false,
-            hint: 'REST mode: set KIRO_API_KEY and harness.connectors.kiro.endpoint.',
+            hint: 'REST mode: set KIRO_API_KEY and toddspect.connectors.kiro.endpoint.',
           };
         }
         return {
@@ -137,7 +137,7 @@ export function checkAgentReadiness(
           ready: false,
           hint:
             'Set KIRO_API_KEY (Kiro Pro API key from https://kiro.dev/docs/cli/authentication). ' +
-            'Install kiro-cli and run `harness aidlc install`.',
+            'Install kiro-cli and run `toddspect aidlc install`.',
         };
       }
       return {

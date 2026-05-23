@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build VSIX and copy to %LOCALAPPDATA%/HarnessRelease (avoids OneDrive sync corruption).
+ * Build VSIX and copy to %LOCALAPPDATA%/ToddSpectRelease (avoids OneDrive sync corruption).
  * Prints SHA256 and install path for manual VSIX install.
  */
 import { spawnSync } from 'child_process';
@@ -24,7 +24,7 @@ run('npm', ['run', 'package:vsix']);
 const pkg = JSON.parse(
   fs.readFileSync(path.join(root, 'packages', 'extension', 'package.json'), 'utf-8'),
 );
-const vsixName = `harness-vscode-${pkg.version}.vsix`;
+const vsixName = `toddspect-vscode-${pkg.version}.vsix`;
 const srcActual = path.join(root, 'packages', 'extension', vsixName);
 
 if (!fs.existsSync(srcActual)) {
@@ -33,8 +33,8 @@ if (!fs.existsSync(srcActual)) {
 }
 
 const outDir =
-  process.env.HARNESS_VSIX_OUT ??
-  path.join(process.env.LOCALAPPDATA ?? process.env.TEMP ?? '.', 'HarnessRelease');
+  process.env.TODDSPECT_VSIX_OUT ??
+  path.join(process.env.LOCALAPPDATA ?? process.env.TEMP ?? '.', 'ToddSpectRelease');
 fs.mkdirSync(outDir, { recursive: true });
 const dest = path.join(outDir, vsixName);
 fs.copyFileSync(srcActual, dest);

@@ -2,7 +2,7 @@
  * Cursor Cloud Agents API v1 connector.
  *
  * The IDE endpoint (api2.cursor.sh) is gRPC/Connect — not OpenAI-compatible.
- * Harness uses the public Cloud Agents API: https://api.cursor.com/v1
+ * ToddSpect uses the public Cloud Agents API: https://api.cursor.com/v1
  *
  * @see https://cursor.com/docs/cloud-agent/api/endpoints
  */
@@ -11,7 +11,7 @@ import http from 'http';
 import { execSync } from 'child_process';
 import { URL } from 'url';
 import type { ChatMessage, ContextItem, CopilotMode } from '../types.js';
-import { harnessLog } from '../log.js';
+import { toddspectLog } from '../log.js';
 
 export const CURSOR_CLOUD_API_DEFAULT = 'https://api.cursor.com';
 
@@ -31,11 +31,11 @@ interface CursorSessionState {
   activeRunId?: string;
 }
 
-/** harness sessionId → Cursor cloud agent + active run */
-const sessionByHarnessId = new Map<string, CursorSessionState>();
+/** toddspect sessionId → Cursor cloud agent + active run */
+const sessionByToddSpectId = new Map<string, CursorSessionState>();
 
 export function clearCursorCloudSession(sessionId: string): void {
-  sessionByHarnessId.delete(sessionId);
+  sessionByToddSpectId.delete(sessionId);
 }
 
 export interface CursorApiProbeResult {
@@ -46,7 +46,7 @@ export interface CursorApiProbeResult {
   error?: string;
 }
 
-/** Live check: GET /v1/me — used by `harness check getGoat` and scripts/test-cursor.mjs */
+/** Live check: GET /v1/me — used by `toddspect check getGoat` and scripts/test-cursor.mjs */
 export async function probeCursorApi(
   apiKey: string,
   endpoint: string,
@@ -57,7 +57,7 @@ export async function probeCursorApi(
     return {
       ok: false,
       endpoint: baseUrl,
-      error: 'CURSOR_API_KEY / harness.connectors.cursor.apiKey is empty',
+      error: 'CURSOR_API_KEY / toddspect.connectors.cursor.apiKey is empty',
     };
   }
   try {
@@ -82,15 +82,15 @@ export async function probeCursorApi(
 }
 
 function getSession(sessionId: string): CursorSessionState | undefined {
-  return sessionByHarnessId.get(sessionId);
+  return sessionByToddSpectId.get(sessionId);
 }
 
 function setSession(sessionId: string, state: CursorSessionState): void {
-  sessionByHarnessId.set(sessionId, state);
+  sessionByToddSpectId.set(sessionId, state);
 }
 
 function clearActiveRun(sessionId: string): void {
-  const s = sessionByHarnessId.get(sessionId);
+  const s = sessionByToddSpectId.get(sessionId);
   if (s) {
     s.activeRunId = undefined;
   }
@@ -101,7 +101,7 @@ export function normalizeCursorBaseUrl(endpoint: string): string {
   const raw = (endpoint || CURSOR_CLOUD_API_DEFAULT).trim().replace(/\/+$/, '');
   if (!raw) return CURSOR_CLOUD_API_DEFAULT;
   if (/api2\.cursor\.sh|api3\.cursor\.sh|agent\.api5\.cursor\.sh/i.test(raw)) {
-    harnessLog(
+    toddspectLog(
       `[cursor] endpoint "${raw}" is the IDE internal API — using ${CURSOR_CLOUD_API_DEFAULT} instead`,
     );
     return CURSOR_CLOUD_API_DEFAULT;
@@ -117,7 +117,7 @@ function basicAuth(apiKey: string): string {
 }
 
 /** Pull `<file>` / `<spec>` blocks from system messages (injected by IpcServer). */
-function extractHarnessContextBlocks(messages: ChatMessage[]): string {
+function extractToddSpectContextBlocks(messages: ChatMessage[]): string {
   const blocks: string[] = [];
   for (const m of messages) {
     if (m.role !== 'system' || !m.content.trim()) {
@@ -136,12 +136,12 @@ export function buildCursorPrompt(
   context: ContextItem[],
 ): string {
   const parts: string[] = [];
-  const workspace = process.env['HARNESS_WORKSPACE']?.trim() || process.cwd();
+  const workspace = process.env['TODDSPECT_WORKSPACE']?.trim() || process.cwd();
 
   parts.push(`Workspace root (local VS Code project): ${workspace}`);
   parts.push('');
 
-  const fileBlocks = extractHarnessContextBlocks(messages);
+  const fileBlocks = extractToddSpectContextBlocks(messages);
   if (fileBlocks) {
     parts.push(fileBlocks);
     parts.push('');
@@ -158,7 +158,7 @@ export function buildCursorPrompt(
       if (
         m.content.includes('<file path=') ||
         m.content.includes('<spec path=') ||
-        m.content.includes('assisting through Harness')
+        m.content.includes('assisting through ToddSpect')
       ) {
         continue;
       }
@@ -179,7 +179,7 @@ function cursorMode(mode?: CopilotMode): 'agent' | 'plan' {
 
 /** Optional GitHub repo for Cloud Agents (speeds up real coding tasks). */
 function detectGithubRepo(): { url: string; startingRef: string } | undefined {
-  const workspace = process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  const workspace = process.env['TODDSPECT_WORKSPACE'] ?? process.cwd();
   try {
     const remote = execSync('git remote get-url origin', {
       cwd: workspace,
@@ -221,7 +221,7 @@ function buildCreateAgentBody(
   const repo = detectGithubRepo();
   if (repo) {
     body['repos'] = [{ url: repo.url, startingRef: repo.startingRef }];
-    harnessLog(`[cursor] using repo ${repo.url} @ ${repo.startingRef}`);
+    toddspectLog(`[cursor] using repo ${repo.url} @ ${repo.startingRef}`);
   }
   return body;
 }
@@ -314,9 +314,9 @@ async function cancelRun(
       undefined,
       [409],
     );
-    harnessLog(`[cursor] cancelled run=${runId} agent=${agentId}`);
+    toddspectLog(`[cursor] cancelled run=${runId} agent=${agentId}`);
   } catch (err) {
-    harnessLog(`[cursor] cancel run failed (ignored): ${(err as Error).message}`);
+    toddspectLog(`[cursor] cancel run failed (ignored): ${(err as Error).message}`);
   }
 }
 
@@ -338,7 +338,7 @@ function isTerminalRunStatus(status: string | undefined): boolean {
   return /FINISHED|FAILED|CANCELLED|COMPLETED|ERROR/i.test(status);
 }
 
-/** Cancel any run still marked active for this Harness session (prevents HTTP 409 agent_busy). */
+/** Cancel any run still marked active for this ToddSpect session (prevents HTTP 409 agent_busy). */
 async function cancelActiveRunForSession(
   baseUrl: string,
   apiKey: string,
@@ -374,7 +374,7 @@ async function createFollowUpRun(
     const msg = (err as Error).message;
     if (!isAgentBusyError(msg)) throw err;
 
-    harnessLog(`[cursor] agent_busy — cancelling previous run session=${sessionId}`);
+    toddspectLog(`[cursor] agent_busy — cancelling previous run session=${sessionId}`);
     await cancelActiveRunForSession(baseUrl, apiKey, sessionId);
     await new Promise((r) => setTimeout(r, 800));
     return postRun();
@@ -473,7 +473,7 @@ async function streamRun(
   };
 
   const failNoContent = () => {
-    harnessLog(`[cursor] no content within ${STREAM_NO_CONTENT_TIMEOUT_MS}ms run=${runId}`);
+    toddspectLog(`[cursor] no content within ${STREAM_NO_CONTENT_TIMEOUT_MS}ms run=${runId}`);
     destroyActiveReq();
     onError(
       'Cursor cloud agent did not return text within 90 seconds. ' +
@@ -487,7 +487,7 @@ async function streamRun(
     if (idleAfterContentTimer) clearTimeout(idleAfterContentTimer);
     idleAfterContentTimer = setTimeout(() => {
       if (finished) return;
-      harnessLog(`[cursor] idle after content run=${runId}`);
+      toddspectLog(`[cursor] idle after content run=${runId}`);
       destroyActiveReq();
       finish(true);
     }, STREAM_IDLE_AFTER_CONTENT_MS);
@@ -561,7 +561,7 @@ async function streamRun(
 
     try {
       const data = JSON.parse(dataLine) as Record<string, unknown>;
-      harnessLog(`[cursor] sse event=${eventType} run=${runId}`);
+      toddspectLog(`[cursor] sse event=${eventType} run=${runId}`);
 
       if (eventType === 'heartbeat') {
         return 'reconnect';
@@ -601,7 +601,7 @@ async function streamRun(
         return 'completed';
       }
     } catch {
-      harnessLog(`[cursor] malformed sse: ${dataLine.slice(0, 80)}`);
+      toddspectLog(`[cursor] malformed sse: ${dataLine.slice(0, 80)}`);
     }
 
     return 'reconnect';
@@ -612,7 +612,7 @@ async function streamRun(
     void getRun(baseUrl, apiKey, agentId, runId)
       .then((run) => {
         if (finished) return;
-        harnessLog(`[cursor] poll status=${run.status ?? '?'} run=${runId}`);
+        toddspectLog(`[cursor] poll status=${run.status ?? '?'} run=${runId}`);
         if (isTerminalRunStatus(run.status)) {
           if (!sawContent) {
             onStreamText(
@@ -631,7 +631,7 @@ async function streamRun(
 
   maxTimer = setTimeout(() => {
     if (finished) return;
-    harnessLog(`[cursor] stream max duration exceeded run=${runId}`);
+    toddspectLog(`[cursor] stream max duration exceeded run=${runId}`);
     destroyActiveReq();
     if (!sawContent) {
       onError('Cursor request exceeded maximum wait time (10 minutes).');
@@ -657,7 +657,7 @@ async function streamRun(
       };
       if (lastEventId) {
         headers['Last-Event-ID'] = lastEventId;
-        harnessLog(`[cursor] stream resume Last-Event-ID=${lastEventId} run=${runId}`);
+        toddspectLog(`[cursor] stream resume Last-Event-ID=${lastEventId} run=${runId}`);
       }
 
       const req = lib.request(
@@ -667,7 +667,7 @@ async function streamRun(
           const code = res.statusCode ?? 0;
 
           if (code === 410) {
-            harnessLog(`[cursor] stream_expired run=${runId} — polling run status`);
+            toddspectLog(`[cursor] stream_expired run=${runId} — polling run status`);
             resolve('reconnect');
             return;
           }
@@ -715,7 +715,7 @@ async function streamRun(
               resolve('completed');
               return;
             }
-            harnessLog(`[cursor] res error run=${runId}: ${err.message}`);
+            toddspectLog(`[cursor] res error run=${runId}: ${err.message}`);
             resolve(isRecoverableStreamError(err.message) ? 'reconnect' : 'fatal');
           });
         },
@@ -729,7 +729,7 @@ async function streamRun(
           resolve('completed');
           return;
         }
-        harnessLog(`[cursor] req error run=${runId}: ${err.message}`);
+        toddspectLog(`[cursor] req error run=${runId}: ${err.message}`);
         resolve(isRecoverableStreamError(err.message) ? 'reconnect' : 'fatal');
       });
 
@@ -757,7 +757,7 @@ async function streamRun(
     }
 
     if (reconnectCount >= STREAM_MAX_RECONNECTS) {
-      harnessLog(`[cursor] max stream reconnects (${STREAM_MAX_RECONNECTS}) run=${runId}`);
+      toddspectLog(`[cursor] max stream reconnects (${STREAM_MAX_RECONNECTS}) run=${runId}`);
       if (!sawContent && Date.now() - lastContentAt > STREAM_NO_CONTENT_TIMEOUT_MS) {
         failNoContent();
       } else if (sawContent) {
@@ -773,7 +773,7 @@ async function streamRun(
     }
 
     reconnectCount += 1;
-    harnessLog(
+    toddspectLog(
       `[cursor] stream reconnect #${reconnectCount} run=${runId} lastEventId=${lastEventId || '(none)'}`,
     );
     onStreamText(`*(Cursor stream reconnecting… #${reconnectCount})*\n`, false);
@@ -805,7 +805,7 @@ export interface CursorCloudRequest {
 }
 
 /**
- * Cancel the active Cursor run for a Harness session (e.g. user clicked Stop).
+ * Cancel the active Cursor run for a ToddSpect session (e.g. user clicked Stop).
  */
 export async function cancelCursorCloudSession(
   sessionId: string,
@@ -834,7 +834,7 @@ export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
   if (!apiKey) {
     req.onError(
       'Cursor API key required. Create one at https://cursor.com/dashboard/integrations ' +
-        'and set harness.connectors.cursor.apiKey or CURSOR_API_KEY.',
+        'and set toddspect.connectors.cursor.apiKey or CURSOR_API_KEY.',
     );
     return;
   }
@@ -856,7 +856,7 @@ export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
     let runId: string;
 
     if (!agentId) {
-      harnessLog(`[cursor] creating cloud agent session=${req.sessionId}`);
+      toddspectLog(`[cursor] creating cloud agent session=${req.sessionId}`);
       const created = await httpJson<CreateAgentResponse>(
         'POST',
         new URL('/v1/agents', baseUrl),
@@ -867,7 +867,7 @@ export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
       runId = created.run.id;
       setSession(req.sessionId, { agentId, activeRunId: runId });
     } else {
-      harnessLog(`[cursor] follow-up run agent=${agentId} session=${req.sessionId}`);
+      toddspectLog(`[cursor] follow-up run agent=${agentId} session=${req.sessionId}`);
       runId = await createFollowUpRun(
         baseUrl,
         apiKey,
@@ -923,7 +923,7 @@ export async function routeCursorCloud(req: CursorCloudRequest): Promise<void> {
     if (/404/.test(msg) && req.endpoint.includes('api2.cursor.sh')) {
       req.onError(
         'HTTP 404: api2.cursor.sh is the Cursor IDE internal API, not the Cloud Agents API. ' +
-          'Set harness.connectors.cursor.endpoint to https://api.cursor.com and use a Cloud Agents API key.',
+          'Set toddspect.connectors.cursor.endpoint to https://api.cursor.com and use a Cloud Agents API key.',
       );
       return;
     }

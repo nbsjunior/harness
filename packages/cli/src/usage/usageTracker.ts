@@ -1,5 +1,5 @@
 /**
- * Workspace-local usage / spending stats (.harness/usage-stats.json).
+ * Workspace-local usage / spending stats (.toddspect/usage-stats.json).
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -49,7 +49,7 @@ export function estimateTokens(text: string): number {
 }
 
 export function usageStatsPath(workspaceRoot: string): string {
-  return path.join(workspaceRoot, '.harness', 'usage-stats.json');
+  return path.join(workspaceRoot, '.toddspect', 'usage-stats.json');
 }
 
 export function loadUsageStats(workspaceRoot: string): UsageStatsSnapshot {
@@ -83,7 +83,7 @@ export function loadUsageStats(workspaceRoot: string): UsageStatsSnapshot {
 }
 
 function saveUsageStats(workspaceRoot: string, stats: UsageStatsSnapshot): void {
-  const dir = path.join(workspaceRoot, '.harness');
+  const dir = path.join(workspaceRoot, '.toddspect');
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }

@@ -149,8 +149,8 @@ export class AgentService {
 
     try {
       const specsDir = vscode.workspace
-        .getConfiguration('harness')
-        .get<string>('specsDirectory', '.harness/specs');
+        .getConfiguration('toddspect')
+        .get<string>('specsDirectory', '.toddspect/specs');
 
       const payload: ChatSendPayload = {
         sessionId,

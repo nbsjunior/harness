@@ -1,7 +1,7 @@
 {
-  "name": "@harness/cli",
+  "name": "@toddspect/cli",
   "version": "0.1.0",
-  "description": "Harness CLI — local orchestrator for AI agent calls and SDD spec management",
+  "description": "ToddSpect CLI — local orchestrator for AI agent calls and SDD spec management",
   "private": true,
   "type": "module",
   "main": "./dist/index.cjs",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "harness": "./dist/index.js"
+    "toddspect": "./dist/index.js"
   },
   "scripts": {
     "build": "tsup",

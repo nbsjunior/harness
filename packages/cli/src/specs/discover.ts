@@ -78,7 +78,7 @@ function yamlStub(
 export function discoverSpecsFromRepo(workspaceRoot?: string): SpecDiscoveryResult {
   const root = workspaceRoot ?? getWorkspaceRoot();
   const suggestions: SpecDiscoverySuggestion[] = [];
-  const specsDir = '.harness/specs';
+  const specsDir = '.toddspect/specs';
 
   if (exists('package.json', root)) {
     const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8')) as {
@@ -121,16 +121,16 @@ export function discoverSpecsFromRepo(workspaceRoot?: string): SpecDiscoveryResu
 
   if (exists('.github/workflows', root)) {
     suggestions.push({
-      id: 'ci-harness-agent',
-      title: 'Harness agent in CI',
+      id: 'ci-toddspect-agent',
+      title: 'ToddSpect agent in CI',
       kind: 'workflow',
       reason: 'GitHub Actions workflows directory present.',
-      suggestedFile: `${specsDir}/workflow-ci-harness.md`,
+      suggestedFile: `${specsDir}/workflow-ci-toddspect.md`,
       template: yamlStub(
-        'ci-harness-agent',
-        'Harness agent in CI',
+        'ci-toddspect-agent',
+        'ToddSpect agent in CI',
         'workflow',
-        'Use `harness agent:run` in CI for automated reviews (see docs/github-actions.md).',
+        'Use `toddspect agent:run` in CI for automated reviews (see docs/github-actions.md).',
         'cursor',
       ),
     });

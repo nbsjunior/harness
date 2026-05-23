@@ -27,7 +27,7 @@ export async function aidlcStatusCommand(dir: string = process.cwd()): Promise<n
   console.log(`  .kiro/steering/aws-aidlc-rules: ${status.coreWorkflowPresent ? 'yes' : 'no'}`);
   console.log(`  .kiro/aws-aidlc-rule-details:   ${status.ruleDetailsPresent ? 'yes' : 'no'}`);
   console.log(`  aidlc-docs/:                     ${status.aidlcDocsPresent ? 'yes' : 'no'}`);
-  console.log(`  Installed: ${status.installed ? 'yes' : 'no (run: harness aidlc install)'}`);
+  console.log(`  Installed: ${status.installed ? 'yes' : 'no (run: toddspect aidlc install)'}`);
 
   return status.installed ? 0 : 1;
 }

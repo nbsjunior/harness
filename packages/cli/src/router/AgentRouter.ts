@@ -35,7 +35,7 @@ import { ensureKiroCli } from '../kiro/bootstrap.js';
 import { buildKiroPrompt } from '../aidlc/prompt.js';
 import { checkAgentReadiness } from './agentReadiness.js';
 import { isChatSessionCancelled } from '../session/cancel.js';
-import { harnessLog, harnessWarn } from '../log.js';
+import { toddspectLog, toddspectWarn } from '../log.js';
 import { routeCursorCloud } from '../connectors/cursorCloud.js';
 import {
   CursorLocalUnavailableError,
@@ -91,7 +91,7 @@ export class AgentRouter {
         config: request.config,
       });
       agent = auto.agent;
-      harnessLog(
+      toddspectLog(
         `[auto] rule=${auto.ruleId} → ${agent} fallback=${auto.fallbackUsed} scores=${JSON.stringify(auto.scores)}`,
       );
       request.onAutoRouted?.(auto);
@@ -152,7 +152,7 @@ export class AgentRouter {
   }
 
   /**
-   * Local workspace agent: Copilot tool loop (read/write/search/git) against HARNESS_WORKSPACE.
+   * Local workspace agent: Copilot tool loop (read/write/search/git) against TODDSPECT_WORKSPACE.
    * Used for Copilot Agent mode and for Cursor/Devin Agent mode when cloud APIs cannot edit the IDE.
    */
   private async routeLocalWorkspaceAgent(req: AgentRequest): Promise<void> {
@@ -160,7 +160,7 @@ export class AgentRouter {
     const copilotToken = await this.resolveCopilotApiToken(cfg);
     if (!copilotToken) {
       req.onError(
-        'Local Agent mode needs GitHub Copilot configured (`gh auth login` or Harness → Copilot). ' +
+        'Local Agent mode needs GitHub Copilot configured (`gh auth login` or ToddSpect → Copilot). ' +
           'It reads and writes files in your VS Code workspace.',
       );
       return;
@@ -182,7 +182,7 @@ export class AgentRouter {
     if (!cfg.token) {
       req.onError(
         'GitHub Copilot token not configured. Run `gh auth login`, set GH_TOKEN, ' +
-          'or save a fine-grained PAT (github_pat_…) via Harness configuration.',
+          'or save a fine-grained PAT (github_pat_…) via ToddSpect configuration.',
       );
       return;
     }
@@ -234,7 +234,7 @@ export class AgentRouter {
     const maxIterations = 10;
 
     req.onChunk('**[Agent]** Starting autonomous run…\n\n');
-    harnessLog(`[copilot-agent] session=${req.sessionId} start`);
+    toddspectLog(`[copilot-agent] session=${req.sessionId} start`);
 
     for (let iteration = 0; iteration < maxIterations; iteration++) {
       if (isChatSessionCancelled(req.sessionId)) {
@@ -244,7 +244,7 @@ export class AgentRouter {
       }
 
       req.onChunk(`**[Agent]** Step ${iteration + 1}/${maxIterations}…\n`);
-      harnessLog(`[copilot-agent] session=${req.sessionId} iteration=${iteration + 1}`);
+      toddspectLog(`[copilot-agent] session=${req.sessionId} iteration=${iteration + 1}`);
 
       const bodyObj: Record<string, unknown> = {
         model: model ?? 'gpt-4o',
@@ -304,7 +304,7 @@ export class AgentRouter {
 
       const toolNames = assistantMsg.tool_calls.map((t) => t.function.name).join(', ');
       req.onChunk(`**[Agent]** Tools: ${toolNames}\n\n`);
-      harnessLog(`[copilot-agent] tools: ${toolNames}`);
+      toddspectLog(`[copilot-agent] tools: ${toolNames}`);
 
       messages.push({
         role: 'assistant',
@@ -347,7 +347,7 @@ export class AgentRouter {
   private async routeDevin(req: AgentRequest): Promise<void> {
     const cfg = req.config.devin;
     if (!cfg.apiKey) {
-      req.onError('Devin API key not configured. Set DEVIN_API_KEY or harness.connectors.devin.apiKey.');
+      req.onError('Devin API key not configured. Set DEVIN_API_KEY or toddspect.connectors.devin.apiKey.');
       return;
     }
 
@@ -386,7 +386,7 @@ export class AgentRouter {
 
       if (wantLocal && cursorKey) {
         req.onChunk(
-          '**[Harness of AI]** Cursor + Agent: editing **your VS Code workspace** locally via **Cursor SDK**. ' +
+          '**[ToddSpect]** Cursor + Agent: editing **your VS Code workspace** locally via **Cursor SDK**. ' +
             '**Live Edits** shows each file change. No GitHub Copilot quota is used.\n\n',
         );
         try {
@@ -407,16 +407,16 @@ export class AgentRouter {
           if (!(err instanceof CursorLocalUnavailableError)) {
             throw err;
           }
-          harnessWarn(`[cursor] SDK local unavailable: ${err.message}`);
+          toddspectWarn(`[cursor] SDK local unavailable: ${err.message}`);
           if (execution === 'local') {
             req.onError(
               `Cursor local agent unavailable: ${err.message}. ` +
-                'Install/update the extension CLI bundle or set harness.cursor.agentExecution to "cloud".',
+                'Install/update the extension CLI bundle or set toddspect.cursor.agentExecution to "cloud".',
             );
             return;
           }
           req.onChunk(
-            `**[Harness]** Cursor SDK local failed (${err.message}). Trying fallback…\n\n`,
+            `**[ToddSpect]** Cursor SDK local failed (${err.message}). Trying fallback…\n\n`,
           );
         }
       }
@@ -428,7 +428,7 @@ export class AgentRouter {
 
       if (useCopilotLocal) {
         req.onChunk(
-          '**[Harness of AI]** Cursor + Agent: local workspace via **GitHub Copilot** tool loop. ' +
+          '**[ToddSpect]** Cursor + Agent: local workspace via **GitHub Copilot** tool loop. ' +
             'Set a **Cursor API key** to edit locally without Copilot.\n\n',
         );
         await this.routeLocalWorkspaceAgent(req);
@@ -437,7 +437,7 @@ export class AgentRouter {
 
       if (wantLocal && !cursorKey && execution === 'local') {
         req.onError(
-          'Cursor Agent (local) needs a Cursor API key (CURSOR_API_KEY or harness.connectors.cursor.apiKey) ' +
+          'Cursor Agent (local) needs a Cursor API key (CURSOR_API_KEY or toddspect.connectors.cursor.apiKey) ' +
             'or GitHub Copilot (`gh auth login` with copilot scope).',
         );
         return;
@@ -445,14 +445,14 @@ export class AgentRouter {
 
       if (wantLocal && !cursorKey && !copilotReady) {
         req.onChunk(
-          '**[Harness of AI]** Cursor Agent is using **Cursor Cloud** (remote). ' +
+          '**[ToddSpect]** Cursor Agent is using **Cursor Cloud** (remote). ' +
             'Add a **Cursor API key** for local file edits without Copilot, or configure Copilot for the legacy local path.\n\n',
         );
       } else if (execution === 'cloud' || (execution === 'auto' && cursorKey)) {
         req.onChunk(
-          '**[Harness of AI]** Cursor Agent is using **Cursor Cloud** (remote). ' +
+          '**[ToddSpect]** Cursor Agent is using **Cursor Cloud** (remote). ' +
             'It cannot change files in your open VS Code folder — **Live Edits stays empty**. ' +
-            'For local edits: set **harness.cursor.agentExecution** to `auto` or `local` and add a Cursor API key.\n\n',
+            'For local edits: set **toddspect.cursor.agentExecution** to `auto` or `local` and add a Cursor API key.\n\n',
         );
       }
     }
@@ -557,7 +557,7 @@ export class AgentRouter {
       return;
     }
 
-    const workspace = process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+    const workspace = process.env['TODDSPECT_WORKSPACE'] ?? process.cwd();
 
     try {
       const kiro = await ensureKiroCli({ allowDownload: true });
@@ -570,7 +570,7 @@ export class AgentRouter {
     const aidlcOk = await ensureAidlcInstalled(workspace, cfg.aidlcAutoInstall);
     if (!aidlcOk) {
       req.onError(
-        'AI-DLC rules not installed. Run `harness aidlc install` or enable harness.aidlc.autoInstall.',
+        'AI-DLC rules not installed. Run `toddspect aidlc install` or enable toddspect.aidlc.autoInstall.',
       );
       return;
     }
@@ -591,7 +591,7 @@ export class AgentRouter {
   private async routeKiroRest(req: AgentRequest): Promise<void> {
     const cfg = req.config.kiro;
     if (!cfg.apiKey || !cfg.endpoint) {
-      req.onError('Kiro REST mode: set KIRO_API_KEY and harness.connectors.kiro.endpoint.');
+      req.onError('Kiro REST mode: set KIRO_API_KEY and toddspect.connectors.kiro.endpoint.');
       return;
     }
 
@@ -628,7 +628,7 @@ export class AgentRouter {
     // Inject mode-specific system prompt if there isn't one already
     const hasSystemPrompt = mapped.some(m => m.role === 'system');
     if (!hasSystemPrompt && (mode === 'agent' || mode === 'spec+agent')) {
-      const workspace = process.env['HARNESS_WORKSPACE']?.trim() || process.cwd();
+      const workspace = process.env['TODDSPECT_WORKSPACE']?.trim() || process.cwd();
       mapped.unshift({
         role: 'system',
         content:
@@ -637,7 +637,7 @@ export class AgentRouter {
           `Context files are in <file> blocks in earlier system messages — read them before editing. ` +
           `Apply changes with write_file so the engineer sees them in the IDE. ` +
           (mode === 'spec+agent'
-            ? `Active Harness Spec definitions are in <spec> blocks — follow them.`
+            ? `Active ToddSpect Spec definitions are in <spec> blocks — follow them.`
             : ''),
       });
     }
@@ -910,7 +910,7 @@ function formatToolResultChunk(
   args: Record<string, string>,
   result: string,
 ): string {
-  const workspace = process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  const workspace = process.env['TODDSPECT_WORKSPACE'] ?? process.cwd();
   const firstLine = result.split('\n')[0]?.trim() ?? '';
 
   if (toolName === 'read_file' || toolName === 'write_file') {
@@ -959,7 +959,7 @@ async function executeCopilotTool(
     onToolEvent?: (event: Omit<ChatToolEventPayload, 'sessionId'>) => void;
   },
 ): Promise<string> {
-  const workspace = process.env['HARNESS_WORKSPACE'] ?? process.cwd();
+  const workspace = process.env['TODDSPECT_WORKSPACE'] ?? process.cwd();
 
   function resolvePath(p: string): string {
     if (fsPath.isAbsolute(p)) return p;
@@ -1106,9 +1106,9 @@ async function executeCopilotTool(
 
 type CursorAgentExecution = 'local' | 'cloud' | 'auto';
 
-/** From HARNESS_SETTINGS_JSON — extension bridges harness.cursor.agentExecution. */
+/** From TODDSPECT_SETTINGS_JSON — extension bridges toddspect.cursor.agentExecution. */
 function readCursorAgentExecution(): CursorAgentExecution {
-  const raw = process.env['HARNESS_SETTINGS_JSON'];
+  const raw = process.env['TODDSPECT_SETTINGS_JSON'];
   if (!raw?.trim()) {
     return 'auto';
   }

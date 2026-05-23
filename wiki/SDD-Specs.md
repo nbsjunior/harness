@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # SDD Specs
 
-**Spec-Driven Development** — YAML files in `.harness/specs/` that describe skills, tools, and workflows for agents.
+**Spec-Driven Development** — YAML files in `.toddspect/specs/` that describe skills, tools, and workflows for agents.
 
 ## Spec types
 
@@ -28,16 +28,16 @@ content: |
 
 ## Spec+Agent mode
 
-When Copilot **Spec+Agent** mode is active, Harness:
+When Copilot **Spec+Agent** mode is active, ToddSpect:
 
-1. Resolves all spec files in `harness.specsDirectory` (default `.harness/specs/`)
+1. Resolves all spec files in `toddspect.specsDirectory` (default `.toddspect/specs/`)
 2. Prepends them as `<spec>` blocks in the system context
 3. Runs the agent tool loop with that guidance
 
 ## CLI
 
 ```bash
-harness spec list
+toddspect spec list
 ```
 
 IPC: `spec:parse` from the extension Spec Manager panel.

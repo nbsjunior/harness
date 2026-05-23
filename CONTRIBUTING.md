@@ -1,6 +1,6 @@
-# Contributing to Harness
+# Contributing to ToddSpect
 
-Thank you for your interest in contributing! This document covers the development workflow, code standards, and how to extend Harness with new agent connectors.
+Thank you for your interest in contributing! This document covers the development workflow, code standards, and how to extend ToddSpect with new agent connectors.
 
 ---
 
@@ -27,8 +27,8 @@ Thank you for your interest in contributing! This document covers the developmen
 ### First-time setup
 
 ```bash
-git clone https://github.com/nbsjunior/harness.git
-cd harness
+git clone https://github.com/nbsjunior/toddspect.git
+cd toddspect
 npm install
 npm run build:cli         # Build CLI first (extension depends on it)
 ```
@@ -146,13 +146,13 @@ export const AGENT_DESCRIPTORS: Record<AgentId, AgentDescriptor> = {
 In `packages/extension/package.json` under `contributes.configuration.properties`:
 
 ```json
-"harness.connectors.myAgent.apiKey": {
+"toddspect.connectors.myAgent.apiKey": {
   "type": "string",
   "default": "",
   "description": "My Agent API key.",
   "scope": "machine"
 },
-"harness.connectors.myAgent.endpoint": {
+"toddspect.connectors.myAgent.endpoint": {
   "type": "string",
   "default": "https://api.myagent.com/v1",
   "description": "My Agent API endpoint.",

@@ -1,10 +1,10 @@
-# Spec-Driven Development (SDD) with Harness
+# Spec-Driven Development (SDD) with ToddSpect
 
-Harness uses **Spec-Driven Development** (SDD) to define reusable agent capabilities. Specs are Markdown files with YAML frontmatter stored in `.harness/specs/`.
+ToddSpect uses **Spec-Driven Development** (SDD) to define reusable agent capabilities. Specs are Markdown files with YAML frontmatter stored in `.toddspect/specs/`.
 
 For the full **GitHub spec-kit** workflow (constitution → specify → plan → tasks → implement), see [sdd-speckit.md](sdd-speckit.md) and the **SDD** view in VS Code.
 
-SDD is one of Harness's core advantages: specs live **in the same VS Code workflow** as multi-provider chat and file context — see [why-harness.md](why-harness.md).
+SDD is one of ToddSpect's core advantages: specs live **in the same VS Code workflow** as multi-provider chat and file context — see [why-toddspect.md](why-toddspect.md).
 
 ---
 
@@ -208,7 +208,7 @@ Refactors a module step-by-step to comply with SOLID design principles.
 ## Directory Structure
 
 ```
-.harness/
+.toddspect/
 ├── config.yaml           # Agent connector configuration (no secrets)
 ├── specs/
 │   ├── skill-code-review.md           # Code review skill
@@ -220,14 +220,14 @@ Refactors a module step-by-step to comply with SOLID design principles.
 
 ---
 
-## Initializing the `.harness/` Directory
+## Initializing the `.toddspect/` Directory
 
 ```bash
 # Via CLI
-harness init
+toddspect init
 
 # Via VSCode
-Ctrl+Shift+P → Harness: Initialize Workspace
+Ctrl+Shift+P → ToddSpect: Initialize Workspace
 ```
 
 This creates the directory structure with example specs.
@@ -238,26 +238,26 @@ This creates the directory structure with example specs.
 
 ```bash
 # Parse a single spec
-harness spec:parse .harness/specs/skill-code-review.md
+toddspect spec:parse .toddspect/specs/skill-code-review.md
 
 # Parse all specs in a directory (table output)
-harness spec:parse .harness/specs/
+toddspect spec:parse .toddspect/specs/
 
 # JSON output
-harness spec:parse .harness/specs/ --output json
+toddspect spec:parse .toddspect/specs/ --output json
 
 # YAML output (re-serialized)
-harness spec:parse .harness/specs/ --output yaml
+toddspect spec:parse .toddspect/specs/ --output yaml
 
 # Validate and exit non-zero on errors
-harness spec:parse .harness/specs/ --validate
+toddspect spec:parse .toddspect/specs/ --validate
 ```
 
 ---
 
 ## Using Specs in Agent Calls
 
-When you run `harness agent:run` or send a message via the chat interface with a `specsDir`, the CLI loads all specs from that directory and uses them to:
+When you run `toddspect agent:run` or send a message via the chat interface with a `specsDir`, the CLI loads all specs from that directory and uses them to:
 
 1. Determine the preferred/fallback agent for the request
 2. Inject tool definitions into the system prompt

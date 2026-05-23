@@ -6,7 +6,7 @@ import type { ExtensionMessage, LiveEditEntry, LiveEditsPanelPayload, WebviewMes
  * Sidebar webview beside Chat — shows live agent file edits (before/after).
  */
 export class LiveEditsViewProvider implements vscode.WebviewViewProvider {
-  static readonly VIEW_ID = 'harness.liveEditsView';
+  static readonly VIEW_ID = 'toddspect.liveEditsView';
 
   private view?: vscode.WebviewView;
   private edits: LiveEditEntry[] = [];
@@ -76,7 +76,7 @@ export class LiveEditsViewProvider implements vscode.WebviewViewProvider {
         break;
       }
       case 'revertAgentChanges':
-        await vscode.commands.executeCommand('harness.revertAgentChanges');
+        await vscode.commands.executeCommand('toddspect.revertAgentChanges');
         break;
       default:
         break;

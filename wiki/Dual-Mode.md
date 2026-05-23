@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="images/harness-icon.png" alt="Harness of AI logo" width="80" />
+  <img src="images/toddspect-icon.png" alt="ToddSpect logo" width="80" />
 </p>
 
 # Dual Mode
 
-Harness runs in two ways with the **same CLI logic**:
+ToddSpect runs in two ways with the **same CLI logic**:
 
 ## VS Code Extension (default)
 
@@ -19,12 +19,12 @@ Extension UI  ←IPC→  CLI daemon (--ipc)  ←→  Agents
 ## Standalone CLI
 
 ```bash
-harness chat -a copilot "Explain this repo"
-harness run -a claude "Refactor utils"
-harness check getGoat
-harness init
-harness setup
-harness aidlc install
+toddspect chat -a copilot "Explain this repo"
+toddspect run -a claude "Refactor utils"
+toddspect check getGoat
+toddspect init
+toddspect setup
+toddspect aidlc install
 ```
 
 No extension required. Uses the same `AgentRouter` and config layering.
@@ -35,15 +35,15 @@ No extension required. Uses the same `AgentRouter` and config layering.
 |----------|------|
 | Daily coding in VS Code | Extension |
 | CI/CD, scripts, servers | CLI |
-| Debugging agents | CLI `harness chat` + stderr logs |
-| Kiro bootstrap / AI-DLC | Either (`harness setup`) |
+| Debugging agents | CLI `toddspect chat` + stderr logs |
+| Kiro bootstrap / AI-DLC | Either (`toddspect setup`) |
 
 ## Config
 
 Both modes read:
 
-- `.harness/config.yaml`
+- `.toddspect/config.yaml`
 - Environment variables
-- Extension adds VS Code secrets via `HARNESS_SETTINGS_JSON`
+- Extension adds VS Code secrets via `TODDSPECT_SETTINGS_JSON`
 
 See [Configuration](Configuration).
