@@ -116,7 +116,7 @@ After installing, you'll see the **Todd of AIDLC icon** (hexagon) in the VSCode 
 When you install from the official `.vsix`, the **Todd of AIDLC CLI is already compiled** inside the extension:
 
 ```
-extensions/toddspect.toddspect-vscode-0.1.0/cli/dist/index.js
+extensions/ToDD-HarnessofAI.toddspect-vscode-0.1.0/cli/dist/index.js
 ```
 
 No `npm link` or manual build is required. The extension starts it automatically with:

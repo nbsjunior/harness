@@ -187,7 +187,7 @@ export class ConfigurationPanel {
       case 'openExtensionSettings':
         await vscode.commands.executeCommand(
           'workbench.action.openSettings',
-          '@ext:toddspect.toddspect-vscode',
+          '@ext:ToDD-HarnessofAI.toddspect-vscode',
         );
         break;
 

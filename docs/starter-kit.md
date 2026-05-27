@@ -157,7 +157,7 @@ The extension starts the **bundled CLI** in IPC mode (`node extension/cli/dist/i
 Inside the installed extension:
 
 ```
-~/.vscode/extensions/toddspect.toddspect-vscode-0.1.0/
+~/.vscode/extensions/ToDD-HarnessofAI.toddspect-vscode-0.2.4/
 ├── dist/extension.js          # Extension host
 ├── dist/webview/              # Chat, Config, Spec UI
 └── cli/dist/index.js          # Todd of AIDLC CLI (bundled orchestrator)
@@ -223,7 +223,7 @@ vsce package           → toddspect-vscode-0.1.0.vsix
 
 ```bash
 # Replace path with your extension install folder
-node "%USERPROFILE%\.vscode\extensions\toddspect.toddspect-vscode-0.1.0\cli\dist\index.js" --help
+node "%USERPROFILE%\.vscode\extensions\ToDD-HarnessofAI.toddspect-vscode-0.2.4\cli\dist\index.js" --help
 ```
 
 In VSCode: send a chat message and confirm no **Todd of AIDLC CLI not found** in Output → Todd of AIDLC.
