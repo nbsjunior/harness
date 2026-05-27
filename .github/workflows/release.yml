@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    name: Package and publish VSIX
+    name: Package, release, and publish
     runs-on: ubuntu-latest
 
     steps:
@@ -52,3 +52,11 @@ jobs:
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
+
+      - name: Publish to VS Code Marketplace
+        if: ${{ !contains(github.ref_name, '-') && secrets.VSCE_PAT != '' }}
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          cd packages/extension
+          npx @vscode/vsce publish --no-dependencies --pat "$VSCE_PAT"

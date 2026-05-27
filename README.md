@@ -6,6 +6,8 @@
 <p align="center"><strong>Open-source meta-agent orchestrator — one VS Code sidebar for every AI provider.</strong></p>
 
 <p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=toddspect.toddspect-vscode"><img src="https://img.shields.io/visual-studio-marketplace/v/toddspect.toddspect-vscode?label=marketplace&color=007ACC&logo=visual-studio-code" alt="VS Code Marketplace"></a>
+  <a href="https://marketplace.visualstudio.com/items?itemName=toddspect.toddspect-vscode"><img src="https://img.shields.io/visual-studio-marketplace/i/toddspect.toddspect-vscode?label=installs" alt="Marketplace installs"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License"></a>
   <a href="https://github.com/nbsjunior/todd/releases"><img src="https://img.shields.io/github/v/release/nbsjunior/todd?label=release&color=green" alt="Latest release"></a>
   <a href="https://github.com/nbsjunior/todd/actions/workflows/ci.yml"><img src="https://github.com/nbsjunior/todd/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -42,6 +44,15 @@ Today most teams use several AI tools. Each has its own window, login, and conte
 ---
 
 ## 🚀 Quick install
+
+### Option A — VS Code Marketplace (recommended)
+
+1. Open VS Code → `Ctrl+Shift+X` → search **"Todd Meta-Agent"**  
+   — or click: **[Install from Marketplace](https://marketplace.visualstudio.com/items?itemName=toddspect.toddspect-vscode)**
+2. Click **Install** → **Reload Window**.
+3. Click the **Todd** icon in the Activity Bar → `Ctrl+Shift+P` → **Todd: Initialize Workspace**.
+
+### Option B — Manual VSIX
 
 1. Download the latest **`toddspect-vscode-*.vsix`** from [**Releases**](https://github.com/nbsjunior/todd/releases).
 2. `Ctrl+Shift+P` → **Extensions: Install from VSIX...** → select the file → **Reload Window**.
