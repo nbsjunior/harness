@@ -54,7 +54,7 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
 
       - name: Publish to VS Code Marketplace
-        if: ${{ !contains(github.ref_name, '-') && secrets.VSCE_PAT != '' }}
+        if: ${{ !contains(github.ref_name, '-') }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
