@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5] — 2026-07-04
+
+### Fixed
+
+- **Security:** resolved all open Dependabot alerts via npm overrides (undici, tar, form-data, hono, markdown-it, linkify-it, js-yaml, esbuild, tmp)
+- **Build:** bumped esbuild to ^0.28.1 for lockfile sync with `npm ci` in CI
+
 ## [0.2.2] — 2026-05-23
 
 ### Changed
